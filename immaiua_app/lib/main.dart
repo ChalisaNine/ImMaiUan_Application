@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'knowledge.dart'; 
-import 'profile_screen.dart'; 
+import 'knowledge.dart';
+import 'profile_screen.dart';
+import 'ai_image.dart';
 
 void main() => runApp(const ImMaiUanApp());
 
@@ -31,19 +32,17 @@ class MainHomeScreen extends StatefulWidget {
 
 class _MainHomeScreenState extends State<MainHomeScreen> {
   int _index = 0;
-
   void _onTap(int i) => setState(() => _index = i);
 
   @override
   Widget build(BuildContext context) {
     const peach = Color(0xFFFFE1C7);
 
-    // หน้าแต่ละแท็บ (แท็บ 0 คือ Home + มีแถบความรู้ตรงกลาง)
     final pages = <Widget>[
-      const _HomeBodyWithKnowledgeTab(),
+      const _HomeScreen(),
       const Center(child: Text('Meal Screen')),
       const Center(child: Text('Capture Screen')),
-      const Center(child: Text('Profile Screen')),
+      const ProfileScreen(),
       const Center(child: Text('Setting Screen')),
     ];
 
@@ -59,7 +58,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
         ),
         centerTitle: true,
         title: SizedBox(
-          height: 36,
+          height: 40,
           child: Image.asset('assets/immaiuan_logo.jpg', fit: BoxFit.contain),
         ),
         actions: [
@@ -72,18 +71,21 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
 
       body: pages[_index],
 
-      // FAB กล้องวงกลมตรงกลาง
       floatingActionButton: _CaptureFab(
-        onPressed: () => _onTap(2),
+        onPressed: () {
+          setState(() => _index = 2);
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AiImageScreen()),
+          );
+        },
         isSelected: _index == 2,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
-      // Bottom bar + spacing เท่ากัน
       bottomNavigationBar: BottomAppBar(
-        height: 84,
+        height: 80,
         color: peach,
-        elevation: 8,
         shape: const CircularNotchedRectangle(),
         notchMargin: 10,
         child: SafeArea(
@@ -99,176 +101,297 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
   }
 }
 
-/* ======================= HOME BODY + KNOWLEDGE TAB ======================= */
+/* ============================ HOME SCREEN ============================ */
 
-class _HomeBodyWithKnowledgeTab extends StatelessWidget {
-  const _HomeBodyWithKnowledgeTab();
+class _HomeScreen extends StatelessWidget {
+  const _HomeScreen();
 
   @override
   Widget build(BuildContext context) {
-    final titleStyle =
-        Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700);
+    const orange = Color(0xFFFFA94D);
+    const lightPeach = Color(0xFFFFE1C7);
 
     return SafeArea(
       top: false,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Center(child: Text('Welcome Monser.', style: titleStyle)),
-            const SizedBox(height: 12),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _arrowButton(Icons.chevron_left_rounded),
+                const SizedBox(width: 8),
+                const Text(
+                  '2 November',
+                  style: TextStyle(
+                      fontSize: 17, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(width: 8),
+                _arrowButton(Icons.chevron_right_rounded),
+              ],
+            ),
+            const SizedBox(height: 20),
 
-            // การ์ดตัวอย่างสรุปวันนี้ (วางเพื่อให้หน้าไม่โล่ง)
-            _SimpleCard(
-              child: Row(
-                children: const [
-                  Icon(Icons.today_rounded, size: 28),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Today summary • Calories, macros, and tips.',
-                      style: TextStyle(fontSize: 13.5),
+            // Basic knowledge card
+            InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const KnowledgeScreen()),
+                );
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: lightPeach,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x14000000),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    )
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.menu_book_rounded,
+                          size: 24, color: Colors.black87),
                     ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Basic knowledge',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700)),
+                          SizedBox(height: 2),
+                          Text('Tap to learn Daily Nutrition and tips',
+                              style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: Colors.black54)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 22),
+
+            // Goal progress
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x11000000),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  )
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Goal',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 16)),
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          SizedBox(
+                            height: 72,
+                            width: 72,
+                            child: CircularProgressIndicator(
+                              value: 0.45,
+                              strokeWidth: 6,
+                              color: orange,
+                              backgroundColor: lightPeach,
+                            ),
+                          ),
+                          const Text('45%\nprogress',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12.5)),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text('Target weight',
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.black54)),
+                          SizedBox(height: 4),
+                          Text('78 kg  →  65 kg',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15)),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: const [
+                          Text('Days',
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.black54)),
+                          SizedBox(height: 4),
+                          Text('365 Days',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15)),
+                        ],
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 20),
 
-            const SizedBox(height: 12),
-
-            // ▼▼ “แถบความรู้” อยู่ช่วงกลางหน้าตามที่ขอ — กดแล้วไป KnowledgeScreen ▼▼
-            const _KnowledgeQuickTab(),
-            // ▲▲ ---------------------------------------------------------------- ▲▲
-
-            const SizedBox(height: 12),
-
-            _SimpleCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text('Recent meals', style: TextStyle(fontWeight: FontWeight.w700)),
-                  SizedBox(height: 8),
-                  Text('• Breakfast: Chicken rice (550 kcal)'),
-                  Text('• Lunch: Pad kra pao (680 kcal)'),
-                  Text('• Dinner: Tom yum soup (320 kcal)'),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 100), // เผื่อพื้นที่ให้เลื่อนพ้นแถบล่าง
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SimpleCard extends StatelessWidget {
-  const _SimpleCard({required this.child});
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return _CardContainer(
-      child: child,
-    );
-  }
-}
-
-/// การ์ดปุ่มลัดไปหน้าความรู้
-class _KnowledgeQuickTab extends StatelessWidget {
-  const _KnowledgeQuickTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    const bg = Color(0xFFFFE1C7);     // พีชอ่อน
-    const accent = Color(0xFFFFA94D); // พีชเข้ม
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(14),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const KnowledgeScreen()),
-        );
-      },
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x14000000),
-              blurRadius: 8,
-              offset: Offset(0, 2),
-            )
-          ],
-        ),
-        child: Row(
-          children: [
+            // Nutrients today
             Container(
-              width: 44,
-              height: 44,
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
+                color: lightPeach,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x11000000),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  )
+                ],
               ),
-              child: const Icon(Icons.menu_book_rounded, size: 24, color: Colors.black87),
-            ),
-            const SizedBox(width: 12),
-            const Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text('Basic knowledge',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                  SizedBox(height: 2),
-                  Text('Tap to learn daily nutrition & tips',
-                      style: TextStyle(fontSize: 12.5, color: Colors.black54)),
+                  const Text('Nutrients received today',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 15)),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: const [
+                      _NutrientItem(
+                          icon: Icons.cake_rounded,
+                          label: 'Sugar',
+                          percent: '40%',
+                          value: '18g remain'),
+                      _NutrientItem(
+                          icon: Icons.rice_bowl_rounded,
+                          label: 'Carb',
+                          percent: '20%',
+                          value: '19g remain'),
+                      _NutrientItem(
+                          icon: Icons.egg_rounded,
+                          label: 'Protein',
+                          percent: '33%',
+                          value: '10g remain'),
+                      _NutrientItem(
+                          icon: Icons.local_pizza_rounded,
+                          label: 'Fat',
+                          percent: '66%',
+                          value: '19g remain'),
+                      _NutrientItem(
+                          icon: Icons.bolt_rounded,
+                          label: 'Sodium',
+                          percent: '36%',
+                          value: '200mg remain'),
+                    ],
+                  ),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 18, color: accent),
+            const SizedBox(height: 80),
           ],
         ),
       ),
     );
   }
-}
 
-/* ============================ WIDGET HELPERS ============================ */
-
-class _CardContainer extends StatelessWidget {
-  const _CardContainer({required this.child, this.padding});
-  final Widget child;
-  final EdgeInsetsGeometry? padding;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _arrowButton(IconData icon) {
     return Container(
-      padding: padding ?? const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE6E6E6)),
+        shape: BoxShape.circle,
         boxShadow: const [
           BoxShadow(
-            blurRadius: 8,
-            spreadRadius: 0,
-            offset: Offset(0, 2),
             color: Color(0x11000000),
+            blurRadius: 4,
+            offset: Offset(0, 2),
           )
         ],
       ),
-      child: child,
+      child: IconButton(
+        onPressed: () {},
+        icon: Icon(icon, size: 22),
+      ),
     );
   }
 }
 
-/* ============================== NAV BAR/FAB ============================= */
+/* ============================ Nutrient Widget ============================ */
+
+class _NutrientItem extends StatelessWidget {
+  const _NutrientItem({
+    required this.icon,
+    required this.label,
+    required this.percent,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String percent;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(icon, size: 24, color: Colors.black87),
+        const SizedBox(height: 4),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 12, fontWeight: FontWeight.w600)),
+        Text(percent,
+            style: const TextStyle(
+                fontSize: 11, color: Colors.black54)),
+        Text(value,
+            style: const TextStyle(
+                fontSize: 10, color: Colors.black54)),
+      ],
+    );
+  }
+}
+
+/* ============================ Bottom Bar ============================ */
 
 class _BottomBarItems extends StatelessWidget {
   const _BottomBarItems({
@@ -279,75 +402,54 @@ class _BottomBarItems extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
 
- @override
+  @override
   Widget build(BuildContext context) {
     final active = Theme.of(context).colorScheme.primary;
     const inactive = Colors.black54;
 
     Widget item({
-  required int idx,
-  required IconData icon,
-  required String label,
-}) {
-  final selected = currentIndex == idx;
-  return InkWell(
-    onTap: () {
-      if (idx == 0) {
-        // Home -> กลับไปหน้าแรก (main.dart) โดยเคลียร์สแตกจนเหลือหน้าราก
-        Navigator.of(context).popUntil((route) => route.isFirst);
-      } else if (idx == 3) {
-        // Profile -> เปิดหน้าโปรไฟล์
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const ProfileScreen()),
-        );
-      } else {
-        // แท็บอื่นทำงานตามปกติ
-        onTap(idx);
-      }
-    },
-    splashFactory: InkRipple.splashFactory,
-    child: Padding(
-      padding: const EdgeInsets.only(top: 6),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 24, color: selected ? active : inactive),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w600,
-              color: selected ? active : inactive,
-            ),
+      required int idx,
+      required IconData icon,
+      required String label,
+    }) {
+      final selected = currentIndex == idx;
+      return InkWell(
+        onTap: () => onTap(idx),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 24, color: selected ? active : inactive),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w600,
+                  color: selected ? active : inactive,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    ),
-  );
-}
-
+        ),
+      );
+    }
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Expanded(child: item(idx: 0, icon: Icons.home_rounded, label: 'Home')),
-        Expanded(
-          child:
-              item(idx: 1, icon: Icons.restaurant_menu_rounded, label: 'Meal'),
-        ),
-        const Expanded(child: SizedBox.shrink()), // ช่องกลางให้ FAB
-        Expanded(
-          child: item(idx: 3, icon: Icons.person_rounded, label: 'Profile'),
-        ),
-        Expanded(
-          child: item(idx: 4, icon: Icons.settings_rounded, label: 'Setting'),
-        ),
+        Expanded(child: item(idx: 1, icon: Icons.restaurant_menu_rounded, label: 'Meal')),
+        const Expanded(child: SizedBox.shrink()),
+        Expanded(child: item(idx: 3, icon: Icons.person_rounded, label: 'Profile')),
+        Expanded(child: item(idx: 4, icon: Icons.settings_rounded, label: 'Setting')),
       ],
     );
   }
 }
+
+/* ============================ FAB Camera ============================ */
 
 class _CaptureFab extends StatelessWidget {
   const _CaptureFab({
@@ -361,7 +463,6 @@ class _CaptureFab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final active = Theme.of(context).colorScheme.primary;
-
     return SizedBox(
       width: 68,
       height: 68,
@@ -380,11 +481,8 @@ class _CaptureFab extends StatelessWidget {
                 color: isSelected ? active : Colors.black,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.photo_camera_rounded,
-                size: 26,
-                color: Colors.white,
-              ),
+              child: const Icon(Icons.photo_camera_rounded,
+                  size: 26, color: Colors.white),
             ),
           ),
         ),

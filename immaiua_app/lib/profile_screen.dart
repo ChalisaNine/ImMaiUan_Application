@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
+/// ใช้ ProfileScreen เป็น "เนื้อหา" อย่างเดียว
+/// ให้ Scaffold / AppBar / BottomNav มาจากหน้าหลักที่ห่ออยู่อีกที
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
@@ -8,258 +10,166 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     const peach = Color(0xFFFFE1C7);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF7F7F7),
-      appBar: AppBar(
-        surfaceTintColor: Colors.white,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.calendar_today_rounded),
-        ),
-        centerTitle: true,
-        title: SizedBox(
-          height: 36,
-          child: Image.asset('assets/immaiuan_logo.jpg', fit: BoxFit.contain),
-        ),
-        actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.tune_rounded)),
-        ],
-      ),
-
-      body: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Container(
-                decoration: BoxDecoration(
-                  color: peach,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
-                child: Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 44,
-                      backgroundColor: Colors.white,
-                      child: CircleAvatar(
-                        radius: 40,
-                        backgroundImage: const AssetImage('assets/avatar.jpg'),
-                        onBackgroundImageError: (_, __) {},
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Monser',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 6),
-                    FilledButton.tonal(
-                      onPressed: () {},
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Colors.yellow.shade200,
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.edit, size: 16, color: Colors.black87),
-                          SizedBox(width: 6),
-                          Text(
-                            'Edit',
-                            style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w700),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        _Metric(icon: Icons.fitness_center_rounded, label: 'Weight', value: '78 kg'),
-                        _Metric(icon: Icons.height_rounded, label: 'height', value: '176 cm'),
-                        _Metric(icon: Icons.monitor_weight_rounded, label: 'BMI', value: '26.1'),
-                        _Metric(icon: Icons.local_fire_department_rounded, label: 'BMR', value: '2561'),
-                        _Metric(icon: Icons.bolt_rounded, label: 'TDEE', value: '3564'),
-                      ],
-                    ),
-                  ],
-                ),
+    return SafeArea(
+      top: false,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Container(
+              decoration: BoxDecoration(
+                color: peach,
+                borderRadius: BorderRadius.circular(8),
               ),
-
-              const SizedBox(height: 14),
-
-              // Goal (วงแหวนเทา + เสี้ยวส้มปลายมน)
-              _Card(
-                child: Row(
-                  children: const [
-                    _GoalProgressRing(
-                      progress: 0.45,
-                      size: 110,
-                      strokeWidth: 10,
-                      icon: Icons.directions_run,
-                      label: 'progress',
-                      percentText: '45%',
-                    ),
-                    SizedBox(width: 18),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Target weight', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-                          SizedBox(height: 6),
-                          _TargetWeightRow(fromText: '78 kg', toText: '65 kg'),
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    _DaysColumn(days: '365 Days'),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // Nutrients received today (แคปซูลสีพีช)
-              const Text('Nutrients received today', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-              const SizedBox(height: 8),
-              const _NutrientsPill(),
-
-              const SizedBox(height: 16),
-
-              // Allergy: หัวข้อ "อยู่ข้างบนกล่อง"
-              const Text('Allergy', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-              const SizedBox(height: 8),
-
-              // แถว: กล่องขอบน้ำเงิน + ปุ่ม Edit สีเหลืองอยู่นอกกล่อง
-              Row(
+              padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
+              child: Column(
                 children: [
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFF1E6BFF), width: 2),
-                      ),
-                      child: const Text("Cow's milk", style: TextStyle(fontSize: 15, color: Colors.black87)),
+                  CircleAvatar(
+                    radius: 44,
+                    backgroundColor: Colors.white,
+                    child: const CircleAvatar(
+                      radius: 40,
+                      backgroundImage: AssetImage('assets/avatar.jpg'),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Monser',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 6),
                   FilledButton.tonal(
                     onPressed: () {},
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFD21F),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      backgroundColor: Colors.yellow.shade200,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.edit, size: 16, color: Colors.black87),
                         SizedBox(width: 6),
-                        Text('Edit', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w700)),
+                        Text('Edit',
+                            style: TextStyle(
+                                color: Colors.black87, fontWeight: FontWeight.w700)),
                       ],
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: const [
+                      _Metric(icon: Icons.fitness_center_rounded, label: 'Weight', value: '78 kg'),
+                      _Metric(icon: Icons.height_rounded, label: 'height', value: '176 cm'),
+                      _Metric(icon: Icons.monitor_weight_rounded, label: 'BMI', value: '26.1'),
+                      _Metric(icon: Icons.local_fire_department_rounded, label: 'BMR', value: '2561'),
+                      _Metric(icon: Icons.bolt_rounded, label: 'TDEE', value: '3564'),
+                    ],
+                  ),
                 ],
               ),
+            ),
 
-              const SizedBox(height: 110),
-            ],
-          ),
-        ),
-      ),
+            const SizedBox(height: 14),
 
-      // FAB (คงเดิม)
-      floatingActionButton: SizedBox(
-        width: 68,
-        height: 68,
-        child: Material(
-          color: Colors.white,
-          shape: const CircleBorder(),
-          elevation: 8,
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: () {},
-            child: Center(
-              child: Container(
-                width: 52,
-                height: 52,
-                decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle),
-                child: const Icon(Icons.photo_camera_rounded, size: 26, color: Colors.white),
+            // Goal
+            const _Card(
+              child: Row(
+                children: [
+                  _GoalProgressRing(
+                    progress: 0.45,
+                    size: 110,
+                    strokeWidth: 10,
+                    icon: Icons.directions_run,
+                    label: 'progress',
+                    percentText: '45%',
+                  ),
+                  SizedBox(width: 18),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Target weight',
+                            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                        SizedBox(height: 6),
+                        _TargetWeightRow(fromText: '78 kg', toText: '65 kg'),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  _DaysColumn(days: '365 Days'),
+                ],
               ),
             ),
-          ),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
-      // NAV BAR (อัปเดตให้กด Home -> root, Profile -> หน้านี้)
-      bottomNavigationBar: BottomAppBar(
-        height: 84,
-        color: peach,
-        elevation: 8,
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 10,
-        child: SafeArea(
-          top: false,
-          minimum: const EdgeInsets.only(bottom: 6),
-          child: Row(
-            children: [
-              _BottomItem(
-                icon: Icons.home_rounded,
-                label: 'Home',
-                selected: false,
-                onTap: () {
-                  // กลับไปหน้าแรก (root) โดยไม่ต้อง import main.dart
-                  Navigator.of(context).popUntil((r) => r.isFirst);
-                },
-              ),
-              _BottomItem(
-                icon: Icons.restaurant_menu_rounded,
-                label: 'Meal',
-                onTap: () {
-                  // TODO: กำหนดพฤติกรรมของแท็บ Meal ตามแอปจริง
-                },
-              ),
-              const Expanded(child: SizedBox()), // ช่องเว้น FAB ตรงกลาง
-              _BottomItem(
-                icon: Icons.person_rounded,
-                label: 'Profile',
-                selected: true, // อยู่หน้า Profile แล้ว
-                onTap: () {
-                  // อยู่หน้านี้แล้ว ไม่ต้อง push ซ้ำ
-                },
-              ),
-              _BottomItem(
-                icon: Icons.settings_rounded,
-                label: 'Setting',
-                onTap: () {
-                  // TODO: กำหนดพฤติกรรมของแท็บ Setting ตามแอปจริง
-                },
-              ),
-            ],
-          ),
+            const SizedBox(height: 12),
+
+            const Text('Nutrients received today',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+            const SizedBox(height: 8),
+            const _NutrientsPill(),
+
+            const SizedBox(height: 16),
+
+            const Text('Allergy',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+            const SizedBox(height: 8),
+
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFF1E6BFF), width: 2),
+                    ),
+                    child: const Text("Cow's milk",
+                        style: TextStyle(fontSize: 15, color: Colors.black87)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                FilledButton.tonal(
+                  onPressed: () {},
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFD21F),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.edit, size: 16, color: Colors.black87),
+                      SizedBox(width: 6),
+                      Text('Edit',
+                          style: TextStyle(
+                              color: Colors.black87, fontWeight: FontWeight.w700)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+          ],
         ),
       ),
     );
   }
 }
 
-/* ---------------------------- Nutrients Pill ---------------------------- */
+/* ---------------------------- Reusable widgets ---------------------------- */
 
 class _NutrientsPill extends StatelessWidget {
   const _NutrientsPill();
@@ -326,8 +236,6 @@ class _NutrientCol extends StatelessWidget {
     );
   }
 }
-
-/* ---------------------------- Helpers อื่น ๆ ---------------------------- */
 
 class _Card extends StatelessWidget {
   const _Card({required this.child, this.padding});
@@ -506,52 +414,6 @@ class _DaysColumn extends StatelessWidget {
         const SizedBox(height: 6),
         Text(days, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20)),
       ],
-    );
-  }
-}
-
-/* --------------------- bottom bar item (interactive) --------------------- */
-
-class _BottomItem extends StatelessWidget {
-  const _BottomItem({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.selected = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    final active = Theme.of(context).colorScheme.primary;
-    const inactive = Colors.black54;
-
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.only(top: 6),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 24, color: selected ? active : inactive),
-              const SizedBox(height: 2),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w600,
-                  color: selected ? active : inactive,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
