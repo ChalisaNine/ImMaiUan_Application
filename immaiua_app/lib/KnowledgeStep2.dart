@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 // Replace with your actual profile screen import
 import 'profile_screen.dart';
+import 'main.dart'; // ✅ เพิ่ม import main.dart
 
 class KnowledgeStep2Screen extends StatelessWidget {
   const KnowledgeStep2Screen({super.key});
@@ -144,7 +145,14 @@ class KnowledgeStep2Screen extends StatelessWidget {
                 children: [
                   FilledButton.tonal(
                     onPressed: () {
-                      Navigator.pop(context);
+                      // ✅ กลับไปหน้า main.dart (MainHomeScreen) และล้าง stack
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MainHomeScreen(),
+                        ),
+                        (route) => false,
+                      );
                     },
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),

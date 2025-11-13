@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'ai_image.dart';
 import 'profile_screen.dart';
 import 'main.dart';
+import 'Calenda.dart';
 
 class CameraLogScreen extends StatefulWidget {
   const CameraLogScreen({super.key});
@@ -133,7 +134,7 @@ class _CameraLogBody extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.asset(
-                    'assets/fried_chicken.jpg',
+                    'assets/sample_food.jpg',
                     height: 120,
                     width: double.infinity,
                     fit: BoxFit.cover,
@@ -148,7 +149,8 @@ class _CameraLogBody extends StatelessWidget {
                     style: TextStyle(fontSize: 13, color: Colors.black54)),
                 const SizedBox(height: 8),
                 const Text('765 kcal',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+                    style:
+                        TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
                 const Text('per 1 plate',
                     style: TextStyle(fontSize: 13, color: Colors.black54)),
               ],
@@ -245,7 +247,9 @@ class _CameraLogBody extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    _showExcessWarningDialog(context);
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFA6F1A6),
                     shape: RoundedRectangleBorder(
@@ -262,6 +266,192 @@ class _CameraLogBody extends StatelessWidget {
           const SizedBox(height: 90),
         ],
       ),
+    );
+  }
+}
+
+/* ====================== WARNING DIALOG ====================== */
+
+void _showExcessWarningDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (dialogCtx) {
+      return AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        contentPadding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // กล่องเหลืองด้านบน
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF5C5),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: const [
+                      Icon(Icons.warning_amber_rounded, color: Colors.amber),
+                      SizedBox(width: 8),
+                      Text(
+                        'WARNING',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'This meal contains excess nutrients.',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  // กล่องขาวด้านใน (list nutrient)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        _ExcessRow(
+                          label: 'Sodium',
+                          value: '501 mg (102%)',
+                        ),
+                        SizedBox(height: 4),
+                        _ExcessRow(
+                          label: 'Sugar',
+                          value: '21 g (103%)',
+                        ),
+                        SizedBox(height: 4),
+                        _ExcessRow(
+                          label: 'Fat',
+                          value: '41 g (130%)',
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+            const Text(
+              'Are you sure to add this meal?',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // ปุ่ม No / Yes
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // ❌ ไม่เพิ่ม: แค่ปิด dialog แล้วอยู่หน้าเดิม
+                      Navigator.of(dialogCtx).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFB8B8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    child: const Text(
+                      'No',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 14),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // ✅ Yes: ปิด dialog แล้วไปหน้าต่อไป
+                      Navigator.of(dialogCtx).pop();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const CalendarScreen(),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFA6F1A6),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    child: const Text(
+                      'Yes',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 14),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+class _ExcessRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _ExcessRow({
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Icon(
+          Icons.circle,
+          size: 8,
+          color: Colors.black54,
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            '$label : $value',
+            style: const TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
