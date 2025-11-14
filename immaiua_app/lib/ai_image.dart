@@ -1,6 +1,7 @@
 // ai_image.dart
 import 'package:flutter/material.dart';
-import 'camera_log.dart'; // ✅ เพิ่ม import
+import 'camera_log.dart';
+import 'main.dart'; // เพื่อให้ Navigator กลับไปหน้า Home/Diary/Profile ได้
 
 class AiImageScreen extends StatelessWidget {
   const AiImageScreen({super.key});
@@ -16,23 +17,28 @@ class AiImageScreen extends StatelessWidget {
           // ---------- พรีวิวภาพ ----------
           Positioned.fill(
             child: Image.asset(
-              'assets/sample_food.jpg', // TODO: เปลี่ยนเป็นสตรีมจากกล้อง/รูปที่ผู้ใช้เลือก
+              'assets/sample_food.jpg',
               fit: BoxFit.cover,
             ),
           ),
 
-          // ---------- แถบบน ----------
+          // ---------- แถบบน (Navbar เหมือนที่สั่ง) ----------
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Row(
                 children: [
+                  // 🏠 Home icon
                   _TopIconButton(
-                    icon: Icons.calendar_today_rounded,
-                    onTap: () {},
+                    icon: Icons.home_rounded,
+                    onTap: () {
+                      Navigator.pop(context); // กลับหน้า Home
+                    },
                   ),
+
                   const Spacer(),
-                  // โลโก้ทรงกลมกลาง
+
+                  // โลโก้กลาง
                   Container(
                     width: 44,
                     height: 44,
@@ -48,17 +54,44 @@ class AiImageScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+
                   const Spacer(),
+
+                  // 📅 Diary icon
                   _TopIconButton(
-                    icon: Icons.tune_rounded,
-                    onTap: () {},
+                    icon: Icons.calendar_month_rounded,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MainHomeScreen(),
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(width: 6),
+
+                  // 👤 Profile icon (ขวาสุด)
+                  _TopIconButton(
+                    icon: Icons.person_rounded,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MainHomeScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
             ),
           ),
 
-          // ---------- เฟรมเล็ง + เครื่องหมายบวก ----------
+          // ---------- เฟรมเล็ง ----------
           IgnorePointer(
             child: Center(
               child: SizedBox(
@@ -69,7 +102,7 @@ class AiImageScreen extends StatelessWidget {
             ),
           ),
 
-          // ---------- สเกิร์ตไล่โทนด้านล่าง ----------
+          // ---------- สเกิร์ตล่าง ----------
           Positioned(
             left: 0,
             right: 0,
@@ -88,16 +121,14 @@ class AiImageScreen extends StatelessWidget {
             ),
           ),
 
-          // ---------- ปุ่มอัปโหลด ซ้ายล่าง ----------
+          // ---------- ปุ่ม UPLOAD ----------
           Positioned(
             left: 16,
             bottom: 90,
             child: Column(
               children: [
                 InkWell(
-                  onTap: () {
-                    // TODO: เปิดแกลเลอรี/กล้องเพื่อเลือกภาพ
-                  },
+                  onTap: () {},
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
                     width: 58,
@@ -132,7 +163,7 @@ class AiImageScreen extends StatelessWidget {
             ),
           ),
 
-          // ---------- ปุ่มรีเฟรช ขวาล่าง ----------
+          // ---------- ปุ่ม Refresh ----------
           Positioned(
             right: 16,
             bottom: 96,
@@ -142,9 +173,7 @@ class AiImageScreen extends StatelessWidget {
               elevation: 6,
               child: InkWell(
                 customBorder: const CircleBorder(),
-                onTap: () {
-                  // TODO: รีโหลด/รีเซ็ต/สลับกล้อง
-                },
+                onTap: () {},
                 child: const SizedBox(
                   width: 52,
                   height: 52,
@@ -154,7 +183,7 @@ class AiImageScreen extends StatelessWidget {
             ),
           ),
 
-          // ---------- ปุ่ม Capture กลมใหญ่กึ่งกลางล่าง ----------
+          // ---------- ปุ่ม Capture ----------
           Positioned(
             bottom: 24,
             left: 0,
@@ -170,12 +199,10 @@ class AiImageScreen extends StatelessWidget {
                   child: InkWell(
                     customBorder: const CircleBorder(),
                     onTap: () {
-                      // ✅ เมื่อกดแล้วไปหน้า camera_log.dart
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const CameraLogScreen(),
-                        ),
+                            builder: (_) => const CameraLogScreen()),
                       );
                     },
                     child: Center(
@@ -204,7 +231,7 @@ class AiImageScreen extends StatelessWidget {
   }
 }
 
-/* ===================== Widgets / Painters ===================== */
+/* ===================== Top Button ===================== */
 
 class _TopIconButton extends StatelessWidget {
   const _TopIconButton({required this.icon, required this.onTap});
@@ -214,7 +241,7 @@ class _TopIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white.withOpacity(0.95),
+      color: Colors.white.withOpacity(0.92),
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),
@@ -229,7 +256,8 @@ class _TopIconButton extends StatelessWidget {
   }
 }
 
-/// วาดกรอบเล็งแบบ "มุมตัว L" + เครื่องหมายบวกกลาง
+/* ===================== Focus Frame ===================== */
+
 class _FocusFramePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -242,26 +270,26 @@ class _FocusFramePainter extends CustomPainter {
     final cornerLen = size.width * 0.16;
     const r = 14.0;
 
-    // มุมซ้ายบน
     _drawCorner(canvas, cornerPaint, Offset(r, r), cornerLen, Corner.topLeft);
-    // มุมขวาบน
-    _drawCorner(canvas, cornerPaint, Offset(size.width - r, r), cornerLen, Corner.topRight);
-    // มุมซ้ายล่าง
-    _drawCorner(canvas, cornerPaint, Offset(r, size.height - r), cornerLen, Corner.bottomLeft);
-    // มุมขวาล่าง
-    _drawCorner(canvas, cornerPaint, Offset(size.width - r, size.height - r), cornerLen, Corner.bottomRight);
+    _drawCorner(canvas, cornerPaint, Offset(size.width - r, r), cornerLen,
+        Corner.topRight);
+    _drawCorner(
+        canvas, cornerPaint, Offset(r, size.height - r), cornerLen, Corner.bottomLeft);
+    _drawCorner(canvas, cornerPaint,
+        Offset(size.width - r, size.height - r), cornerLen, Corner.bottomRight);
 
-    // เครื่องหมายบวกกลาง
     final plusPaint = Paint()
       ..color = Colors.white70
-      ..strokeWidth = 2.5
-      ..style = PaintingStyle.stroke;
+      ..strokeWidth = 2.5;
 
     final cx = size.width / 2;
     final cy = size.height / 2;
     const plusLen = 16.0;
-    canvas.drawLine(Offset(cx - plusLen, cy), Offset(cx + plusLen, cy), plusPaint);
-    canvas.drawLine(Offset(cx, cy - plusLen), Offset(cx, cy + plusLen), plusPaint);
+
+    canvas.drawLine(
+        Offset(cx - plusLen, cy), Offset(cx + plusLen, cy), plusPaint);
+    canvas.drawLine(
+        Offset(cx, cy - plusLen), Offset(cx, cy + plusLen), plusPaint);
   }
 
   void _drawCorner(Canvas canvas, Paint p, Offset o, double len, Corner c) {

@@ -12,18 +12,21 @@ class CameraLogScreen extends StatefulWidget {
 }
 
 class _CameraLogScreenState extends State<CameraLogScreen> {
-  int _index = 2; // Capture tab เป็นค่าเริ่มต้น
+  int _index = 2; // Capture tab default
 
   void _onTap(int i) {
     if (i == 0) {
-      // ✅ ปุ่ม Home → กลับไปหน้า MainHomeScreen
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const MainHomeScreen()),
         (route) => false,
       );
     } else if (i == 3) {
-      // ✅ Profile
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const CalendarScreen()),
+      );
+    } else if (i == 4) {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const ProfileScreen()),
@@ -41,36 +44,84 @@ class _CameraLogScreenState extends State<CameraLogScreen> {
       const Center(child: Text('Home Screen')),
       const Center(child: Text('Meal Screen')),
       const _CameraLogBody(),
+      const CalendarScreen(),
       const ProfileScreen(),
-      const Center(child: Text('Setting Screen')),
     ];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F7),
 
-      appBar: AppBar(
-        surfaceTintColor: Colors.white,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.calendar_today_rounded),
-        ),
-        centerTitle: true,
-        title: SizedBox(
-          height: 40,
-          child: Image.asset('assets/immaiuan_logo.jpg', fit: BoxFit.contain),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.tune_rounded),
+      // ================= TOP NAVBAR ==================
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(60),
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            child: Row(
+              children: [
+                // LEFT: Home
+                _topBtn(
+                  icon: Icons.home_rounded,
+                  onTap: () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const MainHomeScreen()),
+                      (route) => false,
+                    );
+                  },
+                ),
+
+                const Spacer(),
+
+                // MIDDLE: Logo
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                  ),
+                  padding: const EdgeInsets.all(4),
+                  child: ClipOval(
+                    child: Image.asset('assets/immaiuan_logo.jpg', fit: BoxFit.cover),
+                  ),
+                ),
+
+                const Spacer(),
+
+                // RIGHT: Diary
+                _topBtn(
+                  icon: Icons.calendar_month_rounded,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CalendarScreen()),
+                    );
+                  },
+                ),
+                const SizedBox(width: 10),
+
+                // RIGHT: Profile
+                _topBtn(
+                  icon: Icons.person_rounded,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
 
+      // ================= BODY ==================
       body: pages[_index],
 
+      // ================= Capture FAB ==================
       floatingActionButton: _CaptureFab(
         onPressed: () {
           Navigator.push(
@@ -82,6 +133,7 @@ class _CameraLogScreenState extends State<CameraLogScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
+      // ================= BOTTOM NAVBAR ==================
       bottomNavigationBar: BottomAppBar(
         height: 80,
         color: peach,
@@ -114,7 +166,7 @@ class _CameraLogBody extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 🍛 Meal Card
+          // Meal Card
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -142,15 +194,13 @@ class _CameraLogBody extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 const Text('Fried Chicken',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 4),
                 const Text('95% confident',
                     style: TextStyle(fontSize: 13, color: Colors.black54)),
                 const SizedBox(height: 8),
                 const Text('765 kcal',
-                    style:
-                        TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
                 const Text('per 1 plate',
                     style: TextStyle(fontSize: 13, color: Colors.black54)),
               ],
@@ -158,7 +208,7 @@ class _CameraLogBody extends StatelessWidget {
           ),
           const SizedBox(height: 20),
 
-          // 🍽 Nutrient Summary
+          // Nutrient Summary
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
@@ -240,8 +290,7 @@ class _CameraLogBody extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   child: const Text('Decline',
-                      style: TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w600)),
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                 ),
               ),
               const SizedBox(width: 10),
@@ -257,8 +306,7 @@ class _CameraLogBody extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   child: const Text('Add',
-                      style: TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w600)),
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                 ),
               ),
             ],
@@ -286,7 +334,6 @@ void _showExcessWarningDialog(BuildContext context) {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // กล่องเหลืองด้านบน
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(14),
@@ -319,7 +366,6 @@ void _showExcessWarningDialog(BuildContext context) {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  // กล่องขาวด้านใน (list nutrient)
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(10),
@@ -330,20 +376,11 @@ void _showExcessWarningDialog(BuildContext context) {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: const [
-                        _ExcessRow(
-                          label: 'Sodium',
-                          value: '501 mg (102%)',
-                        ),
+                        _ExcessRow(label: 'Sodium', value: '501 mg (102%)'),
                         SizedBox(height: 4),
-                        _ExcessRow(
-                          label: 'Sugar',
-                          value: '21 g (103%)',
-                        ),
+                        _ExcessRow(label: 'Sugar', value: '21 g (103%)'),
                         SizedBox(height: 4),
-                        _ExcessRow(
-                          label: 'Fat',
-                          value: '41 g (130%)',
-                        ),
+                        _ExcessRow(label: 'Fat', value: '41 g (130%)'),
                       ],
                     ),
                   ),
@@ -362,13 +399,11 @@ void _showExcessWarningDialog(BuildContext context) {
             ),
             const SizedBox(height: 16),
 
-            // ปุ่ม No / Yes
             Row(
               children: [
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      // ❌ ไม่เพิ่ม: แค่ปิด dialog แล้วอยู่หน้าเดิม
                       Navigator.of(dialogCtx).pop();
                     },
                     style: ElevatedButton.styleFrom(
@@ -376,8 +411,7 @@ void _showExcessWarningDialog(BuildContext context) {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      padding:
-                          const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
                     child: const Text(
                       'No',
@@ -390,7 +424,6 @@ void _showExcessWarningDialog(BuildContext context) {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      // ✅ Yes: ปิด dialog แล้วไปหน้าต่อไป
                       Navigator.of(dialogCtx).pop();
                       Navigator.push(
                         context,
@@ -404,8 +437,7 @@ void _showExcessWarningDialog(BuildContext context) {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      padding:
-                          const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
                     child: const Text(
                       'Yes',
@@ -436,11 +468,7 @@ class _ExcessRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Icon(
-          Icons.circle,
-          size: 8,
-          color: Colors.black54,
-        ),
+        const Icon(Icons.circle, size: 8, color: Colors.black54),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
@@ -456,7 +484,7 @@ class _ExcessRow extends StatelessWidget {
   }
 }
 
-/* ----------------------- Helper Widgets ----------------------- */
+/* ------------------------ Helper Widgets ------------------------ */
 
 class _DropdownBox extends StatelessWidget {
   final String defaultValue;
@@ -519,7 +547,7 @@ class _NutrientItem extends StatelessWidget {
   }
 }
 
-/* ======================== NAVIGATION BAR ======================== */
+/* ======================== BOTTOM NAVIGATION BAR ======================== */
 
 class _BottomBarItems extends StatelessWidget {
   const _BottomBarItems({
@@ -570,12 +598,14 @@ class _BottomBarItems extends StatelessWidget {
         Expanded(child: item(idx: 0, icon: Icons.home_rounded, label: 'Home')),
         Expanded(child: item(idx: 1, icon: Icons.restaurant_menu_rounded, label: 'Meal')),
         const Expanded(child: SizedBox.shrink()),
-        Expanded(child: item(idx: 3, icon: Icons.person_rounded, label: 'Profile')),
-        Expanded(child: item(idx: 4, icon: Icons.settings_rounded, label: 'Setting')),
+        Expanded(child: item(idx: 3, icon: Icons.calendar_month_rounded, label: 'Diary')),
+        Expanded(child: item(idx: 4, icon: Icons.person_rounded, label: 'Profile')),
       ],
     );
   }
 }
+
+/* ======================== CAPTURE BUTTON ======================== */
 
 class _CaptureFab extends StatelessWidget {
   const _CaptureFab({
@@ -618,4 +648,22 @@ class _CaptureFab extends StatelessWidget {
       ),
     );
   }
+}
+
+/* ======================= TOP BUTTON WIDGET ======================= */
+
+Widget _topBtn({required IconData icon, required VoidCallback onTap}) {
+  return Material(
+    color: Colors.white.withOpacity(0.95),
+    shape: const CircleBorder(),
+    child: InkWell(
+      customBorder: const CircleBorder(),
+      onTap: onTap,
+      child: SizedBox(
+        width: 38,
+        height: 38,
+        child: Icon(icon, size: 20, color: Colors.black87),
+      ),
+    ),
+  );
 }

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-
-// Replace with your actual profile screen import
 import 'profile_screen.dart';
-import 'main.dart'; // ✅ เพิ่ม import main.dart
+import 'main.dart';
 
 class KnowledgeStep2Screen extends StatelessWidget {
   const KnowledgeStep2Screen({super.key});
@@ -13,6 +11,7 @@ class KnowledgeStep2Screen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F7),
+
       appBar: AppBar(
         surfaceTintColor: Colors.white,
         backgroundColor: Colors.white,
@@ -52,14 +51,13 @@ class KnowledgeStep2Screen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Text(
-                    '« back',
-                    style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w700),
-                  ),
+                  child: const Text('« back',
+                      style: TextStyle(
+                          color: Colors.black87, fontWeight: FontWeight.w700)),
                 ),
               ),
-              const SizedBox(height: 8),
 
+              const SizedBox(height: 8),
               Center(
                 child: Text(
                   'Welcome Monser.',
@@ -78,26 +76,23 @@ class KnowledgeStep2Screen extends StatelessWidget {
                 _K2PeachMetric(icon: Icons.local_fire_department_rounded, label: 'BMR', value: '2561'),
                 _K2PeachMetric(icon: Icons.bolt_rounded, label: 'TDEE', value: '3564'),
               ]),
-              const SizedBox(height: 16),
 
-              const Text(
-                'Basic knowledge',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-              ),
+              const SizedBox(height: 16),
+              const Text('Basic knowledge',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+
               const SizedBox(height: 8),
 
               _K2Card(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: const [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _K2CardHeader(left: '', right: 'Daily nutrition'),
-                      ],
+                      children: [ _K2CardHeader(left: '', right: 'Daily nutrition') ],
                     ),
                     SizedBox(height: 6),
+
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -111,29 +106,21 @@ class KnowledgeStep2Screen extends StatelessWidget {
                   ],
                 ),
               ),
+
               const SizedBox(height: 12),
 
               _K2Card(
                 padding: const EdgeInsets.all(14),
                 child: Column(
                   children: const [
-                    _K2ExplainRow(
-                      leftTitle: 'BMR',
-                      rightText:
-                          'The number of calories your body needs to maintain basic functions at rest (breathing, circulation, organ function).',
-                    ),
+                    _K2ExplainRow(leftTitle: 'BMR', rightText:
+                        'The calories your body needs at rest (breathing, circulation, organ function).'),
                     SizedBox(height: 14),
-                    _K2ExplainRow(
-                      leftTitle: 'TDEE',
-                      rightText:
-                          'The total calories you burn in a day, including BMR plus physical activity and digestion.',
-                    ),
+                    _K2ExplainRow(leftTitle: 'TDEE', rightText:
+                        'The total calories you burn daily including activity + digestion.'),
                     SizedBox(height: 14),
-                    _K2ExplainRow(
-                      leftTitle: 'BMI',
-                      rightText:
-                          'A simple ratio of weight to height used to categorize underweight, normal, overweight, or obese — but it doesn’t measure body fat directly.',
-                    ),
+                    _K2ExplainRow(leftTitle: 'BMI', rightText:
+                        'A simple weight/height ratio to categorize body condition; not body-fat direct.'),
                   ],
                 ),
               ),
@@ -145,12 +132,9 @@ class KnowledgeStep2Screen extends StatelessWidget {
                 children: [
                   FilledButton.tonal(
                     onPressed: () {
-                      // ✅ กลับไปหน้า main.dart (MainHomeScreen) และล้าง stack
                       Navigator.pushAndRemoveUntil(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => const MainHomeScreen(),
-                        ),
+                        MaterialPageRoute(builder: (_) => const MainHomeScreen()),
                         (route) => false,
                       );
                     },
@@ -164,30 +148,31 @@ class KnowledgeStep2Screen extends StatelessWidget {
                   ),
                 ],
               ),
+
               const SizedBox(height: 100),
             ],
           ),
         ),
       ),
 
-      floatingActionButton: _K2CaptureFab(
-        onPressed: () {
-          // handle camera/fab tap
-        },
-      ),
+      // 🍑 FAB กล้องตรงกลางแบบเหมือนหน้าแรก
+      floatingActionButton: const _CaptureFab(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
-      bottomNavigationBar: _K2BottomBar(
-        currentIndex: 0,
-        onTap: (index) {
-          // handle tab switching here
+      // 🍑 Bottom Navbar แบบเดียวกับหน้าแรก (Home – Meal – Capture – Diary – Profile)
+      bottomNavigationBar: _BottomNavBar(
+        currentIndex: 1,
+        onTap: (i) {
+          if (i == 2) return; // central Capture via FAB
         },
       ),
     );
   }
 }
 
-/* ============================= Helper Widgets ============================= */
+/* -------------------------------------------------------------------------- */
+/*                                METRIC STRIP                                */
+/* -------------------------------------------------------------------------- */
 
 class _K2PeachStrip extends StatelessWidget {
   const _K2PeachStrip({required this.items});
@@ -205,22 +190,18 @@ class _K2PeachStrip extends StatelessWidget {
       ),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: items
             .map(
               (e) => Expanded(
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(e.icon, size: 22, color: Colors.black87),
                     const SizedBox(height: 6),
-                    Text(e.label, style: const TextStyle(fontSize: 12, color: Colors.black87)),
+                    Text(e.label, style: const TextStyle(fontSize: 12)),
                     const SizedBox(height: 2),
                     Text(e.value,
                         style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                            color: accent,
-                            fontSize: 12)),
+                            fontWeight: FontWeight.w700, color: accent, fontSize: 12)),
                   ],
                 ),
               ),
@@ -238,6 +219,10 @@ class _K2PeachMetric {
   const _K2PeachMetric({required this.icon, required this.label, required this.value});
 }
 
+/* -------------------------------------------------------------------------- */
+/*                                   CARDS                                    */
+/* -------------------------------------------------------------------------- */
+
 class _K2Card extends StatelessWidget {
   const _K2Card({required this.child, this.padding});
   final Widget child;
@@ -253,16 +238,17 @@ class _K2Card extends StatelessWidget {
         border: Border.all(color: const Color(0xFFE6E6E6)),
         boxShadow: const [
           BoxShadow(
-            blurRadius: 8,
-            offset: Offset(0, 2),
-            color: Color(0x11000000),
-          )
+              blurRadius: 8, offset: Offset(0, 2), color: Color(0x11000000)),
         ],
       ),
       child: child,
     );
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/*                               CARD COMPONENTS                               */
+/* -------------------------------------------------------------------------- */
 
 class _K2DailyTile extends StatelessWidget {
   const _K2DailyTile({
@@ -275,9 +261,7 @@ class _K2DailyTile extends StatelessWidget {
 
   final IconData icon;
   final String title;
-  final String line1;
-  final String line2;
-  final String line3;
+  final String line1, line2, line3;
 
   @override
   Widget build(BuildContext context) {
@@ -285,11 +269,11 @@ class _K2DailyTile extends StatelessWidget {
       width: 54,
       child: Column(
         children: [
-          Icon(icon, size: 22, color: Colors.black87),
+          Icon(icon, size: 22),
           const SizedBox(height: 4),
           Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
           const SizedBox(height: 2),
-          Text(line1, style: const TextStyle(fontSize: 11, color: Colors.black87)),
+          Text(line1, style: const TextStyle(fontSize: 11)),
           Text(line2, style: const TextStyle(fontSize: 10, color: Colors.black54)),
           Text(line3, style: const TextStyle(fontSize: 10, color: Colors.black54)),
         ],
@@ -300,12 +284,12 @@ class _K2DailyTile extends StatelessWidget {
 
 class _K2CardHeader extends StatelessWidget {
   const _K2CardHeader({required this.left, required this.right});
-  final String left;
-  final String right;
+  final String left, right;
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700);
+    final style =
+        Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [Text(left, style: style), Text(right, style: style)],
@@ -315,8 +299,7 @@ class _K2CardHeader extends StatelessWidget {
 
 class _K2ExplainRow extends StatelessWidget {
   const _K2ExplainRow({required this.leftTitle, required this.rightText});
-  final String leftTitle;
-  final String rightText;
+  final String leftTitle, rightText;
 
   @override
   Widget build(BuildContext context) {
@@ -324,67 +307,55 @@ class _K2ExplainRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          width: 64,
-          child: Text(leftTitle,
-              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-        ),
+            width: 64,
+            child: Text(leftTitle,
+                style:
+                    const TextStyle(fontWeight: FontWeight.w800, fontSize: 16))),
         const SizedBox(width: 8),
         Expanded(
-          child: Text(rightText,
-              style: const TextStyle(fontSize: 13, height: 1.25)),
-        ),
+          child: Text(
+            rightText,
+            style: const TextStyle(fontSize: 13, height: 1.25),
+          ),
+        )
       ],
     );
   }
 }
 
-/* ============================= Bottom Bar & FAB ============================= */
+/* -------------------------------------------------------------------------- */
+/*                           NEW NAVBAR (MATCH UI)                            */
+/* -------------------------------------------------------------------------- */
 
-class _K2BottomBar extends StatelessWidget {
-  const _K2BottomBar({required this.currentIndex, required this.onTap});
+class _BottomNavBar extends StatelessWidget {
+  const _BottomNavBar({required this.currentIndex, required this.onTap});
   final int currentIndex;
   final ValueChanged<int> onTap;
 
   @override
   Widget build(BuildContext context) {
-    const peach = Color(0xFFFFE1C7);
-    final active = Theme.of(context).colorScheme.primary;
-    const inactive = Colors.black54;
+    const inactive = Color(0xFF8E8E8E);
+    const active = Color(0xFFFFA94D);
 
-    Widget item({
-      required int idx,
-      required IconData icon,
-      required String label,
-    }) {
+    Widget item({required int idx, required IconData icon, required String label}) {
       final selected = currentIndex == idx;
+
       return Expanded(
         child: InkWell(
-          onTap: () {
-            if (idx == 3) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProfileScreen()),
-              );
-            } else {
-              onTap(idx);
-            }
-          },
-          splashFactory: InkRipple.splashFactory,
+          onTap: () => onTap(idx),
           child: Padding(
-            padding: const EdgeInsets.only(top: 6),
+            padding: const EdgeInsets.only(top: 10),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(icon, size: 24, color: selected ? active : inactive),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                    color: selected ? active : inactive,
-                  ),
-                ),
+                      fontSize: 11,
+                      color: selected ? active : inactive,
+                      fontWeight: FontWeight.w500),
+                )
               ],
             ),
           ),
@@ -393,60 +364,69 @@ class _K2BottomBar extends StatelessWidget {
     }
 
     return BottomAppBar(
-      height: 84,
-      color: peach,
-      elevation: 8,
+      height: 88,
+      color: const Color(0xFFFFE1C7),
       shape: const CircularNotchedRectangle(),
-      notchMargin: 10,
-      child: SafeArea(
-        top: false,
-        minimum: const EdgeInsets.only(bottom: 6),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            item(idx: 0, icon: Icons.home_rounded, label: 'Home'),
-            item(idx: 1, icon: Icons.restaurant_menu_rounded, label: 'Meal'),
-            const Expanded(child: SizedBox.shrink()),
-            item(idx: 3, icon: Icons.person_rounded, label: 'Profile'),
-            item(idx: 4, icon: Icons.settings_rounded, label: 'Setting'),
-          ],
-        ),
+      notchMargin: 8,
+      child: Row(
+        children: [
+          item(idx: 0, icon: Icons.home_rounded, label: "Home"),
+          item(idx: 1, icon: Icons.menu_book_rounded, label: "Meal"),
+          const Expanded(child: SizedBox.shrink()), // เว้นที่ปุ่ม Capture
+          item(idx: 3, icon: Icons.calendar_month_rounded, label: "Diary"),
+          item(idx: 4, icon: Icons.person_rounded, label: "Profile"),
+        ],
       ),
     );
   }
 }
 
-class _K2CaptureFab extends StatelessWidget {
-  const _K2CaptureFab({required this.onPressed, this.isSelected = false});
-  final VoidCallback onPressed;
-  final bool isSelected;
+/* -------------------------------------------------------------------------- */
+/*                          CAPTURE FAB (MATCH UI)                           */
+/* -------------------------------------------------------------------------- */
+
+class _CaptureFab extends StatelessWidget {
+  const _CaptureFab();
 
   @override
   Widget build(BuildContext context) {
-    final active = Theme.of(context).colorScheme.primary;
-
     return SizedBox(
-      width: 68,
-      height: 68,
-      child: Material(
-        color: Colors.white,
-        shape: const CircleBorder(),
-        elevation: 8,
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onPressed,
-          child: Center(
+      width: 78,
+      height: 78,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned(
+            bottom: 0,
             child: Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: isSelected ? active : Colors.black,
-                shape: BoxShape.circle,
+              width: 72,
+              height: 36,
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFE1C7),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
               ),
-              child: const Icon(Icons.photo_camera_rounded, size: 26, color: Colors.white),
             ),
           ),
-        ),
+          Material(
+            color: Colors.white,
+            elevation: 6,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: () {},
+              child: Container(
+                width: 62,
+                height: 62,
+                decoration: const BoxDecoration(
+                  color: Colors.black,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.photo_camera_rounded,
+                    size: 30, color: Colors.white),
+              ),
+            ),
+          )
+        ],
       ),
     );
   }

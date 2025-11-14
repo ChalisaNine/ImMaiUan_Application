@@ -39,69 +39,106 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
     const peach = Color(0xFFFFE1C7);
 
     final pages = <Widget>[
-      const _HomeScreen(),
+      const _HomeScreen(),        // 0
       const Center(child: Text('Meal Screen')),
       const Center(child: Text('Capture Screen')),
+      const Center(child: Text('Diary Screen')),
       const ProfileScreen(),
-      const Center(child: Text('Setting Screen')),
     ];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F7),
+
       appBar: AppBar(
-        surfaceTintColor: Colors.white,
-        backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.calendar_today_rounded),
+        backgroundColor: Colors.white,
+        toolbarHeight: 68,
+        automaticallyImplyLeading: false,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const SizedBox(width: 40),
+            Image.asset('assets/immaiuan_logo.jpg', height: 38),
+            IconButton(
+              onPressed: () => setState(() => _index = 4),
+              icon: const Icon(Icons.tune_rounded, size: 26),
+            ),
+          ],
         ),
-        centerTitle: true,
-        title: SizedBox(
-          height: 40,
-          child: Image.asset('assets/immaiuan_logo.jpg', fit: BoxFit.contain),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.tune_rounded),
-          ),
-        ],
       ),
 
       body: pages[_index],
 
-      floatingActionButton: _CaptureFab(
-        onPressed: () {
-          setState(() => _index = 2);
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AiImageScreen()),
-          );
-        },
-        isSelected: _index == 2,
-      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: SizedBox(
+        width: 74,
+        height: 74,
+        child: FloatingActionButton(
+          backgroundColor: const Color(0xFF825C2A),
+          shape: const CircleBorder(),
+          elevation: 6,
+          onPressed: () {
+            setState(() => _index = 2);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AiImageScreen()),
+            );
+          },
+          child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 32),
+        ),
+      ),
 
       bottomNavigationBar: BottomAppBar(
-        height: 80,
         color: peach,
+        height: 90,
         shape: const CircularNotchedRectangle(),
         notchMargin: 10,
         child: SafeArea(
-          top: false,
-          minimum: const EdgeInsets.only(bottom: 6),
-          child: _BottomBarItems(
-            currentIndex: _index,
-            onTap: _onTap,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _navItem(0, Icons.home_rounded, "Home"),
+              _navItem(1, Icons.restaurant_menu_rounded, "Meal"),
+              const SizedBox(width: 36),
+              _navItem(3, Icons.calendar_month_rounded, "Diary"),
+              _navItem(4, Icons.person_rounded, "Profile"),
+            ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _navItem(int index, IconData icon, String label) {
+    final active = Theme.of(context).colorScheme.primary;
+    final selected = _index == index;
+
+    return InkWell(
+      onTap: () => _onTap(index),
+      child: Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon,
+                size: 26, color: selected ? active : Colors.black54),
+            const SizedBox(height: 2),
+            Text(label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: selected ? active : Colors.black54,
+                )),
+          ],
         ),
       ),
     );
   }
 }
 
-/* ============================ HOME SCREEN ============================ */
+/* ------------------------------------------------------------
+ *                HOME SCREEN (ข้อมูลกลับมาครบ)
+ * ------------------------------------------------------------ */
 
 class _HomeScreen extends StatelessWidget {
   const _HomeScreen();
@@ -119,23 +156,22 @@ class _HomeScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 4),
+
+            // ------------------ DATE AREA ------------------
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _arrowButton(Icons.chevron_left_rounded),
                 const SizedBox(width: 8),
-                const Text(
-                  '2 November',
-                  style: TextStyle(
-                      fontSize: 17, fontWeight: FontWeight.w600),
-                ),
+                const Text('2 November',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
                 const SizedBox(width: 8),
                 _arrowButton(Icons.chevron_right_rounded),
               ],
             ),
             const SizedBox(height: 20),
 
-            // Basic knowledge card
+            // ------------------ BASIC KNOWLEDGE BOX ------------------
             InkWell(
               borderRadius: BorderRadius.circular(14),
               onTap: () {
@@ -146,16 +182,16 @@ class _HomeScreen extends StatelessWidget {
               },
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
                   color: lightPeach,
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: const [
                     BoxShadow(
-                      color: Color(0x14000000),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    )
+                        color: Color(0x14000000),
+                        blurRadius: 8,
+                        offset: Offset(0, 2))
                   ],
                 ),
                 child: Row(
@@ -164,9 +200,8 @@ class _HomeScreen extends StatelessWidget {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10)),
                       child: const Icon(Icons.menu_book_rounded,
                           size: 24, color: Colors.black87),
                     ),
@@ -177,13 +212,11 @@ class _HomeScreen extends StatelessWidget {
                         children: [
                           Text('Basic knowledge',
                               style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700)),
+                                  fontSize: 16, fontWeight: FontWeight.w700)),
                           SizedBox(height: 2),
                           Text('Tap to learn Daily Nutrition and tips',
                               style: TextStyle(
-                                  fontSize: 12.5,
-                                  color: Colors.black54)),
+                                  fontSize: 12.5, color: Colors.black54)),
                         ],
                       ),
                     ),
@@ -193,7 +226,7 @@ class _HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 22),
 
-            // Goal progress
+            // ------------------ GOAL BOX ------------------
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(18),
@@ -202,18 +235,17 @@ class _HomeScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: const [
                   BoxShadow(
-                    color: Color(0x11000000),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
-                  )
+                      color: Color(0x11000000),
+                      blurRadius: 8,
+                      offset: Offset(0, 2)),
                 ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text('Goal',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w700, fontSize: 16)),
+                      style:
+                          TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
                   const SizedBox(height: 14),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -234,8 +266,7 @@ class _HomeScreen extends StatelessWidget {
                           const Text('45%\nprogress',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 12.5)),
+                                  fontWeight: FontWeight.w600, fontSize: 12.5)),
                         ],
                       ),
                       Column(
@@ -243,13 +274,11 @@ class _HomeScreen extends StatelessWidget {
                         children: const [
                           Text('Target weight',
                               style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.black54)),
+                                  fontSize: 13, color: Colors.black54)),
                           SizedBox(height: 4),
                           Text('78 kg  →  65 kg',
                               style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15)),
+                                  fontWeight: FontWeight.w700, fontSize: 15)),
                         ],
                       ),
                       Column(
@@ -257,13 +286,11 @@ class _HomeScreen extends StatelessWidget {
                         children: const [
                           Text('Days',
                               style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.black54)),
+                                  fontSize: 13, color: Colors.black54)),
                           SizedBox(height: 4),
                           Text('365 Days',
                               style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15)),
+                                  fontWeight: FontWeight.w700, fontSize: 15)),
                         ],
                       ),
                     ],
@@ -271,29 +298,29 @@ class _HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
+
             const SizedBox(height: 20),
 
-            // Nutrients today
+            // ------------------ NUTRIENT BOX ------------------
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+              padding:
+                  const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
               decoration: BoxDecoration(
                 color: lightPeach,
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: const [
                   BoxShadow(
-                    color: Color(0x11000000),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
-                  )
+                      color: Color(0x11000000),
+                      blurRadius: 8,
+                      offset: Offset(0, 2)),
                 ],
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Text('Nutrients received today',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w700, fontSize: 15)),
+                      style:
+                          TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
                   const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -328,7 +355,8 @@ class _HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 80),
+
+            const SizedBox(height: 90),
           ],
         ),
       ),
@@ -342,10 +370,9 @@ class _HomeScreen extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: const [
           BoxShadow(
-            color: Color(0x11000000),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          )
+              color: Color(0x11000000),
+              blurRadius: 4,
+              offset: Offset(0, 2)),
         ],
       ),
       child: IconButton(
@@ -355,8 +382,6 @@ class _HomeScreen extends StatelessWidget {
     );
   }
 }
-
-/* ============================ Nutrient Widget ============================ */
 
 class _NutrientItem extends StatelessWidget {
   const _NutrientItem({
@@ -381,112 +406,12 @@ class _NutrientItem extends StatelessWidget {
             style: const TextStyle(
                 fontSize: 12, fontWeight: FontWeight.w600)),
         Text(percent,
-            style: const TextStyle(
-                fontSize: 11, color: Colors.black54)),
+            style:
+                const TextStyle(fontSize: 11, color: Colors.black54)),
         Text(value,
-            style: const TextStyle(
-                fontSize: 10, color: Colors.black54)),
+            style:
+                const TextStyle(fontSize: 10, color: Colors.black54)),
       ],
-    );
-  }
-}
-
-/* ============================ Bottom Bar ============================ */
-
-class _BottomBarItems extends StatelessWidget {
-  const _BottomBarItems({
-    required this.currentIndex,
-    required this.onTap,
-  });
-
-  final int currentIndex;
-  final ValueChanged<int> onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final active = Theme.of(context).colorScheme.primary;
-    const inactive = Colors.black54;
-
-    Widget item({
-      required int idx,
-      required IconData icon,
-      required String label,
-    }) {
-      final selected = currentIndex == idx;
-      return InkWell(
-        onTap: () => onTap(idx),
-        child: Padding(
-          padding: const EdgeInsets.only(top: 6),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 24, color: selected ? active : inactive),
-              const SizedBox(height: 2),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w600,
-                  color: selected ? active : inactive,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Expanded(child: item(idx: 0, icon: Icons.home_rounded, label: 'Home')),
-        Expanded(child: item(idx: 1, icon: Icons.restaurant_menu_rounded, label: 'Meal')),
-        const Expanded(child: SizedBox.shrink()),
-        Expanded(child: item(idx: 3, icon: Icons.person_rounded, label: 'Profile')),
-        Expanded(child: item(idx: 4, icon: Icons.settings_rounded, label: 'Setting')),
-      ],
-    );
-  }
-}
-
-/* ============================ FAB Camera ============================ */
-
-class _CaptureFab extends StatelessWidget {
-  const _CaptureFab({
-    required this.onPressed,
-    this.isSelected = false,
-  });
-
-  final VoidCallback onPressed;
-  final bool isSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final active = Theme.of(context).colorScheme.primary;
-    return SizedBox(
-      width: 68,
-      height: 68,
-      child: Material(
-        color: Colors.white,
-        shape: const CircleBorder(),
-        elevation: 8,
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onPressed,
-          child: Center(
-            child: Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: isSelected ? active : Colors.black,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.photo_camera_rounded,
-                  size: 26, color: Colors.white),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

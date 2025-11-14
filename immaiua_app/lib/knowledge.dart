@@ -17,8 +17,8 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
     _BasicKnowledgeBody(),
     Center(child: Text('Meal Screen')),
     Center(child: Text('Capture Screen')),
+    Center(child: Text('Diary Screen')),
     Center(child: Text('Profile Screen')),
-    Center(child: Text('Setting Screen')),
   ];
 
   void _onTap(int i) => setState(() => _index = i);
@@ -29,6 +29,7 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F7),
+
       appBar: AppBar(
         surfaceTintColor: Colors.white,
         backgroundColor: Colors.white,
@@ -38,7 +39,6 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
           icon: const Icon(Icons.calendar_today_rounded),
         ),
         centerTitle: true,
-        // โลโก้ตรงกลาง
         title: SizedBox(
           height: 36,
           child: Image.asset('assets/immaiuan_logo.jpg', fit: BoxFit.contain),
@@ -53,23 +53,20 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
 
       body: _pages[_index],
 
-      // FAB กล้องวงกลมตรงกลาง
       floatingActionButton: _CaptureFab(
         onPressed: () => _onTap(2),
-        isSelected: _index == 2,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
-      // Bottom bar พร้อม spacing เท่ากัน
       bottomNavigationBar: BottomAppBar(
-        height: 84,
+        height: 90,
+        elevation: 0,
         color: peach,
-        elevation: 8,
         shape: const CircularNotchedRectangle(),
-        notchMargin: 10,
+        notchMargin: 8,
         child: SafeArea(
           top: false,
-          minimum: const EdgeInsets.only(bottom: 6),
+          minimum: const EdgeInsets.only(bottom: 8),
           child: _BottomBarItems(
             currentIndex: _index,
             onTap: _onTap,
@@ -80,7 +77,7 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
   }
 }
 
-/* ======================== เนื้อหาในหน้า ======================== */
+/* ======================== CONTENT ======================== */
 
 class _BasicKnowledgeBody extends StatelessWidget {
   const _BasicKnowledgeBody();
@@ -97,9 +94,9 @@ class _BasicKnowledgeBody extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Welcome + แถบค่าพีช
             Center(child: Text('Welcome Monser.', style: titleStyle)),
             const SizedBox(height: 12),
+
             const _PeachStrip(
               items: [
                 _PeachMetric(icon: Icons.fitness_center_rounded, label: 'Weight', value: '78 kg'),
@@ -115,132 +112,73 @@ class _BasicKnowledgeBody extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
             const SizedBox(height: 8),
 
-            // การ์ด 1: Daily nutrition
             _CardContainer(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _CardHeaderRow(left: '', right: 'Daily nutrition'),
-                      ],
-                    ),
-                     SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [ _CardHeaderRow(left: '', right: 'Daily nutrition') ],
+                  ),
+                  SizedBox(height: 6),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _DailyItem(
-                        icon: Icons.cookie_rounded,
-                        title: 'Sugar',
-                        line1: '31 g',
-                        line2: 'Suggested',
-                        line3: 'per day',
-                      ),
-                      _DailyItem(
-                        icon: Icons.rice_bowl_rounded,
-                        title: 'Carb',
-                        line1: '315 g',
-                        line2: 'Suggested',
-                        line3: 'per day',
-                      ),
-                      _DailyItem(
-                        icon: Icons.egg_rounded,
-                        title: 'Protein',
-                        line1: '120 g',
-                        line2: 'Suggested',
-                        line3: 'per day',
-                      ),
-                      _DailyItem(
-                        icon: Icons.oil_barrel_rounded,
-                        title: 'Fat',
-                        line1: '78 g',
-                        line2: 'Suggested',
-                        line3: 'per day',
-                      ),
-                      _DailyItem(
-                        icon: Icons.snowing,
-                        title: 'Sodium',
-                        line1: '2434 mg',
-                        line2: 'Suggested',
-                        line3: 'per day',
-                      ),
+                      _DailyItem(icon: Icons.cookie_rounded, title: 'Sugar', line1: '31 g', line2: 'Suggested', line3: 'per day'),
+                      _DailyItem(icon: Icons.rice_bowl_rounded, title: 'Carb', line1: '315 g', line2: 'Suggested', line3: 'per day'),
+                      _DailyItem(icon: Icons.egg_rounded, title: 'Protein', line1: '120 g', line2: 'Suggested', line3: 'per day'),
+                      _DailyItem(icon: Icons.oil_barrel_rounded, title: 'Fat', line1: '78 g', line2: 'Suggested', line3: 'per day'),
+                      _DailyItem(icon: Icons.snowing, title: 'Sodium', line1: '2434 mg', line2: 'Suggested', line3: 'per day'),
                     ],
                   ),
                 ],
               ),
             ),
+
             const SizedBox(height: 12),
 
-            // การ์ด 2: คำอธิบายโภชนาการ
             _CardContainer(
               padding: const EdgeInsets.all(12),
               child: Column(
                 children: const [
-                  _InfoRow(
-                    icon: Icons.cookie_rounded,
-                    title: 'Sugar',
-                    text:
-                        'Sugar comes from fruits, honey, and processed sweets; calculate by multiplying grams by 4 kcal.',
-                  ),
+                  _InfoRow(icon: Icons.cookie_rounded, title: 'Sugar', text: 'Sugar comes from fruits, honey, and sweets; calculate grams × 4 kcal.'),
                   SizedBox(height: 10),
-                  _InfoRow(
-                    icon: Icons.rice_bowl_rounded,
-                    title: 'Carb',
-                    text:
-                        'Carbohydrates are found in grains, rice, bread, and pasta; energy calculation is grams × 4 kcal.',
-                  ),
+                  _InfoRow(icon: Icons.rice_bowl_rounded, title: 'Carb', text: 'Carbohydrates from rice, grains, bread; grams × 4 kcal.'),
                   SizedBox(height: 10),
-                  _InfoRow(
-                    icon: Icons.egg_rounded,
-                    title: 'Protein',
-                    text:
-                        'Protein is in meat, fish, eggs, and beans; for energy, multiply grams by 4 kcal.',
-                  ),
+                  _InfoRow(icon: Icons.egg_rounded, title: 'Protein', text: 'Protein from meat, eggs, fish, beans; grams × 4 kcal.'),
                   SizedBox(height: 10),
-                  _InfoRow(
-                    icon: Icons.oil_barrel_rounded,
-                    title: 'Fat',
-                    text:
-                        'Fat is found in oils, butter, nuts, and cheese; for calories, multiply grams by 9 kcal.',
-                  ),
+                  _InfoRow(icon: Icons.oil_barrel_rounded, title: 'Fat', text: 'Fat from oils, nuts, cheese; grams × 9 kcal.'),
                   SizedBox(height: 10),
-                  _InfoRow(
-                    icon: Icons.snowing,
-                    title: 'Sodium',
-                    text:
-                        'Sodium is present in salt, processed foods, and sauces; listed in mg, but has no calorie value.',
-                  ),
+                  _InfoRow(icon: Icons.snowing, title: 'Sodium', text: 'Sodium in salt and sauces; measured in mg, no calories.'),
                 ],
               ),
             ),
 
             const SizedBox(height: 16),
 
-            // ปุ่ม Next
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 FilledButton.tonal(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const KnowledgeStep2Screen()),
-                      );
-                    },
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: const Row(
-                      children: [
-                        Text('Next'),
-                        SizedBox(width: 8),
-                        Icon(Icons.double_arrow_rounded, size: 18),
-                      ],
-                    ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const KnowledgeStep2Screen()),
+                    );
+                  },
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
+                  child: const Row(
+                    children: [
+                      Text('Next'),
+                      SizedBox(width: 8),
+                      Icon(Icons.double_arrow_rounded, size: 18),
+                    ],
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 100),
@@ -251,7 +189,7 @@ class _BasicKnowledgeBody extends StatelessWidget {
   }
 }
 
-/* ======================== Widgets ช่วยประกอบ ======================== */
+/* ======================== METRIC STRIP ======================== */
 
 class _PeachStrip extends StatelessWidget {
   const _PeachStrip({required this.items});
@@ -274,7 +212,7 @@ class _PeachStrip extends StatelessWidget {
                     children: [
                       Icon(e.icon, size: 22, color: Colors.black87),
                       const SizedBox(height: 6),
-                      Text(e.label, style: const TextStyle(fontSize: 12, color: Colors.black87)),
+                      Text(e.label, style: const TextStyle(fontSize: 12)),
                       const SizedBox(height: 2),
                       Text(e.value,
                           style: const TextStyle(
@@ -294,6 +232,8 @@ class _PeachMetric {
   final String value;
   const _PeachMetric({required this.icon, required this.label, required this.value});
 }
+
+/* ======================== CARD ======================== */
 
 class _CardContainer extends StatelessWidget {
   const _CardContainer({required this.child, this.padding});
@@ -334,6 +274,8 @@ class _CardHeaderRow extends StatelessWidget {
   }
 }
 
+/* ======================== DAILY ITEM ======================== */
+
 class _DailyItem extends StatelessWidget {
   const _DailyItem({
     required this.icon,
@@ -359,7 +301,7 @@ class _DailyItem extends StatelessWidget {
           const SizedBox(height: 4),
           Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
           const SizedBox(height: 2),
-          Text(line1, style: const TextStyle(fontSize: 11, color: Colors.black87)),
+          Text(line1, style: const TextStyle(fontSize: 11)),
           Text(line2, style: const TextStyle(fontSize: 10, color: Colors.black54)),
           Text(line3, style: const TextStyle(fontSize: 10, color: Colors.black54)),
         ],
@@ -367,6 +309,8 @@ class _DailyItem extends StatelessWidget {
     );
   }
 }
+
+/* ======================== INFO ROW ======================== */
 
 class _InfoRow extends StatelessWidget {
   const _InfoRow({required this.icon, required this.title, required this.text});
@@ -382,9 +326,9 @@ class _InfoRow extends StatelessWidget {
         Container(
           width: 38,
           height: 38,
-          decoration:
-              BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(8)),
-          child: Icon(icon, size: 22, color: Colors.black87),
+          decoration: BoxDecoration(
+              color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(8)),
+          child: Icon(icon, size: 22),
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -393,9 +337,7 @@ class _InfoRow extends StatelessWidget {
             children: [
               Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
               const SizedBox(height: 2),
-              Text(text,
-                  style:
-                      const TextStyle(fontSize: 12.5, color: Colors.black87, height: 1.25)),
+              Text(text, style: const TextStyle(fontSize: 12.5, height: 1.25)),
             ],
           ),
         ),
@@ -404,7 +346,7 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-/* ======================== NavBar + FAB ======================== */
+/* ======================== NAVBAR ======================== */
 
 class _BottomBarItems extends StatelessWidget {
   const _BottomBarItems({required this.currentIndex, required this.onTap});
@@ -413,42 +355,33 @@ class _BottomBarItems extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final active = Theme.of(context).colorScheme.primary;
-    const inactive = Colors.black54;
+    const inactive = Color(0xFF8E8E8E);
+    const active = Color(0xFFFFA94D);
 
     Widget item({
       required int idx,
       required IconData icon,
       required String label,
+      Color? customColor,
     }) {
       final selected = currentIndex == idx;
+      final iconColor = customColor ?? (selected ? active : inactive);
+
       return InkWell(
-        onTap: () {
-          if (idx == 3) {
-            // โปรไฟล์ -> เปิดหน้าโปรไฟล์
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ProfileScreen()),
-            );
-          } else {
-            // แท็บอื่นให้ทำงานตามปกติ
-            onTap(idx);
-          }
-        },
-        splashFactory: InkRipple.splashFactory,
+        onTap: () => onTap(idx),
         child: Padding(
-          padding: const EdgeInsets.only(top: 6),
+          padding: const EdgeInsets.only(top: 10),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 24, color: selected ? active : inactive),
-              const SizedBox(height: 2),
+              Icon(icon, size: 24, color: iconColor),
+              const SizedBox(height: 4),
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w600,
-                  color: selected ? active : inactive,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: iconColor,
                 ),
               ),
             ],
@@ -458,49 +391,73 @@ class _BottomBarItems extends StatelessWidget {
     }
 
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Expanded(child: item(idx: 0, icon: Icons.home_rounded, label: 'Home')),
-        Expanded(child: item(idx: 1, icon: Icons.restaurant_menu_rounded, label: 'Meal')),
-        const Expanded(child: SizedBox.shrink()), // ช่องของ FAB
-        Expanded(child: item(idx: 3, icon: Icons.person_rounded, label: 'Profile')),
-        Expanded(child: item(idx: 4, icon: Icons.settings_rounded, label: 'Setting')),
+        Expanded(child: item(idx: 1, icon: Icons.menu_book_rounded, label: 'Meal')),
+        const Expanded(child: SizedBox.shrink()),
+        Expanded(
+          child: item(
+            idx: 3,
+            icon: Icons.calendar_month_rounded,
+            label: 'Diary',
+            customColor: currentIndex == 3 ? active : inactive,
+          ),
+        ),
+        Expanded(child: item(idx: 4, icon: Icons.person_rounded, label: 'Profile')),
       ],
     );
   }
 }
 
+/* ======================== CENTER FAB ======================== */
+
 class _CaptureFab extends StatelessWidget {
-  const _CaptureFab({required this.onPressed, this.isSelected = false});
+  const _CaptureFab({required this.onPressed});
   final VoidCallback onPressed;
-  final bool isSelected;
 
   @override
   Widget build(BuildContext context) {
-    final active = Theme.of(context).colorScheme.primary;
-
     return SizedBox(
-      width: 68,
-      height: 68,
-      child: Material(
-        color: Colors.white,
-        shape: const CircleBorder(),
-        elevation: 8,
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onPressed,
-          child: Center(
+      width: 78,
+      height: 78,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned(
+            bottom: 0,
             child: Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: isSelected ? active : Colors.black,
-                shape: BoxShape.circle,
+              width: 72,
+              height: 36,
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFE1C7),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
               ),
-              child: const Icon(Icons.photo_camera_rounded, size: 26, color: Colors.white),
             ),
           ),
-        ),
+
+          Material(
+            color: Colors.white,
+            shape: const CircleBorder(),
+            elevation: 6,
+            child: InkWell(
+              onTap: onPressed,
+              customBorder: const CircleBorder(),
+              child: Container(
+                width: 62,
+                height: 62,
+                decoration: const BoxDecoration(
+                  color: Colors.black,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.photo_camera_rounded,
+                  size: 30,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
