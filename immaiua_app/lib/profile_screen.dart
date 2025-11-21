@@ -1,105 +1,124 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'main.dart';
+import 'Meal.dart';
+import 'ai_image.dart';
+import 'Calenda.dart';
+import 'nav_bar.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFFF7F7F7),
-
-      // ❗ ไม่มี AppBar เพื่อไม่ให้ซ้อนกับ main.dart
-      appBar: null,
-
-      body: _ProfileBody(),
-    );
-  }
+  State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-/* ────────────────────────────────────────────────────────────── */
-/*                         PROFILE BODY                           */
-/* ────────────────────────────────────────────────────────────── */
+class _ProfileScreenState extends State<ProfileScreen> {
+  int _index = 4;
 
-class _ProfileBody extends StatelessWidget {
-  const _ProfileBody();
+  void _onTap(int i) {
+    setState(() => _index = i);
+
+    switch (i) {
+      case 0:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MainHomeScreen()),
+        );
+        break;
+
+      case 1:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MealScreen()),
+        );
+        break;
+
+      // ⭐ กลับไปใช้ AiImageScreen แบบเดิม (ไม่มี imagePath)
+      case 2:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const AiImageScreen(),
+          ),
+        );
+        break;
+
+      case 3:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const CalendaScreen()),
+        );
+        break;
+
+      case 4:
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     const peach = Color(0xFFFFE1C7);
 
-    return SafeArea(
-      top: false, // ใช้ AppBar จาก main.dart
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 30),
+    return MainScaffold(
+      currentIndex: _index,
+      onTap: _onTap,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 18),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
 
-            /* -------------------- PROFILE CARD -------------------- */
+            // ================= PROFILE HEADER =================
             Container(
+              padding: const EdgeInsets.symmetric(vertical: 18),
               decoration: BoxDecoration(
                 color: peach,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(20),
               ),
-              padding: const EdgeInsets.fromLTRB(16, 22, 16, 16),
               child: Column(
                 children: [
-                  // Avatar
-                  CircleAvatar(
+                  const CircleAvatar(
                     radius: 45,
-                    backgroundColor: Colors.white,
-                    child: const CircleAvatar(
-                      radius: 41,
-                      backgroundImage: AssetImage('assets/avatar.jpg'),
-                    ),
+                    backgroundImage: AssetImage('assets/profile.png'),
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
 
                   const Text(
                     "Monser",
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                    style: TextStyle(
+                      fontSize: 23,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
 
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
 
-                  FilledButton.tonal(
-                    onPressed: () {},
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.yellow.shade300,
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.yellow,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 18, vertical: 6),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.edit, size: 16, color: Colors.black87),
-                        SizedBox(width: 6),
-                        Text(
-                          "Edit",
-                          style: TextStyle(
-                              color: Colors.black87, fontWeight: FontWeight.w700),
-                        ),
-                      ],
-                    ),
+                    icon: const Icon(Icons.edit, size: 18),
+                    label: const Text("Edit"),
+                    onPressed: () {},
                   ),
 
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 18),
 
-                  // Metrics
+                  // ================= METRICS ROW =================
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
-                      _Metric(icon: Icons.fitness_center, label: "Weight", value: "78 kg"),
-                      _Metric(icon: Icons.height, label: "height", value: "176 cm"),
-                      _Metric(icon: Icons.monitor_weight, label: "BMI", value: "26.1"),
-                      _Metric(icon: Icons.local_fire_department, label: "BMR", value: "2561"),
-                      _Metric(icon: Icons.bolt, label: "TDEE", value: "3564"),
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _metric("Weight", "78 kg", Icons.fitness_center),
+                      _metric("Height", "176 cm", Icons.height),
+                      _metric("BMI", "26.1", Icons.monitor_weight),
+                      _metric("BMR", "2561", Icons.flash_on),
+                      _metric("TDEE", "3564", Icons.directions_run_rounded),
                     ],
                   ),
                 ],
@@ -108,137 +127,69 @@ class _ProfileBody extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            /* -------------------- PERSONAL INFO -------------------- */
-            _SettingCard(
-              items: const [
-                _SettingItem(icon: Icons.person, title: "Personal details"),
-                _SettingItem(icon: Icons.flag, title: "Adjust goal"),
-                _SettingItem(icon: Icons.settings, title: "Setting"),
-              ],
-            ),
+            // ================= MENU 1 =================
+            _menuBox([
+              _menuItem(Icons.person, "Personal details", onTap: () {}),
+              _menuItem(Icons.flag, "Adjust goal", onTap: () {}),
+              _menuItem(Icons.settings, "Setting", onTap: () {}),
+            ]),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
 
-            /* -------------------- SUPPORT + VERSION -------------------- */
-            _SettingCard(
-              items: const [
-                _SettingItem(icon: Icons.mail_rounded, title: "Support"),
-                _SettingItem(
-                    icon: Icons.tag_rounded, title: "Version", trailing: "1.0"),
-              ],
-            ),
+            // ================= MENU 2 =================
+            _menuBox([
+              _menuItem(Icons.chat_bubble_outline, "Support", onTap: () {}),
+              _menuItem(Icons.tag, "Version 1.0", onTap: () {}),
+            ]),
 
-            const SizedBox(height: 22),
-
-            FilledButton.tonal(
-              onPressed: () {},
-              style: FilledButton.styleFrom(
-                backgroundColor: peach,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.logout, color: Colors.black87),
-                  SizedBox(width: 8),
-                  Text("Logout", style: TextStyle(color: Colors.black87)),
-                ],
-              ),
-            ),
+            const SizedBox(height: 120),
           ],
         ),
       ),
     );
   }
-}
 
-/* ────────────────────────────────────────────────────────────── */
-/*                       SMALL WIDGETS                            */
-/* ────────────────────────────────────────────────────────────── */
-
-class _Metric extends StatelessWidget {
-  const _Metric({required this.icon, required this.label, required this.value});
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    const accent = Color(0xFFFFA94D);
-
-    return Expanded(
-      child: Column(
-        children: [
-          Icon(icon, size: 22, color: Colors.black87),
-          const SizedBox(height: 4),
-          Text(label, style: const TextStyle(fontSize: 12)),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: const TextStyle(
-              color: accent,
-              fontWeight: FontWeight.w700,
-              fontSize: 12,
-            ),
+  // ================= METRIC BOX =================
+  Widget _metric(String label, String value, IconData icon) {
+    return Column(
+      children: [
+        Icon(icon, size: 26),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(fontSize: 13)),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.orange,
+            fontWeight: FontWeight.bold,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
-}
 
-class _SettingCard extends StatelessWidget {
-  const _SettingCard({required this.items});
-  final List<_SettingItem> items;
-
-  @override
-  Widget build(BuildContext context) {
+  // ================= MENU BOX =================
+  Widget _menuBox(List<Widget> children) {
     return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFFFFE1C7),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(children: items),
+      child: Column(children: children),
     );
   }
-}
 
-class _SettingItem extends StatelessWidget {
-  const _SettingItem({
-    required this.icon,
-    required this.title,
-    this.trailing,
-  });
-
-  final IconData icon;
-  final String title;
-  final String? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-            Icon(icon, size: 22),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                    fontSize: 15, fontWeight: FontWeight.w600),
-              ),
-            ),
-            if (trailing != null)
-              Text(trailing!, style: const TextStyle(fontSize: 14)),
-            const Icon(Icons.chevron_right, size: 20),
-          ],
-        ),
-      ),
+  // ================= MENU ITEM =================
+  Widget _menuItem(IconData icon, String text, {required VoidCallback onTap}) {
+    return ListTile(
+      leading: Icon(icon, size: 22),
+      title: Text(text, style: const TextStyle(fontSize: 15)),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
+      contentPadding: EdgeInsets.zero,
+      minLeadingWidth: 0,
     );
   }
 }

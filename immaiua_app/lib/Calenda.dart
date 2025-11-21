@@ -1,447 +1,327 @@
 import 'package:flutter/material.dart';
-import 'main.dart'; // ⬅️ ใช้เพื่อกลับไป MainHomeScreen
+import 'main.dart';
+import 'Meal.dart';
+import 'ai_image.dart';
+import 'profile_screen.dart';
 
-class CalendarScreen extends StatelessWidget {
-  const CalendarScreen({super.key});
+class CalendaScreen extends StatefulWidget {
+  const CalendaScreen({super.key});
+
+  @override
+  State<CalendaScreen> createState() => _CalendaScreenState();
+}
+
+class _CalendaScreenState extends State<CalendaScreen> {
+  int _index = 3; // Diary tab
+
+  // ⭐ ปุ่มตรงกลาง ไปหน้า AiImageScreen แบบไม่ใช้กล้อง
+  void _goToAiImage() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const AiImageScreen()),
+    );
+  }
+
+  void _onTap(int i) {
+    setState(() => _index = i);
+
+    switch (i) {
+      case 0:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MainHomeScreen()),
+        );
+        break;
+
+      case 1:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MealScreen()),
+        );
+        break;
+
+      case 2:
+        _goToAiImage();
+        break;
+
+      case 3:
+        break;
+
+      case 4:
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const ProfileScreen()),
+        );
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    const peach = Color(0xFFFFE1C7);
-    const accent = Color(0xFFFFC94D);
+    const navColor = Color(0xFFFFE1C7);
+    const activeColor = Color(0xFFFFA94D);
+    const headerYellow = Color(0xFFFFC93C);
+    const bodyYellow = Color(0xFFFFE6B3);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F7),
 
-      // ===========================
-      //        TOP NAV BAR
-      // ===========================
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
         elevation: 0,
+        backgroundColor: Colors.white,
+        toolbarHeight: 68,
         automaticallyImplyLeading: false,
-        titleSpacing: 0,
-        flexibleSpace: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            child: Row(
-              children: [
-                // 🏠 Home icon
-                _topBtn(
-                  icon: Icons.home_rounded,
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MainHomeScreen()),
-                    );
-                  },
-                ),
-
-                const Spacer(),
-
-                // โลโก้กลาง
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white,
-                  ),
-                  padding: const EdgeInsets.all(4),
-                  child: ClipOval(
-                    child: Image.asset(
-                      'assets/immaiuan_logo.jpg',
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-
-                const Spacer(),
-
-                // 📅 Diary icon
-                _topBtn(
-                  icon: Icons.calendar_month_rounded,
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MainHomeScreen()),
-                    );
-                  },
-                ),
-
-                const SizedBox(width: 8),
-
-                // 👤 Profile icon (ขวาสุด)
-                _topBtn(
-                  icon: Icons.person_rounded,
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MainHomeScreen()),
-                    );
-                  },
-                ),
-              ],
+        title: Row(
+          children: [
+            const SizedBox(width: 40),
+            Expanded(
+              child: Center(
+                child: Image.asset('assets/immaiuan_logo.jpg', height: 38),
+              ),
             ),
-          ),
+            IconButton(
+              onPressed: () => _onTap(4),
+              icon: const Icon(Icons.tune_rounded, size: 26),
+            ),
+          ],
         ),
       ),
 
-      // ===========================
-      //          BODY
-      // ===========================
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(Icons.calendar_month_rounded, size: 18),
-                SizedBox(width: 6),
-                Text(
-                  'Monday 21 Feb 2026',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
+      /* ========================= BODY ========================= */
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 4),
+              const Text(
+                "Select the date to view summaries",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
 
-            // ========= วงแหวนแคล ==========
-            Center(
-              child: SizedBox(
-                width: 260,
-                height: 260,
-                child: Stack(
-                  alignment: Alignment.center,
+              // Calendar card
+              Container(
+                width: 300,
+                decoration: BoxDecoration(
+                  color: bodyYellow,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
                   children: [
-                    SizedBox(
-                      width: 220,
-                      height: 220,
-                      child: CircularProgressIndicator(
-                        value: 1,
-                        strokeWidth: 26,
-                        valueColor:
-                            const AlwaysStoppedAnimation(Color(0xFFEFEFEF)),
-                        backgroundColor: Colors.transparent,
+                    Container(
+                      decoration: BoxDecoration(
+                        color: headerYellow,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20),
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: const [
+                          Icon(Icons.chevron_left_rounded, size: 22),
+                          Text(
+                            "Sep 2025",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Icon(Icons.chevron_right_rounded, size: 22),
+                        ],
                       ),
                     ),
-                    SizedBox(
-                      width: 220,
-                      height: 220,
-                      child: CircularProgressIndicator(
-                        value: 0.45,
-                        strokeWidth: 26,
-                        valueColor: const AlwaysStoppedAnimation(accent),
-                        backgroundColor: Colors.transparent,
+
+                    const SizedBox(height: 12),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: const [
+                          _WeekdayLabel("Sun"),
+                          _WeekdayLabel("Mon"),
+                          _WeekdayLabel("Tue"),
+                          _WeekdayLabel("Wed"),
+                          _WeekdayLabel("Thu"),
+                          _WeekdayLabel("Fri"),
+                          _WeekdayLabel("Sat"),
+                        ],
                       ),
                     ),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Text(
-                          '2181 cal.',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'remaining today',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.black54,
-                          ),
-                        ),
-                      ],
+
+                    const SizedBox(height: 8),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                      child: GridView.count(
+                        crossAxisCount: 7,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: List.generate(35, (i) {
+                          final day = i + 1;
+                          final isSelected = day == 19;
+
+                          return Center(
+                            child: Container(
+                              decoration: isSelected
+                                  ? BoxDecoration(
+                                      color: Colors.orangeAccent,
+                                      borderRadius: BorderRadius.circular(10),
+                                    )
+                                  : null,
+                              padding: const EdgeInsets.all(4),
+                              child: Text(
+                                '$day',
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
                     ),
-                    Positioned(top: 18, child: _RingLabel('Lunch')),
-                    Positioned(bottom: 18, child: _RingLabel('Dinner')),
-                    Positioned(left: 10, child: _RingLabel('Snack', rotate: -1.2)),
-                    Positioned(right: 10, child: _RingLabel('Breakfast', rotate: 1.2)),
+
+                    const SizedBox(height: 14),
                   ],
                 ),
               ),
-            ),
 
-            const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
-            // ========= การ์ดข้อมูลกลาง ==========
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(22),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x14000000),
-                    blurRadius: 10,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _weightHeightSection(),
-                        ),
-                        Container(width: 1, height: 90, color: const Color(0xFFE5E5E5)),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: _calorieSection(),
-                        ),
-                      ],
+              // Weekly report
+              SizedBox(
+                width: 260,
+                height: 48,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: headerYellow,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  Container(
-                    width: double.infinity,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                    color: const Color(0xFFFFC680),
-                    child: Row(
-                      children: const [
-                        Expanded(child: _BmiBox(title: 'BMI 24.4', subtitle: 'Overweight')),
-                        SizedBox(width: 12),
-                        Expanded(child: _BmiBox(title: 'TDEE', subtitle: '3582 kcal')),
-                        SizedBox(width: 12),
-                        Expanded(child: _BmiBox(title: 'BMR', subtitle: '2452 kcal')),
-                      ],
+                  icon: const Icon(Icons.calendar_today_rounded,
+                      color: Colors.black87),
+                  label: const Text(
+                    "Weekly report",
+                    style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w600),
+                  ),
+                  onPressed: () {},
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              // Monthly report
+              SizedBox(
+                width: 260,
+                height: 48,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: headerYellow,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                ],
+                  icon: const Icon(Icons.calendar_month_rounded,
+                      color: Colors.black87),
+                  label: const Text(
+                    "Monthly report",
+                    style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w600),
+                  ),
+                  onPressed: () {},
+                ),
               ),
-            ),
-
-            const SizedBox(height: 18),
-
-            // ========= Macronutrients ==========
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: peach,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x12000000),
-                    blurRadius: 8,
-                    offset: Offset(0, 3),
-                  )
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  _MacroItem(
-                    icon: Icons.cake_rounded,
-                    label: 'Sugar',
-                    percent: '40 %',
-                    remain: '18g. remain',
-                  ),
-                  _MacroItem(
-                    icon: Icons.rice_bowl_rounded,
-                    label: 'Carb',
-                    percent: '20 %',
-                    remain: '18g. remain',
-                  ),
-                  _MacroItem(
-                    icon: Icons.egg_rounded,
-                    label: 'Protein',
-                    percent: '33 %',
-                    remain: '18g. remain',
-                  ),
-                  _MacroItem(
-                    icon: Icons.local_pizza_rounded,
-                    label: 'Fat',
-                    percent: '66 %',
-                    remain: '10g. remain',
-                  ),
-                  _MacroItem(
-                    icon: Icons.bolt_rounded,
-                    label: 'Sodium',
-                    percent: '98 %',
-                    remain: '200mg. remain',
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ========== TOP BUTTON ==========
-
-  Widget _topBtn({required IconData icon, required VoidCallback onTap}) {
-    return Material(
-      color: Colors.white.withOpacity(0.9),
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: SizedBox(
-          width: 38,
-          height: 38,
-          child: Icon(icon, size: 20, color: Colors.black87),
-        ),
-      ),
-    );
-  }
-
-  // ========== WEIGHT / HEIGHT ==========
-  Widget _weightHeightSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Weight', style: TextStyle(fontSize: 12, color: Colors.black54)),
-        const SizedBox(height: 4),
-        const Text('78 kg.', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-        const SizedBox(height: 10),
-        const Text('Height', style: TextStyle(fontSize: 12, color: Colors.black54)),
-        const SizedBox(height: 4),
-        const Text('176 cm.', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 32,
-          child: ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFFC27A),
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-            child: const Text('Edit',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            ],
           ),
         ),
-      ],
+      ),
+
+      /* ================= FAB CAMERA BUTTON ================= */
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: SizedBox(
+        width: 74,
+        height: 74,
+        child: FloatingActionButton(
+          backgroundColor: const Color(0xFF825C2A),
+          elevation: 6,
+          shape: const CircleBorder(),
+          // ⭐ ไปหน้า AiImageScreen
+          onPressed: _goToAiImage,
+          child: const Icon(Icons.camera_alt_rounded,
+              color: Colors.white, size: 32),
+        ),
+      ),
+
+      /* ================= NAV BAR ================= */
+      bottomNavigationBar: BottomAppBar(
+        color: navColor,
+        height: 90,
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 10,
+        child: SafeArea(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _navItem(0, Icons.home_rounded, "Home", activeColor),
+              _navItem(1, Icons.restaurant_menu_rounded, "Meal", activeColor),
+              const SizedBox(width: 36),
+              _navItem(3, Icons.calendar_month_rounded, "Diary", activeColor),
+              _navItem(4, Icons.person_rounded, "Profile", activeColor),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  // ========== CALORIES ==========
-  Widget _calorieSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
-        Text('Calorie intake', style: TextStyle(fontSize: 12, color: Colors.black54)),
-        SizedBox(height: 6),
-        Row(
+  Widget _navItem(int index, IconData icon, String label, Color activeColor) {
+    final selected = _index == index;
+
+    return InkWell(
+      onTap: () => _onTap(index),
+      child: Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.restaurant_rounded, size: 18, color: Colors.black87),
-            SizedBox(width: 6),
-            Text('500',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.green)),
-            SizedBox(width: 4),
-            Text('kcal', style: TextStyle(fontSize: 12)),
+            Icon(icon, size: 26, color: selected ? activeColor : Colors.black45),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: selected ? activeColor : Colors.black45,
+              ),
+            ),
           ],
         ),
-        SizedBox(height: 12),
-        Text('Burned calories', style: TextStyle(fontSize: 12, color: Colors.black54)),
-        SizedBox(height: 6),
-        Row(
-          children: [
-            Icon(Icons.local_fire_department_rounded, size: 18, color: Colors.orange),
-            SizedBox(width: 6),
-            Text('1450',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.red)),
-            SizedBox(width: 4),
-            Text('kcal', style: TextStyle(fontSize: 12)),
-          ],
-        ),
-      ],
+      ),
     );
   }
 }
 
-/* ====================== Helper widgets ====================== */
+class _WeekdayLabel extends StatelessWidget {
+  const _WeekdayLabel(this.text);
 
-class _RingLabel extends StatelessWidget {
   final String text;
-  final double rotate;
-
-  const _RingLabel(this.text, {this.rotate = 0, super.key});
 
   @override
   Widget build(BuildContext context) {
-    final label = Text(
+    return Text(
       text,
-      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-    );
-    return rotate == 0 ? label : Transform.rotate(angle: rotate, child: label);
-  }
-}
-
-class _BmiBox extends StatelessWidget {
-  final String title;
-  final String subtitle;
-
-  const _BmiBox({required this.title, required this.subtitle, super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-        const SizedBox(height: 2),
-        Text(subtitle,
-            style: const TextStyle(fontSize: 11.5, color: Colors.black87)),
-      ],
-    );
-  }
-}
-
-class _MacroItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String percent;
-  final String remain;
-
-  const _MacroItem({
-    required this.icon,
-    required this.label,
-    required this.percent,
-    required this.remain,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 58,
-      child: Column(
-        children: [
-          Icon(icon, size: 20, color: Colors.black87),
-          const SizedBox(height: 4),
-          Text(label,
-              style:
-                  const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 2),
-          Text(percent,
-              style:
-                  const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
-          Text(
-            remain,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 9.5,
-              color: Colors.black54,
-              height: 1.2,
-            ),
-          ),
-        ],
-      ),
+      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
     );
   }
 }

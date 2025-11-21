@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'profile_screen.dart';
 import 'main.dart';
 
 class KnowledgeStep2Screen extends StatelessWidget {

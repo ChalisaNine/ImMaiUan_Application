@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'KnowledgeStep2.dart';
-import 'profile_screen.dart';
 
 class KnowledgeScreen extends StatefulWidget {
   const KnowledgeScreen({super.key});
