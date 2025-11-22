@@ -4,7 +4,7 @@ import 'Meal.dart';
 import 'ai_image.dart';
 import 'knowledge.dart';
 import 'profile_screen.dart';
-import 'nav_bar.dart';   // ⭐ ใช้ NAV BAR กลาง
+import 'nav_bar.dart'; // ⭐ ใช้ NAV BAR กลาง
 
 void main() => runApp(const ImMaiUanApp());
 
@@ -47,28 +47,24 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
           MaterialPageRoute(builder: (_) => const MainHomeScreen()),
         );
         break;
-
       case 1:
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const MealScreen()),
         );
         break;
-
       case 2:
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const AiImageScreen()),
         );
         break;
-
       case 3:
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const CalendaScreen()),
         );
         break;
-
       case 4:
         Navigator.pushReplacement(
           context,
@@ -83,7 +79,7 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
     return MainScaffold(
       currentIndex: _index,
       onTap: _onTap,
-      body: const _HomeScreen(),   // ⭐ BODY ของหน้า Home
+      body: const _HomeScreen(), // ⭐ BODY ของหน้า Home
     );
   }
 }
@@ -107,6 +103,7 @@ class _HomeScreen extends StatelessWidget {
           children: [
             const SizedBox(height: 6),
 
+            // ---------------- วันที่ ----------------
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [
@@ -121,12 +118,18 @@ class _HomeScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 18),
+
+            // ---------------- วงแหวนแคลอรี่ ----------------
             const _CalorieRing(),
+
             const SizedBox(height: 18),
 
-            _SummaryCard(),
+            // ---------------- การ์ดสรุป ----------------
+            const _SummaryCard(),
+
             const SizedBox(height: 18),
 
+            // ---------------- แถวสารอาหาร ----------------
             Container(
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
               decoration: BoxDecoration(
@@ -137,36 +140,42 @@ class _HomeScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: const [
                   _NutrientChip(
-                      icon: Icons.cake_rounded,
-                      label: "Sugar",
-                      percent: "40 %",
-                      detail: "11g remain"),
+                    icon: Icons.cake_rounded,
+                    label: "Sugar",
+                    percent: "40 %",
+                    detail: "kcal",
+                  ),
                   _NutrientChip(
-                      icon: Icons.rice_bowl_rounded,
-                      label: "Carb",
-                      percent: "20 %",
-                      detail: "18g remain"),
+                    icon: Icons.rice_bowl_rounded,
+                    label: "Carb",
+                    percent: "20 %",
+                    detail: "kcal",
+                  ),
                   _NutrientChip(
-                      icon: Icons.egg_rounded,
-                      label: "Protein",
-                      percent: "33 %",
-                      detail: "88g remain"),
+                    icon: Icons.egg_rounded,
+                    label: "Protein",
+                    percent: "33 %",
+                    detail: "kcal",
+                  ),
                   _NutrientChip(
-                      icon: Icons.local_pizza_rounded,
-                      label: "Fat",
-                      percent: "68 %",
-                      detail: "18g remain"),
+                    icon: Icons.local_pizza_rounded,
+                    label: "Fat",
+                    percent: "50 %",
+                    detail: "kcal",
+                  ),
                   _NutrientChip(
-                      icon: Icons.bolt_rounded,
-                      label: "Sodium",
-                      percent: "98 %",
-                      detail: "200mg remain"),
+                    icon: Icons.bolt_rounded,
+                    label: "Sodium",
+                    percent: "98 %",
+                    detail: "mg",
+                  ),
                 ],
               ),
             ),
 
             const SizedBox(height: 18),
 
+            // ---------------- Basic knowledge ----------------
             InkWell(
               borderRadius: BorderRadius.circular(16),
               onTap: () => Navigator.push(
@@ -188,7 +197,7 @@ class _HomeScreen extends StatelessWidget {
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        "Basic knowledge\nTap to learn Daily Nutrition & tips",
+                        "Basic knowledge\nTap to learn Daily Nutrition and tips",
                         style: TextStyle(fontSize: 13.5),
                       ),
                     ),
@@ -205,7 +214,9 @@ class _HomeScreen extends StatelessWidget {
   }
 }
 
-/* ---------------- components เหมือนเดิม (circle, summary, chips) ---------------- */
+/* --------------------------------------------------------------
+ *                        COMPONENTS
+ * -------------------------------------------------------------- */
 
 class _CalorieRing extends StatelessWidget {
   const _CalorieRing();
@@ -217,10 +228,11 @@ class _CalorieRing extends StatelessWidget {
 
     return SizedBox(
       width: 240,
-      height: 240,
+      height: 260,
       child: Stack(
         alignment: Alignment.center,
         children: [
+          // วงเหลือง
           Container(
             width: 210,
             height: 210,
@@ -230,6 +242,7 @@ class _CalorieRing extends StatelessWidget {
             ),
           ),
 
+          // โค้งสีฟ้าด้านบน
           Transform.rotate(
             angle: 0.55,
             child: CustomPaint(
@@ -243,14 +256,52 @@ class _CalorieRing extends StatelessWidget {
             ),
           ),
 
+          // ข้อความตรงกลาง
           Column(
+            mainAxisSize: MainAxisSize.min,
             children: const [
-              Text("2181 cal.",
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+              Text(
+                "2181 cal.",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+              ),
               SizedBox(height: 4),
-              Text("remaining today",
-                  style: TextStyle(fontSize: 13, color: Colors.black54)),
+              Text(
+                "remaining today",
+                style: TextStyle(fontSize: 13, color: Colors.black54),
+              ),
             ],
+          ),
+
+          // label รอบวง: Breakfast / Lunch / Snack / Dinner
+          const Positioned(
+            top: 12,
+            child: Text(
+              "Breakfast",
+              style: TextStyle(fontSize: 11, color: Colors.black87),
+            ),
+          ),
+          const Positioned(
+            right: 0,
+            top: 100,
+            child: Text(
+              "Lunch",
+              style: TextStyle(fontSize: 11, color: Colors.black87),
+            ),
+          ),
+          const Positioned(
+            bottom: 8,
+            child: Text(
+              "Dinner",
+              style: TextStyle(fontSize: 11, color: Colors.black87),
+            ),
+          ),
+          const Positioned(
+            left: 0,
+            top: 100,
+            child: Text(
+              "Snack",
+              style: TextStyle(fontSize: 11, color: Colors.black87),
+            ),
           ),
         ],
       ),
@@ -294,6 +345,8 @@ class _ArcPainter extends CustomPainter {
 }
 
 class _SummaryCard extends StatelessWidget {
+  const _SummaryCard();
+
   @override
   Widget build(BuildContext context) {
     const orangeDeep = Color(0xFFFFA94D);
@@ -306,54 +359,98 @@ class _SummaryCard extends StatelessWidget {
       ),
       child: Column(
         children: [
+          // --------- ส่วนบน (Weight, Height, Intake, Burned + Edit) ---------
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
+            child: Column(
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text("Weight",
-                          style: TextStyle(fontSize: 12, color: Colors.black54)),
-                      Text("78 kg.",
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w700)),
-                      SizedBox(height: 6),
-                      Text("Height",
-                          style: TextStyle(fontSize: 12, color: Colors.black54)),
-                      Text("176 cm.",
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w700)),
-                    ],
-                  ),
+                Row(
+                  children: [
+                    // Weight / Height
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text("Weight",
+                              style: TextStyle(
+                                  fontSize: 12, color: Colors.black54)),
+                          Text("78 kg.",
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700)),
+                          SizedBox(height: 6),
+                          Text("Height",
+                              style: TextStyle(
+                                  fontSize: 12, color: Colors.black54)),
+                          Text("176 cm.",
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700)),
+                        ],
+                      ),
+                    ),
+
+                    // Calorie intake / Burned
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text("Calorie intake",
+                              style: TextStyle(
+                                  fontSize: 12, color: Colors.black54)),
+                          Text("500 kcal",
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.green)),
+                          SizedBox(height: 8),
+                          Text("Burned calories",
+                              style: TextStyle(
+                                  fontSize: 12, color: Colors.black54)),
+                          Text("1450 kcal",
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.redAccent)),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text("Calorie intake",
-                          style: TextStyle(fontSize: 12, color: Colors.black54)),
-                      Text("500 kcal",
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.green)),
-                      SizedBox(height: 8),
-                      Text("Burned calories",
-                          style: TextStyle(fontSize: 12, color: Colors.black54)),
-                      Text("1450 kcal",
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.redAccent)),
-                    ],
+
+                const SizedBox(height: 8),
+
+                // ปุ่ม Edit (เล็ก ๆ ด้านซ้าย ตามภาพ)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFFD66B),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 18, vertical: 4),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    onPressed: () {
+                      // TODO: ไปหน้าแก้ไขข้อมูล หรือ popup
+                    },
+                    child: const Text(
+                      "Edit",
+                      style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
 
+          // --------- แถบสีส้มล่าง (BMI / TDEE / BMR) ---------
           Container(
             decoration: const BoxDecoration(
               color: orangeDeep,
@@ -393,12 +490,19 @@ class _SummaryCell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(title,
-            style: const TextStyle(
-                fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white)),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
         const SizedBox(height: 2),
-        Text(subtitle,
-            style: const TextStyle(fontSize: 11, color: Colors.white)),
+        Text(
+          subtitle,
+          style: const TextStyle(fontSize: 11, color: Colors.white),
+        ),
       ],
     );
   }
@@ -420,19 +524,25 @@ class _NutrientChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 62,
+      width: 64,
       child: Column(
         children: [
           Icon(icon, size: 22, color: Colors.black87),
           const SizedBox(height: 2),
-          Text(label,
-              style:
-                  const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-          Text(percent, style: const TextStyle(fontSize: 11)),
-          Text(detail,
-              textAlign: TextAlign.center,
-              style:
-                  const TextStyle(fontSize: 9.5, color: Colors.black54)),
+          Text(
+            label,
+            style:
+                const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+          ),
+          Text(
+            percent,
+            style: const TextStyle(fontSize: 11),
+          ),
+          Text(
+            detail,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 10, color: Colors.black54),
+          ),
         ],
       ),
     );

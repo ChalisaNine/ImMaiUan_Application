@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+
 import 'main.dart';
 import 'Meal.dart';
 import 'ai_image.dart';
 import 'Calenda.dart';
 import 'nav_bar.dart';
+import 'EditProfile.dart';
+import 'adjust_goal.dart';
+import 'login.dart'; // 👈 เพิ่ม import หน้าล็อกอิน
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -25,15 +29,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           MaterialPageRoute(builder: (_) => const MainHomeScreen()),
         );
         break;
-
       case 1:
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const MealScreen()),
         );
         break;
-
-      // ⭐ กลับไปใช้ AiImageScreen แบบเดิม (ไม่มี imagePath)
       case 2:
         Navigator.pushReplacement(
           context,
@@ -42,15 +43,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         );
         break;
-
       case 3:
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const CalendaScreen()),
         );
         break;
-
       case 4:
+        // อยู่หน้า Profile แล้ว
         break;
     }
   }
@@ -79,11 +79,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   const CircleAvatar(
                     radius: 45,
-                    backgroundImage: AssetImage('assets/profile.png'),
+                    backgroundImage: AssetImage('assets/Avatar.jpg'),
                   ),
-
                   const SizedBox(height: 10),
-
                   const Text(
                     "Monser",
                     style: TextStyle(
@@ -91,9 +89,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
                   const SizedBox(height: 4),
 
+                  // ปุ่ม Edit -> EditProfileScreen
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.yellow,
@@ -105,7 +103,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     icon: const Icon(Icons.edit, size: 18),
                     label: const Text("Edit"),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const EditProfileScreen(),
+                        ),
+                      );
+                    },
                   ),
 
                   const SizedBox(height: 18),
@@ -118,7 +123,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _metric("Height", "176 cm", Icons.height),
                       _metric("BMI", "26.1", Icons.monitor_weight),
                       _metric("BMR", "2561", Icons.flash_on),
-                      _metric("TDEE", "3564", Icons.directions_run_rounded),
+                      _metric(
+                          "TDEE", "3564", Icons.directions_run_rounded),
                     ],
                   ),
                 ],
@@ -129,8 +135,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // ================= MENU 1 =================
             _menuBox([
-              _menuItem(Icons.person, "Personal details", onTap: () {}),
-              _menuItem(Icons.flag, "Adjust goal", onTap: () {}),
+              _menuItem(
+                Icons.person,
+                "Personal details",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const EditProfileScreen(),
+                    ),
+                  );
+                },
+              ),
+              _menuItem(
+                Icons.flag,
+                "Adjust goal",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AdjustGoalScreen(),
+                    ),
+                  );
+                },
+              ),
               _menuItem(Icons.settings, "Setting", onTap: () {}),
             ]),
 
@@ -138,11 +166,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // ================= MENU 2 =================
             _menuBox([
-              _menuItem(Icons.chat_bubble_outline, "Support", onTap: () {}),
+              _menuItem(
+                  Icons.chat_bubble_outline, "Support", onTap: () {}),
               _menuItem(Icons.tag, "Version 1.0", onTap: () {}),
             ]),
 
-            const SizedBox(height: 120),
+            const SizedBox(height: 24),
+
+            // ================= LOGOUT BUTTON =================
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.logout_rounded),
+                label: const Text(
+                  "Logout",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  side: const BorderSide(color: Colors.redAccent),
+                  foregroundColor: Colors.redAccent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: () {
+                  // เคลียร์ stack แล้วไปหน้า Login
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const LoginScreen(),
+                    ),
+                    (route) => false,
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 80),
           ],
         ),
       ),
@@ -182,7 +246,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // ================= MENU ITEM =================
-  Widget _menuItem(IconData icon, String text, {required VoidCallback onTap}) {
+  Widget _menuItem(
+    IconData icon,
+    String text, {
+    required VoidCallback onTap,
+  }) {
     return ListTile(
       leading: Icon(icon, size: 22),
       title: Text(text, style: const TextStyle(fontSize: 15)),
