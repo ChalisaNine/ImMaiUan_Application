@@ -3,6 +3,7 @@ import 'main.dart';
 import 'profile_screen.dart';
 import 'Calenda.dart';
 import 'ai_image.dart';
+import 'camera_log.dart';
 import 'nav_bar.dart'; // MainScaffold
 
 class MealScreen extends StatefulWidget {
@@ -29,7 +30,6 @@ class _MealScreenState extends State<MealScreen> {
       case 1:
         break;
 
-      // ⭐ เปลี่ยนกลับเป็น AiImageScreen แบบเดิม — ไม่มี imagePath
       case 2:
         Navigator.pushReplacement(
           context,
@@ -53,13 +53,19 @@ class _MealScreenState extends State<MealScreen> {
     }
   }
 
+  void _openDetail() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CameraLogScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MainScaffold(
       currentIndex: _index,
       onTap: _onTap,
 
-      /* ================= BODY ================= */
       body: SafeArea(
         top: false,
         bottom: false,
@@ -90,18 +96,21 @@ class _MealScreenState extends State<MealScreen> {
               /* ================= CATEGORY ================= */
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
+                children: [
                   _MealCategoryCard(
                     icon: Icons.restaurant_menu_rounded,
                     title: "Category",
+                    onTap: _openDetail,
                   ),
                   _MealCategoryCard(
                     icon: Icons.bookmark_rounded,
                     title: "Favorites",
+                    onTap: _openDetail,
                   ),
                   _MealCategoryCard(
                     icon: Icons.list_alt_rounded,
                     title: "My List",
+                    onTap: _openDetail,
                   ),
                 ],
               ),
@@ -115,35 +124,41 @@ class _MealScreenState extends State<MealScreen> {
 
               const SizedBox(height: 14),
 
-              const _MealRecentItem(
+              _MealRecentItem(
                 name: "Chicken Breast Salad",
                 subtitle: "3% of calories per day",
                 kcal: "70",
+                onTap: _openDetail,
               ),
-              const _MealRecentItem(
+              _MealRecentItem(
                 name: "Boiled Chicken Rice",
                 subtitle: "25% of calories per day",
                 kcal: "512",
+                onTap: _openDetail,
               ),
-              const _MealRecentItem(
+              _MealRecentItem(
                 name: "Fried Chicken Rice",
                 subtitle: "60% of calories per day",
                 kcal: "768",
+                onTap: _openDetail,
               ),
-              const _MealRecentItem(
+              _MealRecentItem(
                 name: "Pizza",
                 subtitle: "90% of calories per day",
                 kcal: "900",
+                onTap: _openDetail,
               ),
-              const _MealRecentItem(
+              _MealRecentItem(
                 name: "Chicken curry",
                 subtitle: "30% of calories per day",
                 kcal: "1024",
+                onTap: _openDetail,
               ),
-              const _MealRecentItem(
+              _MealRecentItem(
                 name: "Pork fried rice",
                 subtitle: "40% of calories per day",
                 kcal: "456",
+                onTap: _openDetail,
               ),
 
               const SizedBox(height: 80),
@@ -163,32 +178,38 @@ class _MealCategoryCard extends StatelessWidget {
   const _MealCategoryCard({
     required this.icon,
     required this.title,
+    required this.onTap,
   });
 
   final IconData icon;
   final String title;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 100,
-      padding: const EdgeInsets.symmetric(vertical: 18),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFE1C7),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, size: 26, color: Colors.black87),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        width: 100,
+        padding: const EdgeInsets.symmetric(vertical: 18),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFE1C7),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 26, color: Colors.black87),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -203,54 +224,59 @@ class _MealRecentItem extends StatelessWidget {
     required this.name,
     required this.subtitle,
     required this.kcal,
+    required this.onTap,
   });
 
   final String name;
   final String subtitle;
   final String kcal;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0xFFE5E5E5))),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.rice_bowl_outlined,
-              size: 28, color: Colors.black87),
-          const SizedBox(width: 12),
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: Color(0xFFE5E5E5))),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.rice_bowl_outlined,
+                size: 28, color: Colors.black87),
+            const SizedBox(width: 12),
 
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
                   ),
-                ),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                      fontSize: 12, color: Colors.black54),
-                ),
-              ],
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                        fontSize: 12, color: Colors.black54),
+                  ),
+                ],
+              ),
             ),
-          ),
 
-          Text(
-            "$kcal kcal",
-            style: const TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
-              color: Color(0xFFFF8A47),
+            Text(
+              "$kcal kcal",
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: Color(0xFFFF8A47),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
