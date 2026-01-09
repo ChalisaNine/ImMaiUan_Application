@@ -4,8 +4,8 @@ import 'Meal.dart';
 import 'ai_image.dart';
 import 'profile_screen.dart';
 import 'day_report.dart';
-import 'weekly_report.dart';        // ⭐ เพิ่ม
-import 'monthly_report.dart';      // ⭐ ถ้ายังไม่มี เดี๋ยวเราทำให้
+import 'weekly_report.dart';        
+import 'monthly_report.dart';      
 import 'nav_bar.dart';
 
 class CalendaScreen extends StatefulWidget {
@@ -100,7 +100,7 @@ class _CalendaScreenState extends State<CalendaScreen> {
   }
 
   // -------------------------------------------------------
-  // ⭐ Calendar Section
+  // Calendar Section
   // -------------------------------------------------------
 
   Widget _buildCalendar() {
@@ -219,7 +219,7 @@ class _CalendaScreenState extends State<CalendaScreen> {
   }
 
   // -------------------------------------------------------
-  // ⭐ Buttons
+  // Buttons
   // -------------------------------------------------------
 
   Widget _weeklyButton() {
@@ -243,7 +243,7 @@ class _CalendaScreenState extends State<CalendaScreen> {
           ),
         ),
 
-        // ⭐ ไปหน้า Weekly Report
+        //ไปหน้า Weekly Report
         onPressed: () {
           Navigator.push(
             context,
@@ -274,7 +274,7 @@ class _CalendaScreenState extends State<CalendaScreen> {
             color: Colors.black87),
         ),
 
-        // ⭐ ไปหน้า Monthly Report
+        //ไปหน้า Monthly Report
         onPressed: () {
           Navigator.push(
             context,
