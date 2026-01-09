@@ -17,7 +17,7 @@ class KnowledgeStep2Screen extends StatefulWidget {
 }
 
 class _KnowledgeStep2ScreenState extends State<KnowledgeStep2Screen> {
-  int _index = 1; // Meal tab
+  int _index = 0; // Home tab
 
   void _onTap(int i) {
     setState(() => _index = i);
