@@ -80,7 +80,7 @@ class BasicKnowledgeBody extends StatelessWidget {
               alignment: Alignment.topLeft,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFFA94D),
+                  backgroundColor: Color(0xFFFFE1C7),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   shape: RoundedRectangleBorder(
