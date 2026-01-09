@@ -96,7 +96,7 @@ class _KnowledgeStep2Body extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: const Text('« back',
+                child: const Text('« Back',
                     style: TextStyle(
                         color: Colors.black87, fontWeight: FontWeight.w700)),
               ),
