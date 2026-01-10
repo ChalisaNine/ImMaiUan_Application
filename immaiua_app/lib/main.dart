@@ -1,10 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
 import 'Calenda.dart';
 import 'Meal.dart';
 import 'ai_image.dart';
 import 'knowledge.dart';
 import 'profile_screen.dart';
 import 'nav_bar.dart'; // ⭐ ใช้ NAV BAR กลาง
+
+// ================= SVG HELPER =================
+class HealthIcon extends StatelessWidget {
+  final String asset;
+  final double size;
+  final Color color;
+
+  const HealthIcon({
+    super.key,
+    required this.asset,
+    this.size = 22,
+    this.color = Colors.black87,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SvgPicture.asset(
+      asset,
+      width: size,
+      height: size,
+      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+    );
+  }
+}
 
 void main() => runApp(const ImMaiUanApp());
 
@@ -140,31 +166,31 @@ class _HomeScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: const [
                   _NutrientChip(
-                    icon: Icons.cake_rounded,
+                    iconAsset: 'assets/icons/sugar.svg',
                     label: "Sugar",
                     percent: "40 %",
                     detail: "kcal",
                   ),
                   _NutrientChip(
-                    icon: Icons.rice_bowl_rounded,
+                    iconAsset: 'assets/icons/carbohydrates.svg',
                     label: "Carb",
                     percent: "20 %",
                     detail: "kcal",
                   ),
                   _NutrientChip(
-                    icon: Icons.egg_rounded,
+                    iconAsset: 'assets/icons/protein.svg',
                     label: "Protein",
                     percent: "33 %",
                     detail: "kcal",
                   ),
                   _NutrientChip(
-                    icon: Icons.local_pizza_rounded,
+                    iconAsset: 'assets/icons/fat.svg',
                     label: "Fat",
                     percent: "50 %",
                     detail: "kcal",
                   ),
                   _NutrientChip(
-                    icon: Icons.bolt_rounded,
+                    iconAsset: 'assets/icons/sodium.svg',
                     label: "Sodium",
                     percent: "98 %",
                     detail: "mg",
@@ -509,13 +535,13 @@ class _SummaryCell extends StatelessWidget {
 }
 
 class _NutrientChip extends StatelessWidget {
-  final IconData icon;
+  final String iconAsset;
   final String label;
   final String percent;
   final String detail;
 
   const _NutrientChip({
-    required this.icon,
+    required this.iconAsset,
     required this.label,
     required this.percent,
     required this.detail,
@@ -527,7 +553,7 @@ class _NutrientChip extends StatelessWidget {
       width: 64,
       child: Column(
         children: [
-          Icon(icon, size: 22, color: Colors.black87),
+          HealthIcon(asset: iconAsset),
           const SizedBox(height: 2),
           Text(
             label,

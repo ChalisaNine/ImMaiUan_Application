@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'main.dart';
 import 'Meal.dart';
@@ -7,7 +8,7 @@ import 'Calenda.dart';
 import 'nav_bar.dart';
 import 'EditProfile.dart';
 import 'adjust_goal.dart';
-import 'login.dart'; // 👈 เพิ่ม import หน้าล็อกอิน
+import 'login.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -38,9 +39,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       case 2:
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (_) => const AiImageScreen(),
-          ),
+          MaterialPageRoute(builder: (_) => const AiImageScreen()),
         );
         break;
       case 3:
@@ -50,7 +49,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
         break;
       case 4:
-        // อยู่หน้า Profile แล้ว
         break;
     }
   }
@@ -84,14 +82,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 10),
                   const Text(
                     "Monser",
-                    style: TextStyle(
-                      fontSize: 23,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
 
-                  // ปุ่ม Edit -> EditProfileScreen
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.yellow,
@@ -121,10 +115,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       _metric("Weight", "78 kg", Icons.fitness_center),
                       _metric("Height", "176 cm", Icons.height),
-                      _metric("BMI", "26.1", Icons.monitor_weight),
-                      _metric("BMR", "2561", Icons.flash_on),
-                      _metric(
-                          "TDEE", "3564", Icons.directions_run_rounded),
+
+                      // BMI → SVG
+                      _metricSvg("BMI", "26.1", 'assets/icons/bmi.svg'),
+
+                      // BMR → icon เดิม
+                      _metric("BMR", "2561", Icons.local_fire_department),
+
+                      // TDEE → SVG
+                      _metricSvg("TDEE", "3564", 'assets/icons/tdee.svg'),
                     ],
                   ),
                 ],
@@ -166,23 +165,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // ================= MENU 2 =================
             _menuBox([
-              _menuItem(
-                  Icons.chat_bubble_outline, "Support", onTap: () {}),
+              _menuItem(Icons.chat_bubble_outline, "Support", onTap: () {}),
               _menuItem(Icons.tag, "Version 1.0", onTap: () {}),
             ]),
 
             const SizedBox(height: 24),
 
-            // ================= LOGOUT BUTTON =================
+            // ================= LOGOUT =================
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
                 icon: const Icon(Icons.logout_rounded),
                 label: const Text(
                   "Logout",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 style: OutlinedButton.styleFrom(
                   padding:
@@ -194,7 +190,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 onPressed: () {
-                  // เคลียร์ stack แล้วไปหน้า Login
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(
@@ -213,11 +208,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // ================= METRIC BOX =================
+  // ================= METRIC ICON (เดิม) =================
   Widget _metric(String label, String value, IconData icon) {
     return Column(
       children: [
         Icon(icon, size: 26),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(fontSize: 13)),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.orange,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ================= METRIC SVG =================
+  Widget _metricSvg(String label, String value, String asset) {
+    return Column(
+      children: [
+        SvgPicture.asset(asset, width: 26, height: 26),
         const SizedBox(height: 4),
         Text(label, style: const TextStyle(fontSize: 13)),
         Text(

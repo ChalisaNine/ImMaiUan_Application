@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
 import 'KnowledgeStep2.dart';
 import 'main.dart';
-import 'nav_bar.dart'; // ใช้ MainScaffold
+import 'nav_bar.dart';
+
+/* ======================== SCREEN ======================== */
 
 class KnowledgeScreen extends StatefulWidget {
   const KnowledgeScreen({super.key});
@@ -13,12 +17,12 @@ class KnowledgeScreen extends StatefulWidget {
 class _KnowledgeScreenState extends State<KnowledgeScreen> {
   int _index = 0;
 
-  final _pages = const <Widget>[
-    BasicKnowledgeBody(),
-    Center(child: Text('Meal Screen')),
-    Center(child: Text('Capture Screen')),
-    Center(child: Text('Diary Screen')),
-    Center(child: Text('Profile Screen')),
+  final _pages = <Widget>[
+    const BasicKnowledgeBody(),
+    const Center(child: Text('Meal Screen')),
+    const Center(child: Text('Capture Screen')),
+    const Center(child: Text('Diary Screen')),
+    const Center(child: Text('Profile Screen')),
   ];
 
   void _onTap(int i) {
@@ -75,12 +79,12 @@ class BasicKnowledgeBody extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // << Back
+            // Back
             Align(
               alignment: Alignment.topLeft,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFFFFE1C7),
+                  backgroundColor: const Color(0xFFFFE1C7),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   shape: RoundedRectangleBorder(
@@ -110,8 +114,10 @@ class BasicKnowledgeBody extends StatelessWidget {
             Center(child: Text('Welcome Monser.', style: titleStyle)),
             const SizedBox(height: 12),
 
-            const PeachStrip(
-              items: [
+            /* ================= METRICS ================= */
+
+            PeachStrip(
+              items: const [
                 PeachMetric(
                     icon: Icons.fitness_center_rounded,
                     label: 'Weight',
@@ -143,6 +149,8 @@ class BasicKnowledgeBody extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
+            /* ================= DAILY NUTRITION ================= */
+
             CardContainer(
               padding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -158,36 +166,36 @@ class BasicKnowledgeBody extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      DailyItem(
-                        icon: Icons.cookie_rounded,
+                      DailyItemSvg(
+                        assetPath: 'assets/icons/sugar.svg',
                         title: 'Sugar',
                         line1: '31 g',
                         line2: 'Suggested',
                         line3: 'per day',
                       ),
-                      DailyItem(
-                        icon: Icons.rice_bowl_rounded,
+                      DailyItemSvg(
+                        assetPath: 'assets/icons/carbohydrates.svg',
                         title: 'Carb',
                         line1: '315 g',
                         line2: 'Suggested',
                         line3: 'per day',
                       ),
-                      DailyItem(
-                        icon: Icons.egg_rounded,
+                      DailyItemSvg(
+                        assetPath: 'assets/icons/protein.svg',
                         title: 'Protein',
                         line1: '120 g',
                         line2: 'Suggested',
                         line3: 'per day',
                       ),
-                      DailyItem(
-                        icon: Icons.oil_barrel_rounded,
+                      DailyItemSvg(
+                        assetPath: 'assets/icons/fat.svg',
                         title: 'Fat',
                         line1: '78 g',
                         line2: 'Suggested',
                         line3: 'per day',
                       ),
-                      DailyItem(
-                        icon: Icons.snowing,
+                      DailyItemSvg(
+                        assetPath: 'assets/icons/sodium.svg',
                         title: 'Sodium',
                         line1: '2434 mg',
                         line2: 'Suggested',
@@ -201,40 +209,42 @@ class BasicKnowledgeBody extends StatelessWidget {
 
             const SizedBox(height: 12),
 
+            /* ================= INFO ================= */
+
             CardContainer(
               padding: const EdgeInsets.all(12),
               child: Column(
                 children: const [
-                  InfoRow(
-                    icon: Icons.cookie_rounded,
+                  InfoRowSvg(
+                    assetPath: 'assets/icons/sugar.svg',
                     title: 'Sugar',
                     text:
-                        'Sugar comes from fruits, honey, and sweets; calculate grams × 4 kcal.',
+                        'Sugar comes from fruits, honey, and sweets; grams × 4 kcal.',
                   ),
                   SizedBox(height: 10),
-                  InfoRow(
-                    icon: Icons.rice_bowl_rounded,
+                  InfoRowSvg(
+                    assetPath: 'assets/icons/carbohydrates.svg',
                     title: 'Carb',
                     text:
                         'Carbohydrates from rice, grains, bread; grams × 4 kcal.',
                   ),
                   SizedBox(height: 10),
-                  InfoRow(
-                    icon: Icons.egg_rounded,
+                  InfoRowSvg(
+                    assetPath: 'assets/icons/protein.svg',
                     title: 'Protein',
                     text:
                         'Protein from meat, eggs, fish, beans; grams × 4 kcal.',
                   ),
                   SizedBox(height: 10),
-                  InfoRow(
-                    icon: Icons.oil_barrel_rounded,
+                  InfoRowSvg(
+                    assetPath: 'assets/icons/fat.svg',
                     title: 'Fat',
                     text:
                         'Fat from oils, nuts, cheese; grams × 9 kcal.',
                   ),
                   SizedBox(height: 10),
-                  InfoRow(
-                    icon: Icons.snowing,
+                  InfoRowSvg(
+                    assetPath: 'assets/icons/sodium.svg',
                     title: 'Sodium',
                     text:
                         'Sodium in salt and sauces; measured in mg, no calories.',
@@ -257,20 +267,7 @@ class BasicKnowledgeBody extends StatelessWidget {
                       ),
                     );
                   },
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 18, vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Row(
-                    children: [
-                      Text('Next'),
-                      SizedBox(width: 8),
-                      Icon(Icons.double_arrow_rounded, size: 18),
-                    ],
-                  ),
+                  child: const Text('Next >>'),
                 ),
               ],
             ),
@@ -287,36 +284,30 @@ class BasicKnowledgeBody extends StatelessWidget {
 
 class PeachStrip extends StatelessWidget {
   const PeachStrip({super.key, required this.items});
-
   final List<PeachMetric> items;
 
   @override
   Widget build(BuildContext context) {
-    const bg = Color(0xFFFFE1C7);
-    const accent = Color(0xFFFFA94D);
-
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       decoration: BoxDecoration(
-        color: bg,
+        color: const Color(0xFFFFE1C7),
         borderRadius: BorderRadius.circular(8),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: items
             .map(
               (e) => Expanded(
                 child: Column(
                   children: [
-                    Icon(e.icon, size: 22, color: Colors.black87),
+                    _MetricIcon(label: e.label, icon: e.icon),
                     const SizedBox(height: 6),
                     Text(e.label, style: const TextStyle(fontSize: 12)),
-                    const SizedBox(height: 2),
                     Text(
                       e.value,
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
-                        color: accent,
+                        color: Color(0xFFFFA94D),
                         fontSize: 12,
                       ),
                     ),
@@ -330,23 +321,37 @@ class PeachStrip extends StatelessWidget {
   }
 }
 
+class _MetricIcon extends StatelessWidget {
+  const _MetricIcon({required this.label, required this.icon});
+
+  final String label;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    const size = 22.0;
+
+    if (label == 'BMI') {
+      return SvgPicture.asset('assets/icons/bmi.svg', width: size, height: size);
+    }
+    if (label == 'TDEE') {
+      return SvgPicture.asset('assets/icons/tdee.svg', width: size, height: size);
+    }
+    return Icon(icon, size: size);
+  }
+}
+
 class PeachMetric {
   final IconData icon;
   final String label;
   final String value;
-
-  const PeachMetric({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
+  const PeachMetric({required this.icon, required this.label, required this.value});
 }
 
-/* ======================== CARD ======================== */
+/* ======================== SHARED COMPONENTS ======================== */
 
 class CardContainer extends StatelessWidget {
   const CardContainer({super.key, required this.child, this.padding});
-
   final Widget child;
   final EdgeInsetsGeometry? padding;
 
@@ -358,61 +363,41 @@ class CardContainer extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFE6E6E6)),
-        boxShadow: const [
-          BoxShadow(
-            blurRadius: 8,
-            offset: Offset(0, 2),
-            color: Color(0x11000000),
-          ),
-        ],
       ),
       child: child,
     );
   }
 }
 
-/* ======================== HEADER ======================== */
-
 class CardHeaderRow extends StatelessWidget {
   const CardHeaderRow({super.key, required this.left, required this.right});
-
   final String left;
   final String right;
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context)
-        .textTheme
-        .labelLarge
-        ?.copyWith(fontWeight: FontWeight.w700);
-
+    final style =
+        Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(left, style: style),
-        Text(right, style: style),
-      ],
+      children: [Text(left, style: style), Text(right, style: style)],
     );
   }
 }
 
-/* ======================== DAILY ITEM ======================== */
-
-class DailyItem extends StatelessWidget {
-  const DailyItem({
+class DailyItemSvg extends StatelessWidget {
+  const DailyItemSvg({
     super.key,
-    required this.icon,
+    required this.assetPath,
     required this.title,
     required this.line1,
     required this.line2,
     required this.line3,
   });
 
-  final IconData icon;
+  final String assetPath;
   final String title;
-  final String line1;
-  final String line2;
-  final String line3;
+  final String line1, line2, line3;
 
   @override
   Widget build(BuildContext context) {
@@ -420,51 +405,33 @@ class DailyItem extends StatelessWidget {
       width: 54,
       child: Column(
         children: [
-          Icon(icon, size: 22, color: Colors.black87),
+          SvgPicture.asset(assetPath, width: 22, height: 22),
           const SizedBox(height: 4),
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: 2),
+          Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
           Text(line1, style: const TextStyle(fontSize: 11)),
-          Text(
-            line2,
-            style:
-                const TextStyle(fontSize: 10, color: Colors.black54),
-          ),
-          Text(
-            line3,
-            style:
-                const TextStyle(fontSize: 10, color: Colors.black54),
-          ),
+          Text(line2, style: const TextStyle(fontSize: 10)),
+          Text(line3, style: const TextStyle(fontSize: 10)),
         ],
       ),
     );
   }
 }
 
-/* ======================== INFO ROW ======================== */
-
-class InfoRow extends StatelessWidget {
-  const InfoRow({
+class InfoRowSvg extends StatelessWidget {
+  const InfoRowSvg({
     super.key,
-    required this.icon,
+    required this.assetPath,
     required this.title,
     required this.text,
   });
 
-  final IconData icon;
+  final String assetPath;
   final String title;
   final String text;
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           width: 38,
@@ -473,28 +440,15 @@ class InfoRow extends StatelessWidget {
             color: const Color(0xFFF5F5F5),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, size: 22),
+          child: SvgPicture.asset(assetPath, width: 22, height: 22),
         ),
         const SizedBox(width: 10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                text,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  height: 1.25,
-                ),
-              ),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+              Text(text, style: const TextStyle(fontSize: 12)),
             ],
           ),
         ),
