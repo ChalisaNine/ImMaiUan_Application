@@ -94,7 +94,7 @@ class _KnowledgeStep2Body extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 ),
                 child: const Text(
-                  '« Back',
+                  '<< Back',
                   style: TextStyle(
                       color: Colors.black87,
                       fontWeight: FontWeight.w700),
