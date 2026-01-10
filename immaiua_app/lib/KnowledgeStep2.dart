@@ -246,6 +246,7 @@ class _KnowledgeStep2Body extends StatelessWidget {
                     children: [
                       Text('Finish >>'),
                       SizedBox(width: 6)
+                      
                     ],
                   ),
                 ),
