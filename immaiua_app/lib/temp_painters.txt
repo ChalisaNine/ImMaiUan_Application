@@ -1,0 +1,99 @@
+
+class _BlueRingPainter extends CustomPainter {
+  final Color color;
+  final double thickness;
+
+  _BlueRingPainter({required this.color, required this.thickness});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - thickness) / 2;
+
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = thickness
+      ..strokeCap = StrokeCap.round;
+      // No blur
+
+    // Draw an arc representing "total calories left" (e.g. 75%)
+    // Starting from top (-PI/2) and sweeping
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -1.5708, // -90 degrees
+      4.0,     // Arbitrary sweep
+      false,
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// Outer ring track (grey background)
+class _OuterRingTrackPainter extends CustomPainter {
+  final Color trackColor;
+  final double thickness;
+
+  _OuterRingTrackPainter({required this.trackColor, required this.thickness});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - thickness) / 2;
+
+    final paint = Paint()
+      ..color = trackColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = thickness
+      ..strokeCap = StrokeCap.round;
+
+    // Draw full circle track
+    canvas.drawCircle(center, radius, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// Outer ring progress (blue arc showing calories consumed)
+class _OuterRingProgressPainter extends CustomPainter {
+  final Color progressColor;
+  final double thickness;
+  final double progress; // 0.0 to 1.0
+
+  _OuterRingProgressPainter({
+    required this.progressColor,
+    required this.thickness,
+    required this.progress,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - thickness) / 2;
+
+    final paint = Paint()
+      ..color = progressColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = thickness
+      ..strokeCap = StrokeCap.round;
+
+    // Draw arc from top (-90 degrees) clockwise
+    final sweepAngle = 2 * 3.14159 * progress;
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -1.5708, // Start at top (-90 degrees)
+      sweepAngle,
+      false,
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _SummaryCard extends StatelessWidget {

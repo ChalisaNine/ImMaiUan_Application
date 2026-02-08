@@ -111,7 +111,7 @@ class _HomeScreen extends StatelessWidget {
                     size: 16, color: Colors.black87),
                 SizedBox(width: 6),
                 Text(
-                  'Monday 21 Feb 2026',
+                  'Monday 22 Feb 2026',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                 ),
               ],
@@ -133,8 +133,15 @@ class _HomeScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
               decoration: BoxDecoration(
-                color: lightPeach,
-                borderRadius: BorderRadius.circular(16),
+                color: const Color(0xFFFFF0E0),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.orange.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -188,7 +195,14 @@ class _HomeScreen extends StatelessWidget {
                     const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.15),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: const [
@@ -225,83 +239,73 @@ class _CalorieRing extends StatelessWidget {
   Widget build(BuildContext context) {
     const yellow = Color(0xFFFFC93C);
     const blue = Color(0xFF8BC6FF);
+    const lightGrey = Color(0xFFE8E8E8);
 
     return SizedBox(
-      width: 240,
-      height: 260,
+      width: 296,
+      height: 296,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // วงเหลือง
+          // Outer ring background (grey track)
+          CustomPaint(
+            size: const Size(296, 296),
+            painter: _OuterRingTrackPainter(
+              trackColor: lightGrey,
+              thickness: 8,
+            ),
+          ),
+
+          // Outer ring progress (blue arc showing calories used)
+          CustomPaint(
+            size: const Size(296, 296),
+            painter: _OuterRingProgressPainter(
+              progressColor: blue,
+              thickness: 8,
+              progress: 0.65, // 65% of calories used (example)
+            ),
+          ),
+
+          // Yellow Ring + Curved Text
+          CustomPaint(
+            size: const Size(280, 280),
+            painter: _CurvedRingPainter(
+              ringColor: yellow,
+              thickness: 45,
+            ),
+          ),
+
+          // White inner circle with shadow
           Container(
-            width: 210,
-            height: 210,
+            width: 180,
+            height: 180,
             decoration: BoxDecoration(
+              color: Colors.white,
               shape: BoxShape.circle,
-              border: Border.all(color: yellow, width: 26),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
           ),
 
-          // โค้งสีฟ้าด้านบน
-          Transform.rotate(
-            angle: 0.55,
-            child: CustomPaint(
-              size: const Size(210, 210),
-              painter: _ArcPainter(
-                color: blue,
-                strokeWidth: 26,
-                startAngle: -0.4,
-                sweepAngle: 0.75,
-              ),
-            ),
-          ),
-
-          // ข้อความตรงกลาง
+          // Center Text
           Column(
             mainAxisSize: MainAxisSize.min,
             children: const [
               Text(
                 "2181 cal.",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800),
               ),
               SizedBox(height: 4),
               Text(
                 "remaining today",
-                style: TextStyle(fontSize: 13, color: Colors.black54),
+                style: TextStyle(fontSize: 14, color: Colors.black54),
               ),
             ],
-          ),
-
-          // label รอบวง: Breakfast / Lunch / Snack / Dinner
-          const Positioned(
-            top: 12,
-            child: Text(
-              "Breakfast",
-              style: TextStyle(fontSize: 11, color: Colors.black87),
-            ),
-          ),
-          const Positioned(
-            right: 0,
-            top: 100,
-            child: Text(
-              "Lunch",
-              style: TextStyle(fontSize: 11, color: Colors.black87),
-            ),
-          ),
-          const Positioned(
-            bottom: 8,
-            child: Text(
-              "Dinner",
-              style: TextStyle(fontSize: 11, color: Colors.black87),
-            ),
-          ),
-          const Positioned(
-            left: 0,
-            top: 100,
-            child: Text(
-              "Snack",
-              style: TextStyle(fontSize: 11, color: Colors.black87),
-            ),
           ),
         ],
       ),
@@ -309,35 +313,190 @@ class _CalorieRing extends StatelessWidget {
   }
 }
 
-class _ArcPainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
-  final double startAngle;
-  final double sweepAngle;
 
-  _ArcPainter({
-    required this.color,
-    required this.strokeWidth,
-    required this.startAngle,
-    required this.sweepAngle,
+class _CurvedRingPainter extends CustomPainter {
+  final Color ringColor;
+  final double thickness;
+
+  _CurvedRingPainter({required this.ringColor, required this.thickness});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - thickness) / 2;
+    
+    // 1. Draw Ring Segments
+    final paint = Paint()
+      ..color = ringColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = thickness
+      ..strokeCap = StrokeCap.butt;
+
+    // We add small gaps by reducing sweep slightly
+    const gap = 0.015; // Reduced from 0.04
+    
+    // Breakfast (-180 to -90)
+    canvas.drawArc(Rect.fromCircle(center: center, radius: radius), -3.14159 + gap, 1.5708 - gap*1.5, false, paint);
+    // Lunch (-90 to 0)
+    canvas.drawArc(Rect.fromCircle(center: center, radius: radius), -1.5708 + gap, 1.5708 - gap*1.5, false, paint);
+    // Dinner (0 to 90)
+    canvas.drawArc(Rect.fromCircle(center: center, radius: radius), 0 + gap, 1.5708 - gap*1.5, false, paint);
+    // Snack (90 to 180)
+    canvas.drawArc(Rect.fromCircle(center: center, radius: radius), 1.5708 + gap, 1.5708 - gap*1.5, false, paint);
+
+    // 2. Draw Curved Text
+    final textStyle = TextStyle(
+      color: Colors.black87.withOpacity(0.8), 
+      fontSize: 14, 
+      fontWeight: FontWeight.w600,
+    );
+
+    // Radius for text baseline (center of ring)
+    _drawTextOnArc(canvas, center, radius, "Breakfast", -3.14159, -1.5708, textStyle);
+    _drawTextOnArc(canvas, center, radius, "Lunch", -1.5708, 0, textStyle);
+    
+    // For bottom text to be readable, we might need adjustments, 
+    // but based on typical ring charts, they often flow clockwise:
+    _drawTextOnArc(canvas, center, radius, "Dinner", 0, 1.5708, textStyle);
+    _drawTextOnArc(canvas, center, radius, "Snack", 1.5708, 3.14159, textStyle);
+  }
+
+  void _drawTextOnArc(Canvas canvas, Offset center, double radius, String text, double startAngle, double endAngle, TextStyle style) {
+    final textSpan = TextSpan(text: text, style: style);
+    final textPainter = TextPainter(text: textSpan, textDirection: TextDirection.ltr);
+    textPainter.layout();
+
+    // Approximate arc length for text
+    final double textArcLength = textPainter.width / radius; // s = r*theta -> theta = s/r
+    
+    // Center the text in the segment
+    final double midAngle = (startAngle + endAngle) / 2;
+    final double textTotalAngle = textPainter.width / radius; 
+    final double textStartAngle = midAngle - (textTotalAngle / 2);
+
+    double currentAngle = textStartAngle;
+    for (int i = 0; i < text.length; i++) {
+        final char = text[i];
+        final charSpan = TextSpan(text: char, style: style);
+        final charPainter = TextPainter(text: charSpan, textDirection: TextDirection.ltr);
+        charPainter.layout();
+        
+        // Angle allocated for this char
+        final charAngle = charPainter.width / radius;
+        
+        canvas.save();
+        // Translate to center
+        canvas.translate(center.dx, center.dy);
+        // Rotate to character position (midpoint of character)
+        // We rotate to currentAngle + half char width
+        canvas.rotate(currentAngle + charAngle / 2 + 1.5708); // +90deg (PI/2) to orient text tangent to circle
+        // Translate to radius
+        canvas.translate(0, -radius);
+        
+        // Draw char centered
+        charPainter.paint(canvas, Offset(-charPainter.width / 2, -charPainter.height / 2));
+        
+        canvas.restore();
+        
+        currentAngle += charAngle;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _BlueRingPainter extends CustomPainter {
+  final Color color;
+  final double thickness;
+
+  _BlueRingPainter({required this.color, required this.thickness});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - thickness) / 1;
+
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = thickness
+      ..strokeCap = StrokeCap.round;
+      // No blur
+
+    // Draw an arc representing "total calories left" (e.g. 75%)
+    // Starting from top (-PI/2) and sweeping
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -1.5708, // -90 degrees
+      4.0,     // Arbitrary sweep
+      false,
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// Outer ring track (grey background)
+class _OuterRingTrackPainter extends CustomPainter {
+  final Color trackColor;
+  final double thickness;
+
+  _OuterRingTrackPainter({required this.trackColor, required this.thickness});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - thickness) / 2;
+
+    final paint = Paint()
+      ..color = trackColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = thickness
+      ..strokeCap = StrokeCap.round;
+
+    // Draw full circle track
+    canvas.drawCircle(center, radius, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// Outer ring progress (blue arc showing calories consumed)
+class _OuterRingProgressPainter extends CustomPainter {
+  final Color progressColor;
+  final double thickness;
+  final double progress; // 0.0 to 1.0
+
+  _OuterRingProgressPainter({
+    required this.progressColor,
+    required this.thickness,
+    required this.progress,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Rect.fromLTWH(
-      strokeWidth / 2,
-      strokeWidth / 2,
-      size.width - strokeWidth,
-      size.height - strokeWidth,
-    );
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - thickness) / 2;
 
     final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
+      ..color = progressColor
       ..style = PaintingStyle.stroke
+      ..strokeWidth = thickness
       ..strokeCap = StrokeCap.round;
 
-    canvas.drawArc(rect, startAngle, sweepAngle, false, paint);
+    // Draw arc from top (-90 degrees) clockwise
+    final sweepAngle = 2 * 3.14159 * progress;
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -1.5708, // Start at top (-90 degrees)
+      sweepAngle,
+      false,
+      paint,
+    );
   }
 
   @override
@@ -355,7 +514,14 @@ class _SummaryCard extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -453,10 +619,14 @@ class _SummaryCard extends StatelessWidget {
           // --------- แถบสีส้มล่าง (BMI / TDEE / BMR) ---------
           Container(
             decoration: const BoxDecoration(
-              color: orangeDeep,
+              gradient: LinearGradient(
+                colors: [Color(0xFFFFA94D), Color(0xFFFF8C42)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(18),
-                bottomRight: Radius.circular(18),
+                bottomLeft: Radius.circular(20),
+                bottomRight: Radius.circular(20),
               ),
             ),
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),

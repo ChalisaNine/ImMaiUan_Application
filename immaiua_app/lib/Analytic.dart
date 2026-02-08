@@ -101,7 +101,7 @@ class CalendarScreen extends StatelessWidget {
                 Icon(Icons.calendar_month_rounded, size: 18),
                 SizedBox(width: 6),
                 Text(
-                  'Monday 21 Feb 2026',
+                  'Monday 22 Feb 2026',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                 ),
               ],
