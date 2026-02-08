@@ -4,8 +4,8 @@ import 'Meal.dart';
 import 'ai_image.dart';
 import 'profile_screen.dart';
 import 'day_report.dart';
-import 'weekly_report.dart';        
-import 'monthly_report.dart';      
+import 'weekly_report.dart';
+import 'monthly_report.dart';
 import 'nav_bar.dart';
 
 class CalendaScreen extends StatefulWidget {
@@ -202,10 +202,7 @@ class _CalendaScreenState extends State<CalendaScreen> {
                 return Center(
                   child: Container(
                     padding: const EdgeInsets.all(6),
-                    child: Text(
-                      "$day",
-                      style: const TextStyle(fontSize: 14),
-                    ),
+                    child: Text("$day", style: const TextStyle(fontSize: 14)),
                   ),
                 );
               }),
@@ -271,7 +268,8 @@ class _CalendaScreenState extends State<CalendaScreen> {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Colors.black87),
+            color: Colors.black87,
+          ),
         ),
 
         //ไปหน้า Monthly Report
@@ -294,10 +292,7 @@ class _WeekdayLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-      ),
+      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
     );
   }
 }

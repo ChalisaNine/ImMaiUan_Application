@@ -17,8 +17,6 @@ class MainScaffold extends StatelessWidget {
     const peach = Color(0xFFFFE1C7);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F7F7),
-
       // ---------------- TOP BAR ----------------
       appBar: AppBar(
         elevation: 0,
@@ -41,8 +39,21 @@ class MainScaffold extends StatelessWidget {
         ),
       ),
 
-      // ---------------- BODY ----------------
-      body: body,
+      // ---------------- BODY with Modern Gradient Background ----------------
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color.fromARGB(255, 255, 255, 255),
+              //Color.fromARGB(255, 253, 237, 225),
+              Color.fromARGB(255, 250, 234, 222), // Soft peachy-orange
+            ],
+          ),
+        ),
+        child: body,
+      ),
 
       // ---------------- FLOAT CAMERA BUTTON ----------------
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -54,15 +65,18 @@ class MainScaffold extends StatelessWidget {
           elevation: 6,
           shape: const CircleBorder(),
           onPressed: () => onTap(2),
-          child: const Icon(Icons.camera_alt_rounded,
-              color: Colors.white, size: 32),
+          child: const Icon(
+            Icons.camera_alt_rounded,
+            color: Colors.white,
+            size: 32,
+          ),
         ),
       ),
 
       // ---------------- BOTTOM NAV BAR ----------------
       bottomNavigationBar: BottomAppBar(
         color: peach,
-        height: 90,
+        height: 63,
         shape: const CircularNotchedRectangle(),
         notchMargin: 10,
         child: Row(
@@ -89,16 +103,16 @@ class MainScaffold extends StatelessWidget {
     return InkWell(
       onTap: () => onTap(index),
       child: Padding(
-        padding: const EdgeInsets.only(top: 6),
+        padding: const EdgeInsets.only(top: 2),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 26, color: selected ? activeColor : inactiveColor),
-            const SizedBox(height: 2),
+            Icon(icon, size: 22, color: selected ? activeColor : inactiveColor),
+            const SizedBox(height: 1),
             Text(
               label,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 10,
                 fontWeight: FontWeight.w600,
                 color: selected ? activeColor : inactiveColor,
               ),

@@ -7,7 +7,8 @@ import 'Calenda.dart';
 import 'nav_bar.dart';
 import 'EditProfile.dart';
 import 'adjust_goal.dart';
-import 'login.dart'; // 👈 เพิ่ม import หน้าล็อกอิน
+import 'package:provider/provider.dart';
+import 'providers/auth_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -38,9 +39,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       case 2:
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (_) => const AiImageScreen(),
-          ),
+          MaterialPageRoute(builder: (_) => const AiImageScreen()),
         );
         break;
       case 3:
@@ -84,10 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 10),
                   const Text(
                     "Monser",
-                    style: TextStyle(
-                      fontSize: 23,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
 
@@ -96,7 +92,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.yellow,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 18, vertical: 6),
+                        horizontal: 18,
+                        vertical: 6,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -123,8 +121,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       _metric("Height", "176 cm", Icons.height),
                       _metric("BMI", "26.1", Icons.monitor_weight),
                       _metric("BMR", "2561", Icons.flash_on),
-                      _metric(
-                          "TDEE", "3564", Icons.directions_run_rounded),
+                      _metric("TDEE", "3564", Icons.directions_run_rounded),
                     ],
                   ),
                 ],
@@ -153,9 +150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => const AdjustGoalScreen(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const AdjustGoalScreen()),
                   );
                 },
               ),
@@ -166,8 +161,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // ================= MENU 2 =================
             _menuBox([
-              _menuItem(
-                  Icons.chat_bubble_outline, "Support", onTap: () {}),
+              _menuItem(Icons.chat_bubble_outline, "Support", onTap: () {}),
               _menuItem(Icons.tag, "Version 1.0", onTap: () {}),
             ]),
 
@@ -180,28 +174,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon: const Icon(Icons.logout_rounded),
                 label: const Text(
                   "Logout",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 style: OutlinedButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 16,
+                  ),
                   side: const BorderSide(color: Colors.redAccent),
                   foregroundColor: Colors.redAccent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                onPressed: () {
-                  // เคลียร์ stack แล้วไปหน้า Login
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const LoginScreen(),
-                    ),
-                    (route) => false,
-                  );
+                onPressed: () async {
+                  await context.read<AuthProvider>().logout();
+                  if (context.mounted) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const AuthGuard()),
+                      (route) => false,
+                    );
+                  }
                 },
               ),
             ),
@@ -246,11 +240,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // ================= MENU ITEM =================
-  Widget _menuItem(
-    IconData icon,
-    String text, {
-    required VoidCallback onTap,
-  }) {
+  Widget _menuItem(IconData icon, String text, {required VoidCallback onTap}) {
     return ListTile(
       leading: Icon(icon, size: 22),
       title: Text(text, style: const TextStyle(fontSize: 15)),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'main.dart';
+import 'package:provider/provider.dart';
+import 'providers/auth_provider.dart';
 import 'register.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -22,13 +23,31 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  void _submit() async {
     if (_formKey.currentState!.validate()) {
-      // TODO: ต่อ backend จริงทีหลัง
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const MainHomeScreen()),
+      final auth = context.read<AuthProvider>();
+      final success = await auth.login(
+        _usernameController.text,
+        _passwordController.text,
       );
+
+      if (!success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(auth.errorMessage),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } else if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Login Successful!"),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+      // If success, AuthGuard in main.dart will rebuild and show logic Home
     }
   }
 
@@ -42,8 +61,10 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 32.0,
+              vertical: 16.0,
+            ),
             child: Form(
               key: _formKey,
               child: Column(
@@ -67,10 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const Text(
                     'Welcome to “ImMaiUan”',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                   ),
 
                   const SizedBox(height: 28),
@@ -90,8 +108,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 4),
                   TextFormField(
                     controller: _usernameController,
-                    validator: (v) =>
-                        (v == null || v.isEmpty) ? "Please enter username" : null,
+                    validator: (v) => (v == null || v.isEmpty)
+                        ? "Please enter username"
+                        : null,
                     decoration: _inputDecoration(),
                   ),
 
@@ -113,8 +132,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextFormField(
                     controller: _passwordController,
                     obscureText: true,
-                    validator: (v) =>
-                        (v == null || v.isEmpty) ? "Please enter password" : null,
+                    validator: (v) => (v == null || v.isEmpty)
+                        ? "Please enter password"
+                        : null,
                     decoration: _inputDecoration(),
                   ),
 
@@ -134,10 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                       child: const Text(
                         "Forgot password ?",
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.black87,
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.black87),
                       ),
                     ),
                   ),
@@ -183,10 +200,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: const [
                         Text(
                           "I'm new here, sign up here ",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.orange,
-                          ),
+                          style: TextStyle(fontSize: 12, color: Colors.orange),
                         ),
                         Icon(
                           Icons.info_outline,
@@ -209,8 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
   InputDecoration _inputDecoration() {
     return InputDecoration(
       isDense: true,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       filled: true,
       fillColor: Colors.white,
       border: OutlineInputBorder(

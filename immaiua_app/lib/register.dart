@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'Authen/ask1.dart'; // 👈 เพิ่ม import
+import 'package:provider/provider.dart';
+import 'providers/auth_provider.dart';
+import 'Authen/ask1.dart';
 import 'login.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -24,13 +26,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  void _submit() {
+  void _submit() async {
     if (_formKey.currentState!.validate()) {
-      // ✅ สมัครเสร็จแล้วไปหน้า BioScreen
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const Ask1Screen()),
+      final auth = context.read<AuthProvider>();
+      final success = await auth.register(
+        _usernameController.text,
+        _passwordController.text,
+        _confirmController.text,
       );
+
+      if (success && mounted) {
+        // ✅ สมัครเสร็จแล้วไปหน้า BioScreen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const Ask1Screen()),
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(auth.errorMessage),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -44,8 +62,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 32.0,
+              vertical: 16.0,
+            ),
             child: Form(
               key: _formKey,
               child: Column(
@@ -68,10 +88,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                   const Text(
                     'Welcome to “ImMaiUan”',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 24),
 
@@ -90,8 +107,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 4),
                   TextFormField(
                     controller: _usernameController,
-                    validator: (v) =>
-                        (v == null || v.isEmpty) ? "Please enter username" : null,
+                    validator: (v) => (v == null || v.isEmpty)
+                        ? "Please enter username"
+                        : null,
                     decoration: _inputDecoration(),
                   ),
                   const SizedBox(height: 14),
@@ -112,8 +130,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   TextFormField(
                     controller: _passwordController,
                     obscureText: true,
-                    validator: (v) =>
-                        (v == null || v.isEmpty) ? "Please enter password" : null,
+                    validator: (v) => (v == null || v.isEmpty)
+                        ? "Please enter password"
+                        : null,
                     decoration: _inputDecoration(),
                   ),
                   const SizedBox(height: 14),
@@ -180,10 +199,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     },
                     child: const Text(
                       "I'm already have account",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.orange,
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.orange),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -199,8 +215,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   InputDecoration _inputDecoration() {
     return InputDecoration(
       isDense: true,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       filled: true,
       fillColor: Colors.white,
       border: OutlineInputBorder(

@@ -203,10 +203,7 @@ class _MealCategoryCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
             ),
           ],
         ),
@@ -243,8 +240,11 @@ class _MealRecentItem extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(Icons.rice_bowl_outlined,
-                size: 28, color: Colors.black87),
+            const Icon(
+              Icons.rice_bowl_outlined,
+              size: 28,
+              color: Colors.black87,
+            ),
             const SizedBox(width: 12),
 
             Expanded(
@@ -260,8 +260,7 @@ class _MealRecentItem extends StatelessWidget {
                   ),
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                        fontSize: 12, color: Colors.black54),
+                    style: const TextStyle(fontSize: 12, color: Colors.black54),
                   ),
                 ],
               ),
