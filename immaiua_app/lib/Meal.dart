@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'providers/meal_provider.dart';
+import 'providers/user_provider.dart';
+
 import 'main.dart';
 import 'profile_screen.dart';
 import 'Calenda.dart';
@@ -15,6 +19,15 @@ class MealScreen extends StatefulWidget {
 
 class _MealScreenState extends State<MealScreen> {
   int _index = 1; // Meal tab
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch all foods
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<MealProvider>().fetchFoods();
+    });
+  }
 
   void _onTap(int i) {
     setState(() => _index = i);
@@ -53,10 +66,12 @@ class _MealScreenState extends State<MealScreen> {
     }
   }
 
-  void _openDetail() {
+  void _openDetail({int? foodId, String? foodName}) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const CameraLogScreen()),
+      MaterialPageRoute(
+        builder: (_) => CameraLogScreen(foodId: foodId, foodName: foodName),
+      ),
     );
   }
 
@@ -80,7 +95,7 @@ class _MealScreenState extends State<MealScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Color(0xFFE6E6E6)),
+                  border: Border.all(color: const Color(0xFFE6E6E6)),
                 ),
                 child: const TextField(
                   decoration: InputDecoration(
@@ -100,12 +115,12 @@ class _MealScreenState extends State<MealScreen> {
                   _MealCategoryCard(
                     icon: Icons.restaurant_menu_rounded,
                     title: "Category",
-                    onTap: _openDetail,
+                    onTap: () => _openDetail(),
                   ),
                   _MealCategoryCard(
                     icon: Icons.bookmark_rounded,
                     title: "Favorites",
-                    onTap: _openDetail,
+                    onTap: () => _openDetail(),
                   ),
                   _MealCategoryCard(
                     icon: Icons.list_alt_rounded,
@@ -118,47 +133,61 @@ class _MealScreenState extends State<MealScreen> {
               const SizedBox(height: 22),
 
               const Text(
-                "Recently",
+                "All Foods",
                 style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
               ),
 
               const SizedBox(height: 14),
 
-              _MealRecentItem(
-                name: "Chicken Breast Salad",
-                subtitle: "3% of calories per day",
-                kcal: "70",
-                onTap: _openDetail,
-              ),
-              _MealRecentItem(
-                name: "Boiled Chicken Rice",
-                subtitle: "25% of calories per day",
-                kcal: "512",
-                onTap: _openDetail,
-              ),
-              _MealRecentItem(
-                name: "Fried Chicken Rice",
-                subtitle: "60% of calories per day",
-                kcal: "768",
-                onTap: _openDetail,
-              ),
-              _MealRecentItem(
-                name: "Pizza",
-                subtitle: "90% of calories per day",
-                kcal: "900",
-                onTap: _openDetail,
-              ),
-              _MealRecentItem(
-                name: "Chicken curry",
-                subtitle: "30% of calories per day",
-                kcal: "1024",
-                onTap: _openDetail,
-              ),
-              _MealRecentItem(
-                name: "Pork fried rice",
-                subtitle: "40% of calories per day",
-                kcal: "456",
-                onTap: _openDetail,
+              /* ================= FOOD LIST ================= */
+              Consumer2<MealProvider, UserProvider>(
+                builder: (context, mealProvider, userProvider, child) {
+                  if (mealProvider.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (mealProvider.error != null) {
+                    return Center(child: Text("Error: ${mealProvider.error}"));
+                  }
+
+                  final items = mealProvider.foodList;
+
+                  if (items.isEmpty) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: Text("No foods found."),
+                      ),
+                    );
+                  }
+
+                  // Get TDEE from UserProvider
+                  final tdee =
+                      (userProvider.profile?['tdee'] as num?)?.toInt() ?? 2000;
+                  final safeTdee = tdee > 0 ? tdee : 2000;
+
+                  return Column(
+                    children: items.map((item) {
+                      final kcal = (item['calories'] as num).toInt();
+                      final percent = (kcal / safeTdee * 100).toStringAsFixed(
+                        1,
+                      );
+
+                      return _MealRecentItem(
+                        name: item['name'] ?? "Unknown Food",
+                        subtitle:
+                            "$percent% of calories per day (TDEE: $safeTdee)",
+                        kcal: kcal.toString(),
+                        onTap: () {
+                          _openDetail(
+                            foodId: item['food_id'],
+                            foodName: item['name'],
+                          );
+                        },
+                      );
+                    }).toList(),
+                  );
+                },
               ),
 
               const SizedBox(height: 80),

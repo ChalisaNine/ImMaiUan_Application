@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'ask3.dart';
 import 'ask5.dart'; // หน้าเป้าถัดไป (จะทำ placeholder ให้ด้านล่าง)
+import 'package:provider/provider.dart';
+import '../providers/profile_setup_provider.dart';
 
 class Ask4Screen extends StatefulWidget {
   const Ask4Screen({super.key});
@@ -39,7 +41,9 @@ class _Ask4ScreenState extends State<Ask4Screen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonColor,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 6),
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -48,9 +52,7 @@ class _Ask4ScreenState extends State<Ask4Screen> {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const Ask3Screen(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const Ask3Screen()),
                     );
                   },
                   child: const Text(
@@ -84,10 +86,7 @@ class _Ask4ScreenState extends State<Ask4Screen> {
               const Text(
                 "What is your goal?",
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
 
               const SizedBox(height: 28),
@@ -103,7 +102,9 @@ class _Ask4ScreenState extends State<Ask4Screen> {
                           child: Container(
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(
-                                vertical: 12, horizontal: 10),
+                              vertical: 12,
+                              horizontal: 10,
+                            ),
                             decoration: BoxDecoration(
                               color: _selectedGoal == text
                                   ? const Color(0xFFFFD84E)
@@ -145,9 +146,7 @@ class _Ask4ScreenState extends State<Ask4Screen> {
                     onPressed: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => const Ask3Screen(),
-                        ),
+                        MaterialPageRoute(builder: (_) => const Ask3Screen()),
                       );
                     },
                     child: const Text(
@@ -164,13 +163,18 @@ class _Ask4ScreenState extends State<Ask4Screen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: buttonColor,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 8),
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     onPressed: _selectedGoal != null
                         ? () {
+                            context.read<ProfileSetupProvider>().setGoal(
+                              _selectedGoal!,
+                            );
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/profile_setup_provider.dart';
 import 'ask2.dart';
 
 class Ask1Screen extends StatefulWidget {
@@ -29,8 +31,10 @@ class _Ask1ScreenState extends State<Ask1Screen> {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonColor,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -67,10 +71,7 @@ class _Ask1ScreenState extends State<Ask1Screen> {
 
               const Text(
                 "Biological Genders",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
 
               const SizedBox(height: 28),
@@ -104,13 +105,18 @@ class _Ask1ScreenState extends State<Ask1Screen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonColor,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 8),
+                      horizontal: 20,
+                      vertical: 8,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   onPressed: _isMale != null
                       ? () {
+                          context.read<ProfileSetupProvider>().setGender(
+                            _isMale! ? "Male" : "Female",
+                          );
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(

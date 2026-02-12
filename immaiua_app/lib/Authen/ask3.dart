@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'ask2.dart';
 import 'ask4.dart'; // ✅ เพิ่ม import หน้า ask4
+import 'package:provider/provider.dart';
+import '../providers/profile_setup_provider.dart';
 
 class Ask3Screen extends StatefulWidget {
   const Ask3Screen({super.key});
@@ -10,10 +12,12 @@ class Ask3Screen extends StatefulWidget {
 }
 
 class _Ask3ScreenState extends State<Ask3Screen> {
-  final TextEditingController _heightController =
-      TextEditingController(text: "172");
-  final TextEditingController _weightController =
-      TextEditingController(text: "78");
+  final TextEditingController _heightController = TextEditingController(
+    text: "172",
+  );
+  final TextEditingController _weightController = TextEditingController(
+    text: "78",
+  );
 
   @override
   void dispose() {
@@ -41,8 +45,10 @@ class _Ask3ScreenState extends State<Ask3Screen> {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonColor,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -51,9 +57,7 @@ class _Ask3ScreenState extends State<Ask3Screen> {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const Ask2Screen(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const Ask2Screen()),
                     );
                   },
                   child: const Text(
@@ -87,10 +91,7 @@ class _Ask3ScreenState extends State<Ask3Screen> {
               const Text(
                 "Height & Weight",
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
 
               const SizedBox(height: 28),
@@ -111,9 +112,7 @@ class _Ask3ScreenState extends State<Ask3Screen> {
                     onPressed: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => const Ask2Screen(),
-                        ),
+                        MaterialPageRoute(builder: (_) => const Ask2Screen()),
                       );
                     },
                     child: const Text(
@@ -130,18 +129,23 @@ class _Ask3ScreenState extends State<Ask3Screen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: buttonColor,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 8),
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const Ask4Screen(),
-                        ),
-                      );
+                      final h = double.tryParse(_heightController.text);
+                      final w = double.tryParse(_weightController.text);
+                      if (h != null && w != null) {
+                        context.read<ProfileSetupProvider>().setBodyStats(h, w);
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const Ask4Screen()),
+                        );
+                      }
                     },
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
@@ -172,16 +176,16 @@ class _Ask3ScreenState extends State<Ask3Screen> {
 
   // ---------- Input field component ----------
   Widget _buildInputField(
-      String label, TextEditingController controller, String unit) {
+    String label,
+    TextEditingController controller,
+    String unit,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-          ),
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 6),
         Container(
@@ -197,17 +201,12 @@ class _Ask3ScreenState extends State<Ask3Screen> {
                 child: TextField(
                   controller: controller,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                  ),
+                  decoration: const InputDecoration(border: InputBorder.none),
                 ),
               ),
               Text(
                 unit,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.black87,
-                ),
+                style: const TextStyle(fontSize: 14, color: Colors.black87),
               ),
             ],
           ),

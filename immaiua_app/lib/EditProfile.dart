@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'main.dart';
 import 'Meal.dart';
 import 'ai_image.dart';
 import 'Calenda.dart';
 import 'nav_bar.dart';
+import 'providers/user_provider.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -16,16 +18,69 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   int _index = 4; // โปรไฟล์แท็บ
 
-  final TextEditingController _nameController =
-      TextEditingController(text: 'Monser');
-  final TextEditingController _weightController =
-      TextEditingController(text: '78');
-  final TextEditingController _heightController =
-      TextEditingController(text: '176');
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _weightController = TextEditingController();
+  final TextEditingController _heightController = TextEditingController();
 
   bool _isMale = true;
+  String? _bmr;
+  String? _tdee;
+  int? _age;
+  double _multiplier = 1.2;
 
+  // Temporary list for UI only (not saving to DB yet as requested)
   final List<String> _allergies = ["Cow's milk"];
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-fill data from provider
+    final profile = context.read<UserProvider>().profile;
+    if (profile != null) {
+      _nameController.text = profile['display_name'] ?? "";
+      _weightController.text = (profile['weight_kg'] ?? "").toString();
+      _heightController.text = (profile['height_cm'] ?? "").toString();
+      _isMale = (profile['gender'] == "Male");
+      _bmr = (profile['bmr'] ?? "").toString();
+      _tdee = (profile['tdee'] ?? "").toString();
+      _age = profile['age'];
+
+      // Infer multiplier
+      double bmrVal = (profile['bmr'] as num?)?.toDouble() ?? 0;
+      double tdeeVal = (profile['tdee'] as num?)?.toDouble() ?? 0;
+      if (bmrVal > 0) {
+        _multiplier = tdeeVal / bmrVal;
+      }
+    }
+
+    _weightController.addListener(_calculateMetrics);
+    _heightController.addListener(_calculateMetrics);
+  }
+
+  void _calculateMetrics() {
+    if (_age == null) return;
+
+    double weight = double.tryParse(_weightController.text) ?? 0;
+    double height = double.tryParse(_heightController.text) ?? 0;
+
+    if (weight > 0 && height > 0) {
+      // Mifflin-St Jeor Equation
+      double bmrVal = (10 * weight) + (6.25 * height) - (5 * _age!);
+      if (_isMale) {
+        bmrVal += 5;
+      } else {
+        bmrVal -= 161;
+      }
+
+      int bmrInt = bmrVal.round();
+      int tdeeInt = (bmrVal * _multiplier).round();
+
+      setState(() {
+        _bmr = bmrInt.toString();
+        _tdee = tdeeInt.toString();
+      });
+    }
+  }
 
   void _onTap(int i) {
     setState(() => _index = i);
@@ -67,6 +122,38 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _weightController.dispose();
     _heightController.dispose();
     super.dispose();
+  }
+
+  Future<void> _saveProfile() async {
+    final name = _nameController.text;
+    final weight = double.tryParse(_weightController.text);
+    final height = double.tryParse(_heightController.text);
+
+    if (name.isEmpty || weight == null || height == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill in valid data")),
+      );
+      return;
+    }
+
+    final success = await context.read<UserProvider>().updateProfile({
+      "display_name": name,
+      "weight_kg": weight,
+      "height_cm": height,
+      "gender": _isMale ? "Male" : "Female",
+    });
+
+    if (success && mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Profile updated!")));
+      // Data is already refreshed in updateProfile
+      Navigator.pop(context); // Go back to Profile Screen
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.read<UserProvider>().error ?? "Error")),
+      );
+    }
   }
 
   @override
@@ -136,7 +223,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           controller: _nameController,
                           decoration: InputDecoration(
                             contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 10),
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
                             filled: true,
                             fillColor: Colors.white,
                             border: OutlineInputBorder(
@@ -157,10 +246,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             // ---------------- PERSONAL DETAILS ----------------
             const Text(
               "Personal details",
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
 
@@ -206,10 +292,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   // Gender
                   const Text(
                     "Gender",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -222,24 +305,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                   const SizedBox(height: 14),
 
-                  // BMR / TDEE bar (ค่าตัวอย่าง)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
+                  // BMR / TDEE bar
+                  if (_bmr != null && _tdee != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE0E0E0),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [Text("BMR : $_bmr"), Text("TDEE : $_tdee")],
+                      ),
                     ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE0E0E0),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        Text("BMR : 2405"),
-                        Text("TDEE : 3540"),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -249,10 +330,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             // ---------------- ALLERGY HISTORY ----------------
             const Text(
               "History of food allergies",
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
 
@@ -285,10 +363,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(
-                              Icons.delete_outline,
-                              size: 20,
-                            ),
+                            icon: const Icon(Icons.delete_outline, size: 20),
                             onPressed: () {
                               setState(() {
                                 _allergies.remove(a);
@@ -308,7 +383,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.amber,
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 6),
+                          horizontal: 16,
+                          vertical: 6,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -330,16 +407,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFFFA94D),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 8,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),
-                onPressed: () {
-                  // ย้อนกลับไปหน้า Profile
-                  Navigator.pop(context);
-                },
+                onPressed: _saveProfile,
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -380,10 +456,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 6),
         Row(
@@ -395,14 +468,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 decoration: InputDecoration(
                   isDense: true,
                   contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 10),
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(
-                      color: Colors.grey.shade300,
-                    ),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
                   ),
                 ),
               ),
@@ -420,7 +493,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _isMale = maleChip),
+        onTap: () {
+          setState(() => _isMale = maleChip);
+          _calculateMetrics();
+        },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
@@ -433,9 +509,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           child: Center(
             child: Text(
               label,
-              style: TextStyle(
-                color: isSelected ? Colors.white : Colors.black,
-              ),
+              style: TextStyle(color: isSelected ? Colors.white : Colors.black),
             ),
           ),
         ),
@@ -452,9 +526,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         title: const Text('Add allergy'),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(
-            hintText: "e.g. Cow's milk",
-          ),
+          decoration: const InputDecoration(hintText: "e.g. Cow's milk"),
         ),
         actions: [
           TextButton(

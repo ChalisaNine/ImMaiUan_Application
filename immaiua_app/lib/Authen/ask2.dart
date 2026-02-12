@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'ask1.dart';
 import 'ask3.dart';
+import 'package:provider/provider.dart';
+import '../providers/profile_setup_provider.dart';
 
 class Ask2Screen extends StatefulWidget {
   const Ask2Screen({super.key});
@@ -38,8 +40,10 @@ class _Ask2ScreenState extends State<Ask2Screen> {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonColor,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -48,9 +52,7 @@ class _Ask2ScreenState extends State<Ask2Screen> {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const Ask1Screen(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const Ask1Screen()),
                     );
                   },
                   child: const Text(
@@ -85,10 +87,7 @@ class _Ask2ScreenState extends State<Ask2Screen> {
               const Text(
                 "How many workouts\ndo you do per week ?",
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
 
               const SizedBox(height: 28),
@@ -104,7 +103,9 @@ class _Ask2ScreenState extends State<Ask2Screen> {
                           child: Container(
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(
-                                vertical: 12, horizontal: 10),
+                              vertical: 12,
+                              horizontal: 10,
+                            ),
                             decoration: BoxDecoration(
                               color: _selectedLevel == text
                                   ? const Color(0xFFFFD84E)
@@ -146,9 +147,7 @@ class _Ask2ScreenState extends State<Ask2Screen> {
                     onPressed: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => const Ask1Screen(),
-                        ),
+                        MaterialPageRoute(builder: (_) => const Ask1Screen()),
                       );
                     },
                     child: const Text(
@@ -165,13 +164,18 @@ class _Ask2ScreenState extends State<Ask2Screen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: buttonColor,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 8),
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     onPressed: _selectedLevel != null
                         ? () {
+                            context
+                                .read<ProfileSetupProvider>()
+                                .setActivityLevel(_selectedLevel!);
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(

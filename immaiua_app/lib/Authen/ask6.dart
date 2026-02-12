@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import '../main.dart';   // กลับไปหน้า MainHomeScreen
-import 'ask5.dart';     // ย้อนกลับมาหน้า Ask5
+import '../main.dart'; // กลับไปหน้า MainHomeScreen
+import 'ask5.dart'; // ย้อนกลับมาหน้า Ask5
+import 'package:provider/provider.dart';
+import '../providers/profile_setup_provider.dart';
 
 class Ask6Screen extends StatefulWidget {
   const Ask6Screen({super.key});
@@ -10,10 +12,12 @@ class Ask6Screen extends StatefulWidget {
 }
 
 class _Ask6ScreenState extends State<Ask6Screen> {
-  final TextEditingController _nameController =
-      TextEditingController(text: "Monserzaza007");
-  final TextEditingController _dobController =
-      TextEditingController(text: "09/29/2003");
+  final TextEditingController _nameController = TextEditingController(
+    text: "Monserzaza007",
+  );
+  final TextEditingController _dobController = TextEditingController(
+    text: "09/29/2003",
+  );
 
   @override
   void dispose() {
@@ -71,8 +75,10 @@ class _Ask6ScreenState extends State<Ask6Screen> {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonColor,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -81,9 +87,7 @@ class _Ask6ScreenState extends State<Ask6Screen> {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const Ask5Screen(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const Ask5Screen()),
                     );
                   },
                   child: const Text(
@@ -116,10 +120,7 @@ class _Ask6ScreenState extends State<Ask6Screen> {
 
               const Text(
                 "Personal Information",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
 
               const SizedBox(height: 28),
@@ -143,13 +144,14 @@ class _Ask6ScreenState extends State<Ask6Screen> {
                       decoration: InputDecoration(
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
-                          borderSide:
-                              const BorderSide(color: Colors.black26),
+                          borderSide: const BorderSide(color: Colors.black26),
                         ),
                       ),
                     ),
@@ -171,15 +173,17 @@ class _Ask6ScreenState extends State<Ask6Screen> {
                             readOnly: true,
                             decoration: InputDecoration(
                               isDense: true,
-                              contentPadding:
-                                  const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 10),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
-                                borderSide:
-                                    const BorderSide(color: Colors.black26),
+                                borderSide: const BorderSide(
+                                  color: Colors.black26,
+                                ),
                               ),
                             ),
                           ),
@@ -205,9 +209,7 @@ class _Ask6ScreenState extends State<Ask6Screen> {
                     onPressed: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => const Ask5Screen(),
-                        ),
+                        MaterialPageRoute(builder: (_) => const Ask5Screen()),
                       );
                     },
                     child: const Text(
@@ -218,42 +220,74 @@ class _Ask6ScreenState extends State<Ask6Screen> {
                       ),
                     ),
                   ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: buttonColor,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onPressed: () {
-                      // จบ onboarding → ไปหน้า MainHomeScreen
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const MainHomeScreen(),
-                        ),
-                        (route) => false,
-                      );
-                    },
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          "Next ",
-                          style: TextStyle(
-                            color: Colors.black87,
-                            fontWeight: FontWeight.w600,
+                  Consumer<ProfileSetupProvider>(
+                    builder: (context, provider, child) {
+                      return ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: buttonColor,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 8,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        Icon(
-                          Icons.double_arrow_rounded,
-                          size: 16,
-                          color: Colors.black87,
-                        ),
-                      ],
-                    ),
+                        onPressed: provider.isLoading
+                            ? null
+                            : () async {
+                                provider.setPersonalInfo(
+                                  _nameController.text,
+                                  _dobController.text,
+                                );
+                                final success = await provider.submitProfile();
+                                if (success && context.mounted) {
+                                  Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const MainHomeScreen(),
+                                    ),
+                                    (route) => false,
+                                  );
+                                } else if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        provider.error ?? "Setup failed",
+                                      ),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              },
+                        child: provider.isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    "Next ",
+                                    style: TextStyle(
+                                      color: Colors.black87,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.double_arrow_rounded,
+                                    size: 16,
+                                    color: Colors.black87,
+                                  ),
+                                ],
+                              ),
+                      );
+                    },
                   ),
                 ],
               ),

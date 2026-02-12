@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'ask4.dart';
 import 'ask6.dart'; // หน้าถัดไป
+import 'package:provider/provider.dart';
+import '../providers/profile_setup_provider.dart';
 
 class Ask5Screen extends StatefulWidget {
   const Ask5Screen({super.key});
@@ -32,8 +34,10 @@ class _Ask5ScreenState extends State<Ask5Screen> {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonColor,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -75,26 +79,22 @@ class _Ask5ScreenState extends State<Ask5Screen> {
 
               const Text(
                 "Do you have any allergy?",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
               const Text(
                 "(skip if don’t)",
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.black54,
-                ),
+                style: TextStyle(fontSize: 13, color: Colors.black54),
               ),
 
               const SizedBox(height: 24),
 
               // Allergy box
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(14),
@@ -121,7 +121,9 @@ class _Ask5ScreenState extends State<Ask5Screen> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: buttonColor,
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 6),
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -147,16 +149,18 @@ class _Ask5ScreenState extends State<Ask5Screen> {
                         children: _allergies
                             .map(
                               (item) => Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 4.0),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4.0,
+                                ),
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 10),
+                                    horizontal: 12,
+                                    vertical: 10,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFFFFF7E9),
                                     borderRadius: BorderRadius.circular(8),
-                                    border:
-                                        Border.all(color: Colors.black12),
+                                    border: Border.all(color: Colors.black12),
                                   ),
                                   child: Row(
                                     mainAxisAlignment:
@@ -169,14 +173,17 @@ class _Ask5ScreenState extends State<Ask5Screen> {
                                         ),
                                       ),
                                       IconButton(
-                                        icon: const Icon(Icons.delete,
-                                            color: Colors.redAccent, size: 20),
+                                        icon: const Icon(
+                                          Icons.delete,
+                                          color: Colors.redAccent,
+                                          size: 20,
+                                        ),
                                         onPressed: () {
                                           setState(() {
                                             _allergies.remove(item);
                                           });
                                         },
-                                      )
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -216,12 +223,17 @@ class _Ask5ScreenState extends State<Ask5Screen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: buttonColor,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 8),
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     onPressed: () {
+                      context.read<ProfileSetupProvider>().setAllergies(
+                        _allergies,
+                      );
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(builder: (_) => const Ask6Screen()),
@@ -237,8 +249,11 @@ class _Ask5ScreenState extends State<Ask5Screen> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        Icon(Icons.double_arrow_rounded,
-                            size: 16, color: Colors.black87),
+                        Icon(
+                          Icons.double_arrow_rounded,
+                          size: 16,
+                          color: Colors.black87,
+                        ),
                       ],
                     ),
                   ),

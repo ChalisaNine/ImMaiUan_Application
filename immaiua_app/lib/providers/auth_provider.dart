@@ -10,6 +10,7 @@ class AuthProvider extends ChangeNotifier {
 
   AuthStatus get status => _status;
   String get errorMessage => _errorMessage;
+  AuthService get authService => _authService;
 
   // Initialize: check cookie/session
   Future<void> init() async {
@@ -30,6 +31,11 @@ class AuthProvider extends ChangeNotifier {
     _errorMessage = '';
     // notifyListeners();
 
+    // Ensure initialized
+    if (_authService.cookieJar == null) {
+      await _authService.init();
+    }
+
     try {
       final response = await _authService.login(email, password);
 
@@ -43,9 +49,10 @@ class AuthProvider extends ChangeNotifier {
         notifyListeners();
         return false;
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print("❌ Login Error: $e\n$stackTrace"); // DEBUG
       _status = AuthStatus.unauthenticated;
-      _errorMessage = 'Connection error or server unreachable';
+      _errorMessage = 'Connection error: $e'; // Show actual error for debugging
       notifyListeners();
       return false;
     }

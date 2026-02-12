@@ -6,7 +6,10 @@ import 'package:path_provider/path_provider.dart';
 
 class AuthService {
   late Dio _dio;
-  late PersistCookieJar _cookieJar;
+  Dio get dio => _dio;
+  PersistCookieJar? _cookieJar;
+
+  PersistCookieJar? get cookieJar => _cookieJar;
 
   // Base URL for Android Emulator (10.0.2.2) or iOS Simulator (127.0.0.1)
   // Adjust this based on where the Flask server is running.
@@ -37,14 +40,83 @@ class AuthService {
     _cookieJar = PersistCookieJar(
       storage: FileStorage("$appDocPath/.cookies/"),
     );
-    _dio.interceptors.add(CookieManager(_cookieJar));
+    _dio.interceptors.add(CookieManager(_cookieJar!));
 
     // DEBUG: Print loaded cookies
     try {
-      final cookies = await _cookieJar.loadForRequest(Uri.parse(_baseUrl));
+      final cookies = await _cookieJar!.loadForRequest(Uri.parse(_baseUrl));
       print("🍪 Initial Cookies loaded: $cookies");
     } catch (e) {
       print("🍪 Error loading cookies: $e");
+    }
+  }
+
+  Future<Response> setupProfile(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post('/register/setup-profile', data: data);
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Response> getProfile() async {
+    try {
+      final response = await _dio.get('/profile/');
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Response> updateProfile(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.put('/profile/', data: data);
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Response> getMeals(String date) async {
+    try {
+      final response = await _dio.get(
+        '/meals/',
+        queryParameters: {'date': date},
+      );
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Response> getDailySummary(String date) async {
+    try {
+      final response = await _dio.get(
+        '/meals/daily-summary',
+        queryParameters: {'date': date},
+      );
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Response> getFoodList() async {
+    try {
+      final response = await _dio.get('/meals/foods');
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Response> getFoodDetails(int foodId) async {
+    try {
+      final response = await _dio.get('/meals/food/$foodId');
+      return response;
+    } catch (e) {
+      rethrow;
     }
   }
 
@@ -55,8 +127,18 @@ class AuthService {
     );
     // DEBUG
     print("📥 Login Response: ${response.statusCode} - ${response.data}");
-    final cookies = await _cookieJar.loadForRequest(Uri.parse(_baseUrl));
-    print("🍪 Cookies after login: $cookies");
+
+    // Safety check for cookieJar
+    try {
+      if (_cookieJar != null) {
+        final cookies = await _cookieJar!.loadForRequest(Uri.parse(_baseUrl));
+        print("🍪 Cookies after login: $cookies");
+      } else {
+        print("⚠️ CookieJar not initialized yet.");
+      }
+    } catch (e) {
+      print("⚠️ Failed to load/print cookies: $e");
+    }
     return response;
   }
 
@@ -76,11 +158,20 @@ class AuthService {
     try {
       final response = await _dio.post('/auth/logout');
       // Clear cookies locally
-      await _cookieJar.deleteAll();
+      await _cookieJar?.deleteAll();
       return response;
     } catch (e) {
       // Even if API fails, clear cookies
-      await _cookieJar.deleteAll();
+      await _cookieJar?.deleteAll();
+      rethrow;
+    }
+  }
+
+  Future<Response> logFood(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post('/meals/logfood', data: data);
+      return response;
+    } catch (e) {
       rethrow;
     }
   }
