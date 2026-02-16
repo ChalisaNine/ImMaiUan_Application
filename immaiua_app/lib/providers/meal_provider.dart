@@ -57,23 +57,95 @@ class MealProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> fetchFoods() async {
-    _isLoading = true;
+  // Pagination state
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
+  int _offset = 0;
+  final int _limit = 20;
+  String _searchQuery = '';
+
+  bool get isLoadingMore => _isLoadingMore;
+  bool get hasMore => _hasMore;
+  String get searchQuery => _searchQuery;
+
+  Future<void> fetchFoods({bool reset = false, String? search}) async {
+    // Handle search query changes
+    if (search != null && search != _searchQuery) {
+      _searchQuery = search;
+      reset = true; // Reset pagination when search changes
+    }
+
+    // Reset pagination if requested
+    if (reset) {
+      _offset = 0;
+      _foodList = [];
+      _hasMore = true;
+    }
+
+    // Prevent multiple simultaneous requests
+    if (_isLoading || _isLoadingMore || !_hasMore) return;
+
+    // Set appropriate loading state
+    if (_offset == 0) {
+      _isLoading = true;
+    } else {
+      _isLoadingMore = true;
+    }
     _error = null;
     notifyListeners();
 
     try {
-      final response = await _authService.getFoodList();
+      final response = await _authService.getFoodList(
+        limit: _limit,
+        offset: _offset,
+        search: _searchQuery.isNotEmpty ? _searchQuery : null,
+      );
+
       if (response.statusCode == 200) {
-        _foodList = response.data;
+        final data = response.data;
+
+        // Handle the new response structure with pagination metadata
+        if (data is Map && data.containsKey('foods')) {
+          final foods = data['foods'] as List;
+
+          if (reset) {
+            _foodList = foods;
+          } else {
+            _foodList.addAll(foods);
+          }
+
+          _hasMore = data['has_more'] ?? false;
+          _offset += foods.length;
+        } else {
+          // Fallback for old response format (backwards compatibility)
+          if (reset) {
+            _foodList = data;
+          } else {
+            _foodList.addAll(data);
+          }
+          _hasMore = false; // No more data if using old format
+        }
+
+        _error = null;
       } else {
         _error = "Failed to load food list";
+        _hasMore = false;
       }
     } catch (e) {
       _error = e.toString();
+      _hasMore = false;
     } finally {
       _isLoading = false;
+      _isLoadingMore = false;
       notifyListeners();
+    }
+  }
+
+  // Clear search and reset list
+  void clearSearch() {
+    if (_searchQuery.isNotEmpty) {
+      _searchQuery = '';
+      fetchFoods(reset: true);
     }
   }
 

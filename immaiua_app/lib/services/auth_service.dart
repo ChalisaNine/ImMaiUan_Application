@@ -102,9 +102,21 @@ class AuthService {
     }
   }
 
-  Future<Response> getFoodList() async {
+  Future<Response> getFoodList({
+    int? limit,
+    int? offset,
+    String? search,
+  }) async {
     try {
-      final response = await _dio.get('/meals/foods');
+      final queryParams = <String, dynamic>{};
+      if (limit != null) queryParams['limit'] = limit;
+      if (offset != null) queryParams['offset'] = offset;
+      if (search != null && search.isNotEmpty) queryParams['search'] = search;
+
+      final response = await _dio.get(
+        '/meals/foods',
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
       return response;
     } catch (e) {
       rethrow;
