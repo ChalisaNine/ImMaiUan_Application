@@ -5,6 +5,7 @@ import 'Meal.dart';
 import 'ai_image.dart';
 import 'knowledge.dart';
 import 'profile_screen.dart';
+import 'EditProfile.dart';
 import 'nav_bar.dart'; // ⭐ ใช้ NAV BAR กลาง
 import 'login.dart';
 import 'providers/auth_provider.dart';
@@ -209,6 +210,11 @@ class _HomeScreenState extends State<_HomeScreen> {
 
           // Extract profile data
           final calorieTarget = (profile?['calorie_target'] ?? 2000).toDouble();
+          final carbTarget =
+              (profile?['carb_prefer'] as num?)?.toDouble() ?? 300.0;
+          final proteinTarget =
+              (profile?['protein_prefer'] as num?)?.toDouble() ?? 50.0;
+          final fatTarget = (profile?['fat_prefer'] as num?)?.toDouble() ?? 70.0;
           final weight = profile?['weight_kg']?.toString() ?? "0";
           final height = profile?['height_cm']?.toString() ?? "0";
           final bmi = profile?['bmi']?.toStringAsFixed(1) ?? "0.0";
@@ -217,7 +223,21 @@ class _HomeScreenState extends State<_HomeScreen> {
 
           // Calculate remaining calories
           final remaining = calorieTarget - calories;
+          final burnedCalories = calorieTarget - calories;
           final progress = calorieTarget > 0 ? calories / calorieTarget : 0.0;
+
+          int calculatePercentage(double intake, double target) {
+            if (target <= 0) {
+              return intake <= 0 ? 0 : 100;
+            }
+            return ((intake / target) * 100).toInt();
+          }
+
+          final sugarPercentage = calculatePercentage(sugar, 50);
+          final carbPercentage = calculatePercentage(carb, carbTarget);
+          final proteinPercentage = calculatePercentage(protein, proteinTarget);
+          final fatPercentage = calculatePercentage(fat, fatTarget);
+          final sodiumPercentage = calculatePercentage(sodium, 2300);
 
           return SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
@@ -268,6 +288,7 @@ class _HomeScreenState extends State<_HomeScreen> {
                   weight: weight,
                   height: height,
                   calories: calories,
+                  burnedCalories: burnedCalories,
                   tdee: tdee,
                   bmi: bmi,
                   bmr: bmr,
@@ -303,37 +324,37 @@ class _HomeScreenState extends State<_HomeScreen> {
                       _NutrientChip(
                         icon: Icons.cake_rounded,
                         label: "Sugar",
+                        percentage: sugarPercentage,
                         value: sugar,
                         unit: "g",
-                        rdi: 50, // Recommended Daily Intake
                       ),
                       _NutrientChip(
                         icon: Icons.rice_bowl_rounded,
                         label: "Carb",
+                        percentage: carbPercentage,
                         value: carb,
                         unit: "g",
-                        rdi: 300,
                       ),
                       _NutrientChip(
                         icon: Icons.egg_rounded,
                         label: "Protein",
+                        percentage: proteinPercentage,
                         value: protein,
                         unit: "g",
-                        rdi: 50,
                       ),
                       _NutrientChip(
                         icon: Icons.local_pizza_rounded,
                         label: "Fat",
+                        percentage: fatPercentage,
                         value: fat,
                         unit: "g",
-                        rdi: 70,
                       ),
                       _NutrientChip(
                         icon: Icons.bolt_rounded,
                         label: "Sodium",
+                        percentage: sodiumPercentage,
                         value: sodium,
                         unit: "mg",
-                        rdi: 2300,
                       ),
                     ],
                   ),
@@ -732,6 +753,7 @@ class _SummaryCard extends StatelessWidget {
   final String weight;
   final String height;
   final double calories;
+  final double burnedCalories;
   final String tdee;
   final String bmi;
   final String bmr;
@@ -740,6 +762,7 @@ class _SummaryCard extends StatelessWidget {
     required this.weight,
     required this.height,
     required this.calories,
+    required this.burnedCalories,
     required this.tdee,
     required this.bmi,
     required this.bmr,
@@ -826,7 +849,15 @@ class _SummaryCard extends StatelessWidget {
                               ),
                             ),
                         onPressed: () {
-                          // TODO: Edit user data
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const EditProfileScreen(),
+                            ),
+                          ).then((_) {
+                            // Refresh profile data when returning
+                            context.read<UserProvider>().fetchProfile();
+                          });
                         },
                         child: const Text(
                           "Edit",
@@ -892,23 +923,23 @@ class _SummaryCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       Row(
-                        children: const [
-                          Icon(
+                        children: [
+                          const Icon(
                             Icons.local_fire_department,
                             size: 28,
                             color: Colors.black87,
                           ),
-                          SizedBox(width: 12),
+                          const SizedBox(width: 12),
                           Text(
-                            "1450",
-                            style: TextStyle(
+                            "${burnedCalories.toInt()}",
+                            style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
                               color: Color(0xFFFF9800),
                             ),
                           ),
-                          SizedBox(width: 6),
-                          Text(
+                          const SizedBox(width: 6),
+                          const Text(
                             "kcal",
                             style: TextStyle(
                               fontSize: 14,
@@ -995,21 +1026,21 @@ class _SummaryCell extends StatelessWidget {
 class _NutrientChip extends StatelessWidget {
   final IconData icon;
   final String label;
+  final int percentage;
   final double value;
   final String unit;
-  final double rdi;
 
   const _NutrientChip({
     required this.icon,
     required this.label,
+    required this.percentage,
     required this.value,
     required this.unit,
-    required this.rdi,
   });
 
   @override
   Widget build(BuildContext context) {
-    final percentage = rdi > 0 ? (value / rdi * 100).toInt() : 0;
+    final isOver = percentage > 100;
     return SizedBox(
       width: 64,
       child: Column(
@@ -1020,7 +1051,14 @@ class _NutrientChip extends StatelessWidget {
             label,
             style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
           ),
-          Text("$percentage %", style: const TextStyle(fontSize: 11)),
+          Text(
+            "$percentage %",
+            style: TextStyle(
+              fontSize: 11,
+              color: isOver ? Colors.red.shade700 : Colors.black87,
+              fontWeight: isOver ? FontWeight.w700 : FontWeight.normal,
+            ),
+          ),
           Text(
             "${value.toStringAsFixed(1)} $unit",
             textAlign: TextAlign.center,

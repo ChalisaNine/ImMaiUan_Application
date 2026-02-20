@@ -8,15 +8,19 @@ class MealProvider extends ChangeNotifier {
 
   List<dynamic> _meals = [];
   List<dynamic> _foodList = [];
+  List<dynamic> _categories = [];
   Map<String, dynamic>? _dailySummary;
   bool _isLoading = false;
   String? _error;
+  int? _selectedCategoryId;
 
   List<dynamic> get meals => _meals;
   List<dynamic> get foodList => _foodList;
+  List<dynamic> get categories => _categories;
   Map<String, dynamic>? get dailySummary => _dailySummary;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  int? get selectedCategoryId => _selectedCategoryId;
 
   // Flattened list of food items from all meals today
   List<Map<String, dynamic>> get todayItems {
@@ -68,11 +72,21 @@ class MealProvider extends ChangeNotifier {
   bool get hasMore => _hasMore;
   String get searchQuery => _searchQuery;
 
-  Future<void> fetchFoods({bool reset = false, String? search}) async {
+  Future<void> fetchFoods({
+    bool reset = false,
+    String? search,
+    int? categoryId,
+  }) async {
     // Handle search query changes
     if (search != null && search != _searchQuery) {
       _searchQuery = search;
       reset = true; // Reset pagination when search changes
+    }
+
+    // Handle category changes - only update if categoryId is explicitly provided
+    if (categoryId != null && categoryId != _selectedCategoryId) {
+      _selectedCategoryId = categoryId;
+      reset = true; // Reset pagination when category changes
     }
 
     // Reset pagination if requested
@@ -99,6 +113,7 @@ class MealProvider extends ChangeNotifier {
         limit: _limit,
         offset: _offset,
         search: _searchQuery.isNotEmpty ? _searchQuery : null,
+        categoryId: _selectedCategoryId,
       );
 
       if (response.statusCode == 200) {
@@ -145,6 +160,27 @@ class MealProvider extends ChangeNotifier {
   void clearSearch() {
     if (_searchQuery.isNotEmpty) {
       _searchQuery = '';
+      fetchFoods(reset: true);
+    }
+  }
+
+  // Fetch all categories
+  Future<void> fetchCategories() async {
+    try {
+      final response = await _authService.getCategories();
+      if (response.statusCode == 200) {
+        _categories = response.data['categories'];
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Error fetching categories: $e');
+    }
+  }
+
+  // Clear category filter
+  void clearCategoryFilter() {
+    if (_selectedCategoryId != null) {
+      _selectedCategoryId = null;
       fetchFoods(reset: true);
     }
   }

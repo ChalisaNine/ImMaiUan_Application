@@ -8,6 +8,7 @@ import 'Calenda.dart';
 import 'nav_bar.dart';
 import 'EditProfile.dart';
 import 'adjust_goal.dart';
+import 'Setting_macro.dart';
 import 'providers/auth_provider.dart';
 import 'providers/user_provider.dart';
 
@@ -185,6 +186,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (_) => const AdjustGoalScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _menuItem(
+                    Icons.pie_chart_outline,
+                    "Adjust nutrition ratio",
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MacroSettingsScreen(),
                         ),
                       );
                     },

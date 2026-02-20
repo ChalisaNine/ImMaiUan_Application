@@ -5,7 +5,9 @@ import 'Meal.dart';
 import 'ai_image.dart';
 import 'Calenda.dart';
 import 'nav_bar.dart';
-import 'profile_screen.dart';   // 👈 เพิ่ม import โปรไฟล์
+import 'knowledge.dart';
+import 'profile_screen.dart';
+import 'package:flutter/gestures.dart';
 
 class AdjustGoal2Screen extends StatefulWidget {
   const AdjustGoal2Screen({super.key});
@@ -66,10 +68,7 @@ class _AdjustGoal2ScreenState extends State<AdjustGoal2Screen> {
             // ----------- EXPECTED WEIGHT -----------
             const Text(
               "Expected Weight",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
 
@@ -102,10 +101,7 @@ class _AdjustGoal2ScreenState extends State<AdjustGoal2Screen> {
                 children: [
                   const Text(
                     "Goal : Lose 11.4 kg",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 12),
 
@@ -129,10 +125,7 @@ class _AdjustGoal2ScreenState extends State<AdjustGoal2Screen> {
                             children: [
                               Icon(Icons.monitor_weight_outlined, size: 18),
                               SizedBox(width: 4),
-                              Text(
-                                "BMI",
-                                style: TextStyle(fontSize: 12),
-                              ),
+                              Text("BMI", style: TextStyle(fontSize: 12)),
                             ],
                           ),
                           SizedBox(height: 4),
@@ -152,7 +145,9 @@ class _AdjustGoal2ScreenState extends State<AdjustGoal2Screen> {
 
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 6),
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFE4FBE6),
                       borderRadius: BorderRadius.circular(20),
@@ -169,20 +164,29 @@ class _AdjustGoal2ScreenState extends State<AdjustGoal2Screen> {
                   const SizedBox(height: 10),
 
                   RichText(
-                    text: const TextSpan(
-                      style: TextStyle(
+                    text: TextSpan(
+                      style: const TextStyle(
                         color: Colors.black87,
                         fontSize: 13,
                       ),
                       children: [
-                        TextSpan(text: "Learn more about "),
+                        const TextSpan(text: "Learn more about "),
                         TextSpan(
                           text: "Body Mass Index(BMI)",
-                          style: TextStyle(
+                          style: const TextStyle(
                             decoration: TextDecoration.underline,
                             color: Colors.blueAccent,
                             fontWeight: FontWeight.w500,
                           ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const KnowledgeScreen(),
+                                ),
+                              );
+                            },
                         ),
                       ],
                     ),
@@ -196,10 +200,7 @@ class _AdjustGoal2ScreenState extends State<AdjustGoal2Screen> {
             // ----------- DURATION -----------
             const Text(
               "How long would you like to take?",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
 
@@ -218,8 +219,10 @@ class _AdjustGoal2ScreenState extends State<AdjustGoal2Screen> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFFFA94D),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 8,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
@@ -228,9 +231,7 @@ class _AdjustGoal2ScreenState extends State<AdjustGoal2Screen> {
                   // ✅ finish แล้วกลับไปหน้า ProfileScreen
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => const ProfileScreen(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
                   );
                 },
                 child: const Row(
@@ -285,10 +286,7 @@ class _AdjustGoal2ScreenState extends State<AdjustGoal2Screen> {
           Expanded(
             child: Text(
               valueText,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
           ),
           const Icon(Icons.edit, size: 18),
@@ -296,18 +294,14 @@ class _AdjustGoal2ScreenState extends State<AdjustGoal2Screen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orangeAccent,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
             onPressed: onEdit,
-            child: const Text(
-              "Edit",
-              style: TextStyle(color: Colors.white),
-            ),
-          )
+            child: const Text("Edit", style: TextStyle(color: Colors.white)),
+          ),
         ],
       ),
     );

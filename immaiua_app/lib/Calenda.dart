@@ -16,11 +16,22 @@ class CalendaScreen extends StatefulWidget {
 }
 
 class _CalendaScreenState extends State<CalendaScreen> {
-  int _index = 3; // Diary
+  int _index = 3; // Diary tab
+
+  // Calendar state
+  final DateTime _today = DateTime.now();
+  late DateTime _displayMonth;
+  DateTime? _selectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _displayMonth = DateTime(_today.year, _today.month);
+    _selectedDate = DateTime(_today.year, _today.month, _today.day);
+  }
 
   void _onTap(int i) {
     setState(() => _index = i);
-
     switch (i) {
       case 0:
         Navigator.pushReplacement(
@@ -28,24 +39,20 @@ class _CalendaScreenState extends State<CalendaScreen> {
           MaterialPageRoute(builder: (_) => const MainHomeScreen()),
         );
         break;
-
       case 1:
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const MealScreen()),
         );
         break;
-
       case 2:
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const AiImageScreen()),
         );
         break;
-
       case 3:
         break;
-
       case 4:
         Navigator.pushReplacement(
           context,
@@ -53,6 +60,25 @@ class _CalendaScreenState extends State<CalendaScreen> {
         );
         break;
     }
+  }
+
+  void _prevMonth() {
+    setState(() {
+      _displayMonth = DateTime(_displayMonth.year, _displayMonth.month - 1);
+    });
+  }
+
+  void _nextMonth() {
+    setState(() {
+      _displayMonth = DateTime(_displayMonth.year, _displayMonth.month + 1);
+    });
+  }
+
+  void _goToToday() {
+    setState(() {
+      _displayMonth = DateTime(_today.year, _today.month);
+      _selectedDate = DateTime(_today.year, _today.month, _today.day);
+    });
   }
 
   @override
@@ -103,9 +129,35 @@ class _CalendaScreenState extends State<CalendaScreen> {
   // Calendar Section
   // -------------------------------------------------------
 
+  static const _monthNames = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
   Widget _buildCalendar() {
     const yellowHeader = Color(0xFFFFC93C);
     const yellowBody = Color(0xFFFFE6B3);
+
+    final year = _displayMonth.year;
+    final month = _displayMonth.month;
+
+    // Day of week the 1st falls on (0=Sun, 1=Mon, ..., 6=Sat)
+    final firstWeekday = DateTime(year, month, 1).weekday % 7; // Sun=0
+    // Total days in month
+    final daysInMonth = DateUtils.getDaysInMonth(year, month);
+    // Total cells needed
+    final totalCells = firstWeekday + daysInMonth;
+    final rows = (totalCells / 7).ceil();
 
     return Container(
       width: double.infinity,
@@ -115,32 +167,73 @@ class _CalendaScreenState extends State<CalendaScreen> {
       ),
       child: Column(
         children: [
-          // Month header
+          // Month header with navigation
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: yellowHeader,
-              borderRadius: const BorderRadius.only(
+              borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(20),
                 topRight: Radius.circular(20),
               ),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Icon(Icons.chevron_left_rounded),
-                Text(
-                  "Sep 2025",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    GestureDetector(
+                      onTap: _prevMonth,
+                      child: const Icon(Icons.chevron_left_rounded, size: 28),
+                    ),
+                    Text(
+                      "${_monthNames[month - 1]} $year",
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: _nextMonth,
+                      child: const Icon(Icons.chevron_right_rounded, size: 28),
+                    ),
+                  ],
                 ),
-                Icon(Icons.chevron_right_rounded),
+                // Show "Today" button only when not on current month
+                if (_displayMonth.year != _today.year ||
+                    _displayMonth.month != _today.month)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: GestureDetector(
+                      onTap: _goToToday,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.6),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.orange, width: 1.2),
+                        ),
+                        child: const Text(
+                          'Go to Today',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.deepOrange,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
 
           const SizedBox(height: 10),
 
-          // Weekday row
+          // Weekday labels
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -157,55 +250,76 @@ class _CalendaScreenState extends State<CalendaScreen> {
             ),
           ),
 
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
 
           // Calendar grid
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: GridView.count(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: GridView.builder(
               shrinkWrap: true,
-              crossAxisCount: 7,
               physics: const NeverScrollableScrollPhysics(),
-              children: List.generate(35, (i) {
-                final day = i + 1;
-                final isPicked = day == 19;
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 7,
+                mainAxisSpacing: 4,
+                crossAxisSpacing: 0,
+                childAspectRatio: 1,
+              ),
+              itemCount: rows * 7,
+              itemBuilder: (context, index) {
+                final dayNum = index - firstWeekday + 1;
 
-                if (isPicked) {
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const DayReportScreen(),
-                        ),
-                      );
-                    },
-                    child: Center(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.orangeAccent,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: const EdgeInsets.all(6),
-                        child: const Text(
-                          "19",
+                // Empty cell before month starts or after it ends
+                if (dayNum < 1 || dayNum > daysInMonth) {
+                  return const SizedBox.shrink();
+                }
+
+                final cellDate = DateTime(year, month, dayNum);
+                final isToday = DateUtils.isSameDay(cellDate, _today);
+                final isSelected =
+                    _selectedDate != null &&
+                    DateUtils.isSameDay(cellDate, _selectedDate!);
+
+                return GestureDetector(
+                  onTap: () {
+                    setState(() => _selectedDate = cellDate);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => DayReportScreen(date: cellDate),
+                      ),
+                    );
+                  },
+                  child: Center(
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? Colors.orangeAccent
+                            : isToday
+                            ? const Color(0xFFFFC93C)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                        border: isToday && !isSelected
+                            ? Border.all(color: Colors.orange, width: 1.5)
+                            : null,
+                      ),
+                      child: Center(
+                        child: Text(
+                          "$dayNum",
                           style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            fontWeight: isToday || isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w400,
+                            color: isSelected ? Colors.white : Colors.black87,
                           ),
                         ),
                       ),
                     ),
-                  );
-                }
-
-                return Center(
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    child: Text("$day", style: const TextStyle(fontSize: 14)),
                   ),
                 );
-              }),
+              },
             ),
           ),
 
@@ -239,8 +353,6 @@ class _CalendaScreenState extends State<CalendaScreen> {
             color: Colors.black87,
           ),
         ),
-
-        //ไปหน้า Weekly Report
         onPressed: () {
           Navigator.push(
             context,
@@ -271,8 +383,6 @@ class _CalendaScreenState extends State<CalendaScreen> {
             color: Colors.black87,
           ),
         ),
-
-        //ไปหน้า Monthly Report
         onPressed: () {
           Navigator.push(
             context,
@@ -290,9 +400,13 @@ class _WeekdayLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+    return SizedBox(
+      width: 36,
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+      ),
     );
   }
 }

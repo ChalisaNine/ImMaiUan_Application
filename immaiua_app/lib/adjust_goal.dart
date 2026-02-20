@@ -5,7 +5,9 @@ import 'Meal.dart';
 import 'ai_image.dart';
 import 'Calenda.dart';
 import 'nav_bar.dart';
-import 'adjust_goal2.dart';   // 👈 เพิ่ม import
+import 'adjust_goal2.dart';
+import 'knowledge.dart';
+import 'package:flutter/gestures.dart';
 
 class AdjustGoalScreen extends StatefulWidget {
   const AdjustGoalScreen({super.key});
@@ -65,10 +67,7 @@ class _AdjustGoalScreenState extends State<AdjustGoalScreen> {
           children: [
             const Text(
               "What is your goal?",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 18),
@@ -111,10 +110,7 @@ class _AdjustGoalScreenState extends State<AdjustGoalScreen> {
                             children: [
                               Icon(Icons.monitor_weight_outlined, size: 18),
                               SizedBox(width: 4),
-                              Text(
-                                "BMI",
-                                style: TextStyle(fontSize: 12),
-                              ),
+                              Text("BMI", style: TextStyle(fontSize: 12)),
                             ],
                           ),
                           SizedBox(height: 4),
@@ -134,7 +130,9 @@ class _AdjustGoalScreenState extends State<AdjustGoalScreen> {
 
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 6),
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFE4FBE6),
                       borderRadius: BorderRadius.circular(20),
@@ -151,20 +149,29 @@ class _AdjustGoalScreenState extends State<AdjustGoalScreen> {
                   const SizedBox(height: 14),
 
                   RichText(
-                    text: const TextSpan(
-                      style: TextStyle(
+                    text: TextSpan(
+                      style: const TextStyle(
                         color: Colors.black87,
                         fontSize: 13,
                       ),
                       children: [
-                        TextSpan(text: "Learn more about "),
+                        const TextSpan(text: "Learn more about "),
                         TextSpan(
                           text: "Body Mass Index(BMI)",
-                          style: TextStyle(
+                          style: const TextStyle(
                             decoration: TextDecoration.underline,
                             color: Colors.blueAccent,
                             fontWeight: FontWeight.w500,
                           ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const KnowledgeScreen(),
+                                ),
+                              );
+                            },
                         ),
                       ],
                     ),
@@ -205,9 +212,7 @@ class _AdjustGoalScreenState extends State<AdjustGoalScreen> {
   void _goToAdjustGoal2() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => const AdjustGoal2Screen(),
-      ),
+      MaterialPageRoute(builder: (_) => const AdjustGoal2Screen()),
     );
   }
 
@@ -221,8 +226,7 @@ class _AdjustGoalScreenState extends State<AdjustGoalScreen> {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
         decoration: BoxDecoration(
           color: const Color(0xFFFFE1C7),
           borderRadius: BorderRadius.circular(16),
@@ -240,10 +244,7 @@ class _AdjustGoalScreenState extends State<AdjustGoalScreen> {
             const SizedBox(width: 12),
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
           ],
         ),

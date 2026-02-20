@@ -78,6 +78,26 @@ class AuthService {
     }
   }
 
+  Future<Response> updateMacroPercentages({
+    required int carbPercent,
+    required int proteinPercent,
+    required int fatPercent,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/profile/calculate-macros',
+        data: {
+          'carb_percent': carbPercent,
+          'protein_percent': proteinPercent,
+          'fat_percent': fatPercent,
+        },
+      );
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<Response> getMeals(String date) async {
     try {
       final response = await _dio.get(
@@ -102,21 +122,56 @@ class AuthService {
     }
   }
 
+  Future<Response> getWeeklyAnalytics(String date) async {
+    try {
+      final response = await _dio.get(
+        '/analytics/weekly',
+        queryParameters: {'date': date},
+      );
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Response> getMonthlyAnalytics(String date) async {
+    try {
+      final response = await _dio.get(
+        '/analytics/monthly',
+        queryParameters: {'date': date},
+      );
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<Response> getFoodList({
     int? limit,
     int? offset,
     String? search,
+    int? categoryId,
   }) async {
     try {
       final queryParams = <String, dynamic>{};
       if (limit != null) queryParams['limit'] = limit;
       if (offset != null) queryParams['offset'] = offset;
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
+      if (categoryId != null) queryParams['category_id'] = categoryId;
 
       final response = await _dio.get(
         '/meals/foods',
         queryParameters: queryParams.isNotEmpty ? queryParams : null,
       );
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Response> getCategories() async {
+    try {
+      final response = await _dio.get('/meals/categories');
       return response;
     } catch (e) {
       rethrow;
@@ -196,6 +251,80 @@ class AuthService {
     } catch (e) {
       print("❌ checkAuthStatus Error: $e"); // DEBUG
       return false;
+    }
+  }
+
+  Future<bool> checkFavorite(int foodId) async {
+    try {
+      final response = await _dio.get('/meals/favorites/check/$foodId');
+      return response.data['is_favorite'] == true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> toggleFavorite(int foodId) async {
+    try {
+      final response = await _dio.post('/meals/favorites/toggle/$foodId');
+      return response.data['is_favorite'] == true;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Response> getFavorites() async {
+    try {
+      final response = await _dio.get('/meals/favorites');
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Response> getMenus() async {
+    try {
+      final response = await _dio.get('/meals/menus');
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Response> createMenu(String name, {String? description}) async {
+    try {
+      final response = await _dio.post(
+        '/meals/menus',
+        data: {
+          'name': name,
+          if (description != null && description.isNotEmpty)
+            'description': description,
+        },
+      );
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteMenu(int menuId) async {
+    try {
+      await _dio.delete('/meals/menus/$menuId');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Response> getDaySummary(DateTime date) async {
+    final dateStr =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    try {
+      final response = await _dio.get(
+        '/meals/day-summary',
+        queryParameters: {'date': dateStr},
+      );
+      return response;
+    } catch (e) {
+      rethrow;
     }
   }
 }

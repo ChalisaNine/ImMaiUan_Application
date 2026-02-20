@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
+import 'providers/user_provider.dart';
 import 'main.dart';
 import 'Meal.dart';
 import 'nav_bar.dart';
@@ -22,6 +23,8 @@ class _CameraLogScreenState extends State<CameraLogScreen> {
   bool _isLoading = false;
   Map<String, dynamic>? _foodDetails;
   String? _error;
+  bool _isFavorite = false;
+  bool _isFavoriteLoading = false;
 
   String _selectedMealType = "Breakfast"; // Default
 
@@ -30,6 +33,49 @@ class _CameraLogScreenState extends State<CameraLogScreen> {
     super.initState();
     if (widget.foodId != null) {
       _fetchFoodDetails();
+      _checkFavorite();
+    }
+  }
+
+  Future<void> _checkFavorite() async {
+    try {
+      final authService = Provider.of<AuthProvider>(
+        context,
+        listen: false,
+      ).authService;
+      final isFav = await authService.checkFavorite(widget.foodId!);
+      if (mounted) setState(() => _isFavorite = isFav);
+    } catch (_) {}
+  }
+
+  Future<void> _toggleFavorite() async {
+    if (_isFavoriteLoading) return;
+    setState(() => _isFavoriteLoading = true);
+    try {
+      final authService = Provider.of<AuthProvider>(
+        context,
+        listen: false,
+      ).authService;
+      final newState = await authService.toggleFavorite(widget.foodId!);
+      if (mounted) {
+        setState(() => _isFavorite = newState);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              newState ? 'Added to favorites' : 'Removed from favorites',
+            ),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update favorite')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isFavoriteLoading = false);
     }
   }
 
@@ -105,6 +151,9 @@ class _CameraLogScreenState extends State<CameraLogScreen> {
               foodDetails: _foodDetails,
               fallbackName: widget.foodName,
               selectedMealType: _selectedMealType,
+              isFavorite: _isFavorite,
+              isFavoriteLoading: _isFavoriteLoading,
+              onToggleFavorite: widget.foodId != null ? _toggleFavorite : null,
               onMealTypeChanged: (val) {
                 if (val != null) setState(() => _selectedMealType = val);
               },
@@ -117,34 +166,113 @@ class _CameraLogScreenState extends State<CameraLogScreen> {
                     BODY CONTENT (UI)
 ---------------------------------------------------------- */
 
-class _CameraLogBody extends StatelessWidget {
+class _CameraLogBody extends StatefulWidget {
   final Map<String, dynamic>? foodDetails;
   final String? fallbackName;
   final String selectedMealType;
   final ValueChanged<String?> onMealTypeChanged;
+  final bool isFavorite;
+  final bool isFavoriteLoading;
+  final VoidCallback? onToggleFavorite;
 
   const _CameraLogBody({
     this.foodDetails,
     this.fallbackName,
     required this.selectedMealType,
     required this.onMealTypeChanged,
+    this.isFavorite = false,
+    this.isFavoriteLoading = false,
+    this.onToggleFavorite,
   });
+
+  @override
+  State<_CameraLogBody> createState() => _CameraLogBodyState();
+}
+
+class _CameraLogBodyState extends State<_CameraLogBody> {
+  double _quantity = 1.0;
+  late final TextEditingController _qtyController;
+
+  @override
+  void initState() {
+    super.initState();
+    _qtyController = TextEditingController(text: '1');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userProvider = context.read<UserProvider>();
+      if (userProvider.profile == null && !userProvider.isLoading) {
+        userProvider.fetchProfile();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _qtyController.dispose();
+    super.dispose();
+  }
+
+  void _changeQty(double delta) {
+    setState(() {
+      _quantity = (_quantity + delta).clamp(0.5, 99.0);
+      // Round to 1 decimal if not whole
+      _quantity = double.parse(_quantity.toStringAsFixed(1));
+      _qtyController.text = _quantity == _quantity.truncateToDouble()
+          ? _quantity.toInt().toString()
+          : _quantity.toString();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     const peach = Color(0xFFFFE1C7);
 
     // Parse data
-    final name = foodDetails?['name'] ?? fallbackName ?? "Unknown Food";
-    final cal = foodDetails?['calories']?.toString() ?? "0";
-    final portionStr = "per 1 ${(foodDetails?['portion'] ?? 'serving')}";
+    final foodDetails = widget.foodDetails;
+    final name = foodDetails?['name'] ?? widget.fallbackName ?? "Unknown Food";
+    final baseCalDouble = (foodDetails?['calories'] as num?)?.toDouble() ?? 0.0;
+    final scaledCal = (baseCalDouble * _quantity).round();
+    final portionStr = "per ${foodDetails?['portion'] ?? 'serving'}";
 
     final nutrients = foodDetails?['nutrients'] ?? {};
-    final sugar = nutrients['Sugar']?.toString() ?? "0";
-    final carb = nutrients['Carb']?.toString() ?? "0";
-    final protein = nutrients['Protein']?.toString() ?? "0";
-    final fat = nutrients['Fat']?.toString() ?? "0";
-    final sodium = nutrients['Sodium']?.toString() ?? "0";
+    final sugarValue =
+        _readAsDouble(nutrients['Sugar']) * _quantity; // g
+    final carbValue = _readAsDouble(nutrients['Carb']) * _quantity; // g
+    final proteinValue = _readAsDouble(nutrients['Protein']) * _quantity; // g
+    final fatValue = _readAsDouble(nutrients['Fat']) * _quantity; // g
+    final sodiumValue = _readAsDouble(nutrients['Sodium']) * _quantity; // mg
+
+    final sugar = sugarValue.toStringAsFixed(1);
+    final carb = carbValue.toStringAsFixed(1);
+    final protein = proteinValue.toStringAsFixed(1);
+    final fat = fatValue.toStringAsFixed(1);
+    final sodium = sodiumValue.toStringAsFixed(1);
+
+    final profile = context.watch<UserProvider>().profile;
+    final carbTarget = _readAsDouble(profile?['carb_prefer']);
+    final proteinTarget = _readAsDouble(profile?['protein_prefer']);
+    final fatTarget = _readAsDouble(profile?['fat_prefer']);
+
+    final carbPercent = _calculatePercent(carbValue, carbTarget);
+    final proteinPercent = _calculatePercent(proteinValue, proteinTarget);
+    final fatPercent = _calculatePercent(fatValue, fatTarget);
+
+    final excessRows = <_ExcessData>[
+      if (carbPercent >= 100 && carbValue > carbTarget)
+        _ExcessData(
+          label: "Carb",
+          value: "${(carbValue - carbTarget).toStringAsFixed(1)} g",
+        ),
+      if (proteinPercent >= 100 && proteinValue > proteinTarget)
+        _ExcessData(
+          label: "Protein",
+          value: "${(proteinValue - proteinTarget).toStringAsFixed(1)} g",
+        ),
+      if (fatPercent >= 100 && fatValue > fatTarget)
+        _ExcessData(
+          label: "Fat",
+          value: "${(fatValue - fatTarget).toStringAsFixed(1)} g",
+        ),
+    ];
 
     final ingredientsList = (foodDetails?['ingredients'] as List?) ?? [];
     String ingredientText = "";
@@ -159,53 +287,50 @@ class _CameraLogBody extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           /* ---------------- WARNING BOX ---------------- */
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF5C5),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.amber.shade200),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: const [
-                    Icon(Icons.warning_amber_rounded, color: Colors.amber),
-                    SizedBox(width: 8),
-                    Text(
-                      "WARNING",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
+          if (excessRows.isNotEmpty) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF5C5),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.amber.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: const [
+                      Icon(Icons.warning_amber_rounded, color: Colors.amber),
+                      SizedBox(width: 8),
+                      Text(
+                        "WARNING",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  "This meal contains excess nutrients.",
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 10),
-
-                // TODO: Calculate excess based on RDI
-                Wrap(
-                  spacing: 8.0,
-                  runSpacing: 4.0,
-                  alignment: WrapAlignment.spaceBetween,
-                  children: [
-                    _ExcessRow(label: "Sodium", value: "$sodium mg"),
-                    _ExcessRow(label: "Sugar", value: "$sugar g"),
-                    _ExcessRow(label: "Fat", value: "$fat g"),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    "This meal exceeds your macro target.",
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8.0,
+                    runSpacing: 4.0,
+                    alignment: WrapAlignment.spaceBetween,
+                    children: excessRows
+                        .map((item) => _ExcessRow(label: item.label, value: item.value))
+                        .toList(),
+                  ),
+                ],
+              ),
             ),
-          ),
-
-          const SizedBox(height: 18),
+            const SizedBox(height: 18),
+          ],
 
           /* ---------------- MEAL CARD ---------------- */
           Container(
@@ -227,12 +352,41 @@ class _CameraLogBody extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    if (widget.onToggleFavorite != null)
+                      widget.isFavoriteLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : GestureDetector(
+                              onTap: widget.onToggleFavorite,
+                              child: Icon(
+                                widget.isFavorite
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                color: widget.isFavorite
+                                    ? Colors.red
+                                    : Colors.grey,
+                                size: 26,
+                              ),
+                            ),
+                  ],
                 ),
                 // Hide or update confidence if not AI based
                 const Text(
@@ -242,14 +396,14 @@ class _CameraLogBody extends StatelessWidget {
                 const SizedBox(height: 8),
 
                 Text(
-                  "$cal kcal",
+                  "$scaledCal kcal",
                   style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
-                  portionStr,
+                  "${_quantity == _quantity.truncateToDouble() ? _quantity.toInt() : _quantity} × $portionStr",
                   style: const TextStyle(fontSize: 13, color: Colors.black54),
                 ),
               ],
@@ -278,19 +432,19 @@ class _CameraLogBody extends StatelessWidget {
                   icon: Icons.rice_bowl_rounded,
                   label: "Carb",
                   value: "$carb g",
-                  percent: "",
+                  percent: "$carbPercent%",
                 ),
                 _NutItem(
                   icon: Icons.egg_rounded,
                   label: "Protein",
                   value: "$protein g",
-                  percent: "",
+                  percent: "$proteinPercent%",
                 ),
                 _NutItem(
                   icon: Icons.local_pizza_rounded,
                   label: "Fat",
                   value: "$fat g",
-                  percent: "",
+                  percent: "$fatPercent%",
                 ),
                 _NutItem(
                   icon: Icons.bolt_rounded,
@@ -304,7 +458,6 @@ class _CameraLogBody extends StatelessWidget {
 
           const SizedBox(height: 18),
 
-          /* ---------------- INGREDIENT ---------------- */
           /* ---------------- INGREDIENT ---------------- */
           if (ingredientsList.isNotEmpty) ...[
             const Text(
@@ -341,7 +494,7 @@ class _CameraLogBody extends StatelessWidget {
               border: Border.all(color: const Color(0xFFE6E6E6)),
             ),
             child: DropdownButton<String>(
-              value: selectedMealType,
+              value: widget.selectedMealType,
               underline: const SizedBox(),
               isExpanded: true,
               items: [
@@ -350,30 +503,71 @@ class _CameraLogBody extends StatelessWidget {
                 "Dinner",
                 "Snack",
               ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-              onChanged: onMealTypeChanged,
+              onChanged: widget.onMealTypeChanged,
             ),
           ),
           const SizedBox(height: 18),
 
-          /* ---------------- GRAM + SERVING ---------------- */
-          Row(
-            children: const [
-              Expanded(
-                child: _DropdownBox(
-                  defaultValue: "100 g",
-                  items: ["50 g", "100 g", "200 g"],
-                  label: "Gram per serving",
+          /* ---------------- QUANTITY STEPPER ---------------- */
+          const Text(
+            "Quantity",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE6E6E6)),
+            ),
+            child: Row(
+              children: [
+                // Minus button
+                IconButton(
+                  onPressed: () => _changeQty(-0.5),
+                  icon: const Icon(Icons.remove_circle_outline_rounded),
+                  color: Colors.orange,
+                  iconSize: 28,
                 ),
-              ),
-              SizedBox(width: 14),
-              Expanded(
-                child: _DropdownBox(
-                  defaultValue: "Plate",
-                  items: ["Bowl", "Plate", "Cup"],
-                  label: "Serving",
+                // Editable number field
+                Expanded(
+                  child: TextField(
+                    controller: _qtyController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    decoration: const InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    onChanged: (val) {
+                      final parsed = double.tryParse(val);
+                      if (parsed != null && parsed > 0) {
+                        setState(() => _quantity = parsed.clamp(0.5, 99.0));
+                      }
+                    },
+                  ),
                 ),
-              ),
-            ],
+                // Plus button
+                IconButton(
+                  onPressed: () => _changeQty(0.5),
+                  icon: const Icon(Icons.add_circle_outline_rounded),
+                  color: Colors.orange,
+                  iconSize: 28,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'servings  ·  ${scaledCal} kcal total',
+            style: const TextStyle(fontSize: 12, color: Colors.black54),
           ),
 
           const SizedBox(height: 20),
@@ -383,7 +577,7 @@ class _CameraLogBody extends StatelessWidget {
             children: [
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {}, // stay this page
+                  onPressed: () => Navigator.of(context).pop(),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFFFB8B8),
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -403,7 +597,8 @@ class _CameraLogBody extends StatelessWidget {
                   onPressed: () => _showExcessWarningDialog(
                     context,
                     foodDetails ?? {},
-                    selectedMealType,
+                    widget.selectedMealType,
+                    _quantity,
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFA6F1A6),
@@ -426,6 +621,17 @@ class _CameraLogBody extends StatelessWidget {
       ),
     );
   }
+
+  double _readAsDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+  }
+
+  int _calculatePercent(double value, double target) {
+    if (target <= 0) return value <= 0 ? 0 : 100;
+    return ((value / target) * 100).toInt();
+  }
 }
 
 /* ---------------------------------------------------------
@@ -436,6 +642,7 @@ void _showExcessWarningDialog(
   BuildContext context,
   Map<String, dynamic> foodDetails,
   String mealType,
+  double quantity,
 ) {
   bool isLogging = false;
 
@@ -445,9 +652,36 @@ void _showExcessWarningDialog(
     builder: (dialogCtx) {
       // Extract nutrients for warning
       final nutrients = foodDetails['nutrients'] ?? {};
-      final sugar = nutrients['Sugar']?.toString() ?? "0";
-      final fat = nutrients['Fat']?.toString() ?? "0";
-      final sodium = nutrients['Sodium']?.toString() ?? "0";
+      final carb = _safeToDouble(nutrients['Carb']) * quantity;
+      final protein = _safeToDouble(nutrients['Protein']) * quantity;
+      final fat = _safeToDouble(nutrients['Fat']) * quantity;
+
+      final profile = Provider.of<UserProvider>(context, listen: false).profile;
+      final carbTarget = _safeToDouble(profile?['carb_prefer']);
+      final proteinTarget = _safeToDouble(profile?['protein_prefer']);
+      final fatTarget = _safeToDouble(profile?['fat_prefer']);
+
+      final carbPercent = _calculatePercent(carb, carbTarget);
+      final proteinPercent = _calculatePercent(protein, proteinTarget);
+      final fatPercent = _calculatePercent(fat, fatTarget);
+
+      final excessRows = <_ExcessData>[
+        if (carbPercent >= 100 && carb > carbTarget)
+          _ExcessData(
+            label: "Carb",
+            value: "${(carb - carbTarget).toStringAsFixed(1)} g",
+          ),
+        if (proteinPercent >= 100 && protein > proteinTarget)
+          _ExcessData(
+            label: "Protein",
+            value: "${(protein - proteinTarget).toStringAsFixed(1)} g",
+          ),
+        if (fatPercent >= 100 && fat > fatTarget)
+          _ExcessData(
+            label: "Fat",
+            value: "${(fat - fatTarget).toStringAsFixed(1)} g",
+          ),
+      ];
 
       return StatefulBuilder(
         builder: (context, setState) {
@@ -459,25 +693,23 @@ void _showExcessWarningDialog(
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                /* Warning box inside popup */
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFF5C5),
-                    borderRadius: BorderRadius.circular(14),
+                if (excessRows.isNotEmpty) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF5C5),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: excessRows
+                          .map((item) => _ExcessRow(label: item.label, value: item.value))
+                          .toList(),
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _ExcessRow(label: "Sodium", value: "$sodium mg"),
-                      _ExcessRow(label: "Sugar", value: "$sugar g"),
-                      _ExcessRow(label: "Fat", value: "$fat g"),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 14),
+                  const SizedBox(height: 14),
+                ],
                 const Text(
                   "Are you sure to add this meal?",
                   textAlign: TextAlign.center,
@@ -523,7 +755,7 @@ void _showExcessWarningDialog(
                                 "items": [
                                   {
                                     "food_id": foodDetails['food_id'],
-                                    "quantity": 1, // Default 1 serving
+                                    "quantity": quantity,
                                   },
                                 ],
                               });
@@ -568,6 +800,24 @@ void _showExcessWarningDialog(
       );
     },
   );
+}
+
+double _safeToDouble(dynamic value) {
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? 0.0;
+  return 0.0;
+}
+
+int _calculatePercent(double value, double target) {
+  if (target <= 0) return value <= 0 ? 0 : 100;
+  return ((value / target) * 100).toInt();
+}
+
+class _ExcessData {
+  final String label;
+  final String value;
+
+  const _ExcessData({required this.label, required this.value});
 }
 
 /* ---------------------------------------------------------
@@ -625,50 +875,6 @@ class _NutItem extends StatelessWidget {
         Text(
           percent,
           style: const TextStyle(fontSize: 10, color: Colors.black54),
-        ),
-      ],
-    );
-  }
-}
-
-class _DropdownBox extends StatelessWidget {
-  final String defaultValue;
-  final List<String> items;
-  final String label;
-
-  const _DropdownBox({
-    required this.defaultValue,
-    required this.items,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 6),
-
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: const Color(0xFFE6E6E6)),
-          ),
-          child: DropdownButton<String>(
-            value: defaultValue,
-            underline: const SizedBox(),
-            isExpanded: true,
-            items: items
-                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                .toList(),
-            onChanged: (v) {},
-          ),
         ),
       ],
     );
