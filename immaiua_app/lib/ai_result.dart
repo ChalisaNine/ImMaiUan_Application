@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'dart:convert';
 import 'package:provider/provider.dart';
 
 import 'camera_log.dart';
@@ -18,6 +19,7 @@ class _AiResultScreenState extends State<AiResultScreen> {
   bool _isAnalyzing = true;
   String _errorMessage = "";
   List<dynamic> _detections = [];
+  String? _annotatedImageBase64;
 
   @override
   void initState() {
@@ -37,6 +39,7 @@ class _AiResultScreenState extends State<AiResultScreen> {
         if (mounted) {
           setState(() {
             _detections = response.data['detections'] ?? [];
+            _annotatedImageBase64 = response.data['annotated_image_base64'];
             _isAnalyzing = false;
           });
         }
@@ -182,12 +185,21 @@ class _AiResultScreenState extends State<AiResultScreen> {
           // Image Preview
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: Image.file(
-              widget.imageFile,
-              height: 240,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
+            child:
+                _annotatedImageBase64 != null &&
+                    _annotatedImageBase64!.isNotEmpty
+                ? Image.memory(
+                    base64Decode(_annotatedImageBase64!),
+                    height: 240,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  )
+                : Image.file(
+                    widget.imageFile,
+                    height: 240,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
           ),
           const SizedBox(height: 24),
 
