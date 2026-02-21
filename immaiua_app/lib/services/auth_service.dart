@@ -20,8 +20,8 @@ class AuthService {
     _dio = Dio(
       BaseOptions(
         baseUrl: _baseUrl,
-        connectTimeout: const Duration(seconds: 5),
-        receiveTimeout: const Duration(seconds: 5),
+        connectTimeout: const Duration(seconds: 120),
+        receiveTimeout: const Duration(seconds: 120),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -322,6 +322,23 @@ class AuthService {
         '/meals/day-summary',
         queryParameters: {'date': dateStr},
       );
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Response> analyzeImage(File imageFile) async {
+    try {
+      final formData = FormData.fromMap({
+        'image': await MultipartFile.fromFile(
+          imageFile.path,
+          filename: imageFile.path.split('/').last,
+        ),
+      });
+
+      final response = await _dio.post('/ai/analyze', data: formData);
+
       return response;
     } catch (e) {
       rethrow;

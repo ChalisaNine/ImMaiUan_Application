@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 import 'nav_bar.dart';
 import 'main.dart';
@@ -6,6 +8,7 @@ import 'Meal.dart';
 import 'Calenda.dart';
 import 'profile_screen.dart';
 import 'camera_log.dart';
+import 'ai_result.dart';
 
 class AiImageScreen extends StatefulWidget {
   const AiImageScreen({super.key});
@@ -23,12 +26,16 @@ class _AiImageScreenState extends State<AiImageScreen> {
     switch (i) {
       case 0:
         Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (_) => const MainHomeScreen()));
+          context,
+          MaterialPageRoute(builder: (_) => const MainHomeScreen()),
+        );
         break;
 
       case 1:
         Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (_) => const MealScreen()));
+          context,
+          MaterialPageRoute(builder: (_) => const MealScreen()),
+        );
         break;
 
       case 2: // ⭐ ปุ่มกล้องสีน้ำตาล (กลาง NavBar)
@@ -40,12 +47,16 @@ class _AiImageScreenState extends State<AiImageScreen> {
 
       case 3:
         Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (_) => const CalendaScreen()));
+          context,
+          MaterialPageRoute(builder: (_) => const CalendaScreen()),
+        );
         break;
 
       case 4:
         Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (_) => const ProfileScreen()));
+          context,
+          MaterialPageRoute(builder: (_) => const ProfileScreen()),
+        );
         break;
     }
   }
@@ -64,8 +75,49 @@ class _AiImageScreenState extends State<AiImageScreen> {
 /*                                CAMERA BODY                                */
 /* ========================================================================= */
 
-class _CameraBody extends StatelessWidget {
+class _CameraBody extends StatefulWidget {
   const _CameraBody();
+
+  @override
+  State<_CameraBody> createState() => _CameraBodyState();
+}
+
+class _CameraBodyState extends State<_CameraBody> {
+  File? _imageFile;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(source: source);
+      if (pickedFile != null) {
+        setState(() {
+          _imageFile = File(pickedFile.path);
+        });
+      }
+    } catch (e) {
+      debugPrint("Error picking image: $e");
+    }
+  }
+
+  void _clearImage() {
+    setState(() {
+      _imageFile = null;
+    });
+  }
+
+  void _mockScanToLog() {
+    if (_imageFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please take or select a photo first!')),
+      );
+      return;
+    }
+    // Navigate to the AI analysis result screen first
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => AiResultScreen(imageFile: _imageFile!)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,11 +127,28 @@ class _CameraBody extends StatelessWidget {
       children: [
         // ---------- พรีวิวภาพ ----------
         Positioned.fill(
-          child: Image.asset(
-            'assets/sample_food.jpg',
-            fit: BoxFit.cover,
-          ),
+          child: _imageFile != null
+              ? Image.file(_imageFile!, fit: BoxFit.cover)
+              : Container(
+                  color: Colors.black87,
+                  child: const Center(
+                    child: Text(
+                      "Tap the camera to start",
+                      style: TextStyle(color: Colors.white54, fontSize: 16),
+                    ),
+                  ),
+                ),
         ),
+
+        // ---------- Center Target Area (Camera tap area if empty) ----------
+        if (_imageFile == null)
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () => _pickImage(ImageSource.camera),
+              behavior: HitTestBehavior.opaque,
+              child: const SizedBox.expand(),
+            ),
+          ),
 
         // ---------- วงกลมเล็ง ----------
         IgnorePointer(
@@ -91,6 +160,31 @@ class _CameraBody extends StatelessWidget {
             ),
           ),
         ),
+
+        // ---------- Center "SCAN" Action Button ----------
+        if (_imageFile != null)
+          Center(
+            child: ElevatedButton.icon(
+              onPressed: _mockScanToLog,
+              icon: const Icon(Icons.document_scanner_rounded, size: 28),
+              label: const Text(
+                "SCAN MEAL",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: peachDeep,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                elevation: 10,
+              ),
+            ),
+          ),
 
         // ---------- Gradient ล่าง ----------
         Positioned(
@@ -104,11 +198,7 @@ class _CameraBody extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black45,
-                    Colors.black87
-                  ],
+                  colors: [Colors.transparent, Colors.black45, Colors.black87],
                 ),
               ),
             ),
@@ -123,23 +213,25 @@ class _CameraBody extends StatelessWidget {
             children: [
               InkWell(
                 borderRadius: BorderRadius.circular(16),
-                onTap: () {},
+                onTap: () => _pickImage(ImageSource.gallery),
                 child: Container(
                   width: 62,
                   height: 62,
                   decoration: BoxDecoration(
+                    color: Colors.white24,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: const [
                       BoxShadow(
                         color: Color(0x44000000),
                         blurRadius: 8,
                         offset: Offset(0, 2),
-                      )
+                      ),
                     ],
-                    image: const DecorationImage(
-                      image: AssetImage('assets/sample_food.jpg'),
-                      fit: BoxFit.cover,
-                    ),
+                  ),
+                  child: const Icon(
+                    Icons.photo_library_rounded,
+                    color: Colors.white,
+                    size: 30,
                   ),
                 ),
               ),
@@ -152,12 +244,12 @@ class _CameraBody extends StatelessWidget {
                   letterSpacing: 1,
                   fontSize: 12,
                 ),
-              )
+              ),
             ],
           ),
         ),
 
-        // ---------- Refresh ----------
+        // ---------- Refresh/Camera ----------
         Positioned(
           right: 20,
           bottom: 118,
@@ -166,13 +258,20 @@ class _CameraBody extends StatelessWidget {
             shape: const CircleBorder(),
             elevation: 6,
             child: InkWell(
-              onTap: () {},
+              onTap: _imageFile != null
+                  ? _clearImage
+                  : () => _pickImage(ImageSource.camera),
               customBorder: const CircleBorder(),
-              child: const SizedBox(
+              child: SizedBox(
                 width: 54,
                 height: 54,
-                child: Icon(Icons.refresh_rounded,
-                    size: 28, color: Colors.white),
+                child: Icon(
+                  _imageFile != null
+                      ? Icons.refresh_rounded
+                      : Icons.camera_alt_rounded,
+                  size: 28,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
