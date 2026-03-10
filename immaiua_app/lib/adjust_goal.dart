@@ -1,13 +1,15 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import 'main.dart';
+import 'Calenda.dart';
 import 'Meal.dart';
 import 'ai_image.dart';
-import 'Calenda.dart';
-import 'nav_bar.dart';
 import 'adjust_goal2.dart';
 import 'knowledge.dart';
-import 'package:flutter/gestures.dart';
+import 'main.dart';
+import 'nav_bar.dart';
+import 'providers/user_provider.dart';
 
 class AdjustGoalScreen extends StatefulWidget {
   const AdjustGoalScreen({super.key});
@@ -17,7 +19,18 @@ class AdjustGoalScreen extends StatefulWidget {
 }
 
 class _AdjustGoalScreenState extends State<AdjustGoalScreen> {
-  int _index = 4; // แท็บ Profile
+  int _index = 4;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userProvider = context.read<UserProvider>();
+      if (userProvider.profile == null) {
+        userProvider.fetchProfile();
+      }
+    });
+  }
 
   void _onTap(int i) {
     setState(() => _index = i);
@@ -48,7 +61,6 @@ class _AdjustGoalScreenState extends State<AdjustGoalScreen> {
         );
         break;
       case 4:
-        // อยู่ในเมนู Profile/Goal อยู่แล้ว
         break;
     }
   }
@@ -60,166 +72,174 @@ class _AdjustGoalScreenState extends State<AdjustGoalScreen> {
     return MainScaffold(
       currentIndex: _index,
       onTap: _onTap,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "What is your goal?",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
+      body: Consumer<UserProvider>(
+        builder: (context, userProvider, child) {
+          final profile = userProvider.profile;
+          final bmi = _readDouble(profile?['bmi']);
+          final goalType = (profile?['goal_type'] ?? 'MAINTAIN').toString();
 
-            const SizedBox(height: 18),
-
-            // ----------- BMI CARD -----------
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: peach,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.07),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
+          return SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "What is your goal?",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 18),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: peach,
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.07),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Expanded(
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              "Your Body Mass Index",
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.monitor_weight_outlined, size: 18),
+                                  SizedBox(width: 4),
+                                  Text("BMI", style: TextStyle(fontSize: 12)),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                bmi.toStringAsFixed(2),
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE4FBE6),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                         child: Text(
-                          "Your Body Mass Index",
-                          style: TextStyle(
-                            fontSize: 14,
+                          _bmiLabel(bmi),
+                          style: const TextStyle(
+                            color: Color(0xFF2E7D32),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: const [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.monitor_weight_outlined, size: 18),
-                              SizedBox(width: 4),
-                              Text("BMI", style: TextStyle(fontSize: 12)),
-                            ],
+                      const SizedBox(height: 14),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(
+                            color: Colors.black87,
+                            fontSize: 13,
                           ),
-                          SizedBox(height: 4),
-                          Text(
-                            "22.73",
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                          children: [
+                            const TextSpan(text: "Learn more about "),
+                            TextSpan(
+                              text: "Body Mass Index(BMI)",
+                              style: const TextStyle(
+                                decoration: TextDecoration.underline,
+                                color: Colors.blueAccent,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const KnowledgeScreen(),
+                                    ),
+                                  );
+                                },
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 12),
-
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE4FBE6),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      "Normal",
-                      style: TextStyle(
-                        color: Color(0xFF2E7D32),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  RichText(
-                    text: TextSpan(
-                      style: const TextStyle(
-                        color: Colors.black87,
-                        fontSize: 13,
-                      ),
-                      children: [
-                        const TextSpan(text: "Learn more about "),
-                        TextSpan(
-                          text: "Body Mass Index(BMI)",
-                          style: const TextStyle(
-                            decoration: TextDecoration.underline,
-                            color: Colors.blueAccent,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const KnowledgeScreen(),
-                                ),
-                              );
-                            },
-                        ),
-                      ],
-                    ),
+                ),
+                const SizedBox(height: 26),
+                _goalButton(
+                  icon: Icons.south_west,
+                  label: "Lose Weight",
+                  selected: goalType == "LOSE",
+                  onTap: () => _goToAdjustGoal2("LOSE"),
+                ),
+                const SizedBox(height: 12),
+                _goalButton(
+                  icon: Icons.compare_arrows,
+                  label: "Maintain Weight",
+                  selected: goalType == "MAINTAIN",
+                  onTap: () => _goToAdjustGoal2("MAINTAIN"),
+                ),
+                const SizedBox(height: 12),
+                _goalButton(
+                  icon: Icons.north_west,
+                  label: "Gain Weight",
+                  selected: goalType == "GAIN",
+                  onTap: () => _goToAdjustGoal2("GAIN"),
+                ),
+                if (userProvider.error != null) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    userProvider.error!,
+                    style: const TextStyle(color: Colors.red),
                   ),
                 ],
-              ),
+                const SizedBox(height: 120),
+              ],
             ),
-
-            const SizedBox(height: 26),
-
-            // ----------- GOAL BUTTONS -----------
-            _goalButton(
-              icon: Icons.south_west,
-              label: "Lose Weight",
-              onTap: _goToAdjustGoal2,
-            ),
-            const SizedBox(height: 12),
-            _goalButton(
-              icon: Icons.compare_arrows,
-              label: "Maintain Weight",
-              onTap: _goToAdjustGoal2,
-            ),
-            const SizedBox(height: 12),
-            _goalButton(
-              icon: Icons.north_west,
-              label: "Gain Weight",
-              onTap: _goToAdjustGoal2,
-            ),
-
-            const SizedBox(height: 120),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  // ฟังก์ชันไปหน้า AdjustGoal2Screen
-  void _goToAdjustGoal2() {
+  void _goToAdjustGoal2(String goalType) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const AdjustGoal2Screen()),
+      MaterialPageRoute(
+        builder: (_) => AdjustGoal2Screen(selectedGoalType: goalType),
+      ),
     );
   }
 
-  // ปุ่ม goal
   Widget _goalButton({
     required IconData icon,
     required String label,
+    required bool selected,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
@@ -228,11 +248,14 @@ class _AdjustGoalScreenState extends State<AdjustGoalScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFE1C7),
+          color: selected ? const Color(0xFFFFD2A6) : const Color(0xFFFFE1C7),
           borderRadius: BorderRadius.circular(16),
+          border: selected
+              ? Border.all(color: const Color(0xFFFFA94D), width: 2)
+              : null,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha: 0.06),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
@@ -242,13 +265,32 @@ class _AdjustGoalScreenState extends State<AdjustGoalScreen> {
           children: [
             Icon(icon, size: 24),
             const SizedBox(width: 12),
-            Text(
-              label,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
+            if (selected)
+              const Icon(Icons.check_circle, color: Color(0xFFFFA94D)),
           ],
         ),
       ),
     );
   }
+}
+
+double _readDouble(dynamic value) {
+  if (value is num) return value.toDouble();
+  return double.tryParse(value?.toString() ?? '') ?? 0;
+}
+
+String _bmiLabel(double bmi) {
+  if (bmi < 18.5) return "Underweight";
+  if (bmi < 25) return "Normal";
+  if (bmi < 30) return "Overweight";
+  return "Obese";
 }

@@ -54,4 +54,33 @@ class UserProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<bool> updateGoal({
+    required String goalType,
+    double? targetWeight,
+    int? durationMonths,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final response = await _authService.updateGoal(
+        goalType: goalType,
+        targetWeight: targetWeight,
+        durationMonths: durationMonths,
+      );
+      if (response.statusCode == 200) {
+        await fetchProfile();
+        return true;
+      }
+      _error = response.data?['error']?.toString() ?? "Goal update failed";
+      return false;
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }
