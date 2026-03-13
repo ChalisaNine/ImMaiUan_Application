@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:provider/provider.dart';
 
-import 'camera_log.dart';
+import 'Camera_log.dart';
 import 'providers/auth_provider.dart';
 
 class AiResultScreen extends StatefulWidget {
@@ -63,21 +63,10 @@ class _AiResultScreenState extends State<AiResultScreen> {
   }
 
   void _proceedToLog() {
-    // For now, if there are detections, we pass the first matched food class,
-    // otherwise fallback to null.
-    String? foodName;
-    if (_detections.isNotEmpty && _detections[0]['class'] != null) {
-      foodName = _detections[0]['class'];
-    }
-
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => CameraLogScreen(
-          foodId:
-              1, // Will need actual ID mapping from standard Food table eventually
-          foodName: foodName ?? "Unknown Item",
-        ),
+        builder: (_) => CameraLogScreen(detections: _detections),
       ),
     );
   }

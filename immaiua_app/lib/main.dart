@@ -489,7 +489,7 @@ class _CalorieRing extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                "${remaining.toInt()} cal.",
+                "${remaining.toInt()} kcal",
                 style: const TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w800,
