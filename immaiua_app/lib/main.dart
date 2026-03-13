@@ -489,7 +489,7 @@ class _CalorieRing extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                "${remaining.toInt()} cal.",
+                "${remaining.round()} cal.",
                 style: const TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w800,
@@ -899,7 +899,7 @@ class _SummaryCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            "${calories.toInt()}",
+                            "${calories.round()}",
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
@@ -931,7 +931,7 @@ class _SummaryCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            "${burnedCalories.toInt()}",
+                            "${burnedCalories.round()}",
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,

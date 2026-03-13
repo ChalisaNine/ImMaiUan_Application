@@ -7,6 +7,7 @@ import 'ai_image.dart';
 import 'profile_screen.dart';
 import 'Calenda.dart';
 import 'providers/auth_provider.dart';
+import 'providers/user_provider.dart';
 
 class DayReportScreen extends StatefulWidget {
   final DateTime? date;
@@ -120,7 +121,9 @@ class _ReportBodyState extends State<_ReportBody> {
         context,
         listen: false,
       ).authService;
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
       final response = await authService.getDaySummary(widget.date);
+      await userProvider.fetchProfile();
       if (mounted) {
         setState(() {
           _data = Map<String, dynamic>.from(response.data);
@@ -229,6 +232,7 @@ class _ReportBodyState extends State<_ReportBody> {
     final dailyTotal = _data?['daily_total_kcal'] as int? ?? 0;
     final kcalRemaining = _data?['kcal_remaining'] as int? ?? 0;
     final calorieTarget = _data?['calorie_target'] as int? ?? 2000;
+    final profile = context.watch<UserProvider>().profile;
 
     final rawNutrients = _data?['nutrients'] as Map? ?? {};
     final sugar = (rawNutrients['sugar'] as num?)?.toDouble() ?? 0.0;
@@ -236,6 +240,11 @@ class _ReportBodyState extends State<_ReportBody> {
     final protein = (rawNutrients['protein'] as num?)?.toDouble() ?? 0.0;
     final fat = (rawNutrients['fat'] as num?)?.toDouble() ?? 0.0;
     final sodium = (rawNutrients['sodium'] as num?)?.toDouble() ?? 0.0;
+    final carbTarget =
+        (profile?['carb_prefer'] as num?)?.toDouble() ?? 300.0;
+    final proteinTarget =
+        (profile?['protein_prefer'] as num?)?.toDouble() ?? 50.0;
+    final fatTarget = (profile?['fat_prefer'] as num?)?.toDouble() ?? 70.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,21 +314,21 @@ class _ReportBodyState extends State<_ReportBody> {
                 label: 'Carb',
                 value: carb,
                 unit: 'g',
-                rdi: 300,
+                rdi: carbTarget,
               ),
               _NutrientChip(
                 icon: Icons.egg_rounded,
                 label: 'Protein',
                 value: protein,
                 unit: 'g',
-                rdi: 50,
+                rdi: proteinTarget,
               ),
               _NutrientChip(
                 icon: Icons.local_pizza_rounded,
                 label: 'Fat',
                 value: fat,
                 unit: 'g',
-                rdi: 70,
+                rdi: fatTarget,
               ),
               _NutrientChip(
                 icon: Icons.bolt_rounded,
