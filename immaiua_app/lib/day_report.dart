@@ -7,6 +7,7 @@ import 'ai_image.dart';
 import 'profile_screen.dart';
 import 'Calenda.dart';
 import 'providers/auth_provider.dart';
+import 'providers/user_provider.dart';
 
 class DayReportScreen extends StatefulWidget {
   final DateTime? date;
@@ -120,7 +121,9 @@ class _ReportBodyState extends State<_ReportBody> {
         context,
         listen: false,
       ).authService;
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
       final response = await authService.getDaySummary(widget.date);
+      await userProvider.fetchProfile();
       if (mounted) {
         setState(() {
           _data = Map<String, dynamic>.from(response.data);
@@ -229,6 +232,7 @@ class _ReportBodyState extends State<_ReportBody> {
     final dailyTotal = _data?['daily_total_kcal'] as int? ?? 0;
     final kcalRemaining = _data?['kcal_remaining'] as int? ?? 0;
     final calorieTarget = _data?['calorie_target'] as int? ?? 2000;
+    final profile = context.watch<UserProvider>().profile;
 
     final rawNutrients = _data?['nutrients'] as Map? ?? {};
     final sugar = (rawNutrients['sugar'] as num?)?.toDouble() ?? 0.0;
@@ -236,6 +240,11 @@ class _ReportBodyState extends State<_ReportBody> {
     final protein = (rawNutrients['protein'] as num?)?.toDouble() ?? 0.0;
     final fat = (rawNutrients['fat'] as num?)?.toDouble() ?? 0.0;
     final sodium = (rawNutrients['sodium'] as num?)?.toDouble() ?? 0.0;
+    final carbTarget =
+        (profile?['carb_prefer'] as num?)?.toDouble() ?? 300.0;
+    final proteinTarget =
+        (profile?['protein_prefer'] as num?)?.toDouble() ?? 50.0;
+    final fatTarget = (profile?['fat_prefer'] as num?)?.toDouble() ?? 70.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,21 +314,21 @@ class _ReportBodyState extends State<_ReportBody> {
                 label: 'Carb',
                 value: carb,
                 unit: 'g',
-                rdi: 300,
+                rdi: carbTarget,
               ),
               _NutrientChip(
                 icon: Icons.egg_rounded,
                 label: 'Protein',
                 value: protein,
                 unit: 'g',
-                rdi: 50,
+                rdi: proteinTarget,
               ),
               _NutrientChip(
                 icon: Icons.local_pizza_rounded,
                 label: 'Fat',
                 value: fat,
                 unit: 'g',
-                rdi: 70,
+                rdi: fatTarget,
               ),
               _NutrientChip(
                 icon: Icons.bolt_rounded,
@@ -335,66 +344,171 @@ class _ReportBodyState extends State<_ReportBody> {
         const SizedBox(height: 16),
 
         /* ---------------- DAILY SUMMARY ---------------- */
+        const Text(
+          'Daily Summary',
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+        ),
+        const SizedBox(height: 12),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: const Color(0xFFFFC93C),
-            borderRadius: BorderRadius.circular(16),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.grey.withOpacity(0.15)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.08),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Column(
             children: [
-              const Text(
-                'Daily Summary',
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
-              ),
-              const SizedBox(height: 12),
+              // Circular or Linear Progress Visualization
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Target',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Total Consumed',
+                        style: TextStyle(
+                          color: Colors.black54,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '$dailyTotal',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 24,
+                              color: Color(0xFFFF9900),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Padding(
+                            padding: EdgeInsets.only(bottom: 4),
+                            child: Text(
+                              'kcal',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  Text(
-                    '$calorieTarget kcal',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  Container(
+                    width: 1,
+                    height: 40,
+                    color: Colors.grey.withOpacity(0.2),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      const Text(
+                        'Daily Target',
+                        style: TextStyle(
+                          color: Colors.black54,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '$calorieTarget',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 20,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Padding(
+                            padding: EdgeInsets.only(bottom: 3),
+                            child: Text(
+                              'kcal',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Total consumed',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+              
+              const SizedBox(height: 20),
+              
+              // Progress Bar
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: LinearProgressIndicator(
+                  value: calorieTarget > 0 ? (dailyTotal / calorieTarget).clamp(0.0, 1.0) : 0,
+                  minHeight: 12,
+                  backgroundColor: const Color(0xFFF0F0F0),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    dailyTotal > calorieTarget ? Colors.red.shade400 : const Color(0xFFFFC93C),
                   ),
-                  Text(
-                    '$dailyTotal kcal',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ],
+                ),
               ),
-              const Divider(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Calories remaining',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-                  ),
-                  Text(
-                    '$kcalRemaining kcal',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                      color: kcalRemaining < 0
-                          ? Colors.red.shade700
-                          : Colors.green.shade800,
+              
+              const SizedBox(height: 16),
+              
+              // Remaining Calories Container
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: kcalRemaining < 0 
+                    ? Colors.red.withOpacity(0.1) 
+                    : const Color(0xFFF4F9F4),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      kcalRemaining < 0 
+                        ? Icons.warning_amber_rounded 
+                        : Icons.check_circle_outline_rounded,
+                      color: kcalRemaining < 0 
+                        ? Colors.red.shade700 
+                        : Colors.green.shade700,
+                      size: 20,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Text(
+                      kcalRemaining < 0 
+                        ? '${kcalRemaining.abs()} kcal over target'
+                        : '$kcalRemaining kcal remaining',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        color: kcalRemaining < 0 
+                          ? Colors.red.shade700 
+                          : Colors.green.shade800,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -462,6 +576,7 @@ class _MealBlock extends StatelessWidget {
                   ...items.map(
                     (item) => _MealItemRow(
                       name: item['food_name'] as String? ?? 'Unknown',
+                      categoryName: item['category_name'] as String?,
                       kcal: item['kcal'] as int? ?? 0,
                     ),
                   ),
@@ -497,30 +612,96 @@ class _MealBlock extends StatelessWidget {
 /* ---------------------------------------------------------------------- */
 
 class _MealItemRow extends StatelessWidget {
-  const _MealItemRow({required this.name, required this.kcal});
+  const _MealItemRow({
+    required this.name,
+    required this.kcal,
+    this.categoryName,
+  });
 
   final String name;
   final int kcal;
+  final String? categoryName;
+
+  Icon _getCategoryIcon(String? category) {
+    const color = Color(0xFFFF9900);
+    const size = 20.0;
+
+    if (category == null) {
+      return const Icon(Icons.fastfood, size: size, color: color);
+    }
+
+    switch (category.toLowerCase()) {
+      case 'boiled':
+        return const Icon(Icons.soup_kitchen, size: size, color: color);
+      case 'curry':
+        return const Icon(Icons.set_meal, size: size, color: color);
+      case 'fried':
+        return const Icon(Icons.ramen_dining, size: size, color: color);
+      case 'stir-fried':
+        return const Icon(Icons.local_dining, size: size, color: color);
+      case 'grilled':
+        return const Icon(Icons.kebab_dining, size: size, color: color);
+      case 'dessert':
+        return const Icon(Icons.cake, size: size, color: color);
+      case 'beverage':
+        return const Icon(Icons.local_cafe, size: size, color: color);
+      default:
+        return const Icon(Icons.fastfood, size: size, color: color);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        children: [
-          const Icon(Icons.restaurant_menu_rounded, size: 22),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              name,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.withOpacity(0.2)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-          ),
-          Text(
-            '$kcal kcal',
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-          ),
-        ],
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFE1C7).withOpacity(0.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: _getCategoryIcon(categoryName),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                name,
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF5E5),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '$kcal kcal',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700, 
+                  fontSize: 13,
+                  color: Color(0xFFFF8A47),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

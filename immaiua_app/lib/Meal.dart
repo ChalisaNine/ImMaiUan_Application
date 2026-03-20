@@ -164,15 +164,15 @@ class _MealScreenState extends State<MealScreen> {
 
     switch (categoryName.toLowerCase()) {
       case 'boiled':
-        return Icons.water_drop;
-      case 'curry':
         return Icons.soup_kitchen;
+      case 'curry':
+        return Icons.set_meal;
       case 'fried':
-        return Icons.restaurant;
+        return Icons.ramen_dining;
       case 'stir-fried':
-        return Icons.rice_bowl;
+        return Icons.local_dining;
       case 'grilled':
-        return Icons.outdoor_grill;
+        return Icons.kebab_dining;
       case 'dessert':
         return Icons.cake;
       case 'beverage':
@@ -425,6 +425,13 @@ class _MealCategoryCard extends StatelessWidget {
           border: isSelected
               ? Border.all(color: const Color(0xFFFF9900), width: 2)
               : null,
+          boxShadow: [
+            BoxShadow(
+              color: isSelected ? Colors.orange.withOpacity(0.3) : Colors.grey.withOpacity(0.15),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           children: [
@@ -523,15 +530,15 @@ class _MealRecentItem extends StatelessWidget {
 
     switch (categoryName.toLowerCase()) {
       case 'boiled':
-        return const Icon(Icons.water_drop, size: size, color: color);
-      case 'curry':
         return const Icon(Icons.soup_kitchen, size: size, color: color);
+      case 'curry':
+        return const Icon(Icons.set_meal, size: size, color: color);
       case 'fried':
-        return const Icon(Icons.restaurant, size: size, color: color);
+        return const Icon(Icons.ramen_dining, size: size, color: color);
       case 'stir-fried':
-        return const Icon(Icons.rice_bowl, size: size, color: color);
+        return const Icon(Icons.local_dining, size: size, color: color);
       case 'grilled':
-        return const Icon(Icons.outdoor_grill, size: size, color: color);
+        return const Icon(Icons.kebab_dining, size: size, color: color);
       case 'dessert':
         return const Icon(Icons.cake, size: size, color: color);
       case 'beverage':
@@ -648,15 +655,15 @@ class CategorySelectionSheet extends StatelessWidget {
     const color = Color(0xFFFF9900);
     switch (name.toLowerCase()) {
       case 'boiled':
-        return const Icon(Icons.water_drop, color: color);
-      case 'curry':
         return const Icon(Icons.soup_kitchen, color: color);
+      case 'curry':
+        return const Icon(Icons.set_meal, color: color);
       case 'fried':
-        return const Icon(Icons.restaurant, color: color);
+        return const Icon(Icons.ramen_dining, color: color);
       case 'stir-fried':
-        return const Icon(Icons.rice_bowl, color: color);
+        return const Icon(Icons.local_dining, color: color);
       case 'grilled':
-        return const Icon(Icons.outdoor_grill, color: color);
+        return const Icon(Icons.kebab_dining, color: color);
       case 'dessert':
         return const Icon(Icons.cake, color: color);
       case 'beverage':

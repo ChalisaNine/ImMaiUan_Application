@@ -107,7 +107,7 @@ class _CalendaScreenState extends State<CalendaScreen> {
 
                   _buildCalendar(),
 
-                  const SizedBox(height: 22),
+                  const SizedBox(height: 20),
 
                   _weeklyButton(),
 
@@ -145,8 +145,6 @@ class _CalendaScreenState extends State<CalendaScreen> {
   ];
 
   Widget _buildCalendar() {
-    const yellowHeader = Color(0xFFFFC93C);
-    const yellowBody = Color(0xFFFFE6B3);
 
     final year = _displayMonth.year;
     final month = _displayMonth.month;
@@ -162,76 +160,88 @@ class _CalendaScreenState extends State<CalendaScreen> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: yellowBody,
-        borderRadius: BorderRadius.circular(20),
+        color: const Color(0xFFFFE6B3), // Soft orange body
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.orange.withOpacity(0.15),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
           // Month header with navigation
           Container(
             decoration: const BoxDecoration(
-              color: yellowHeader,
+              color: Color(0xFFFFC93C), // Stronger orange header
               borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
               ),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Column(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      onTap: _prevMonth,
-                      child: const Icon(Icons.chevron_left_rounded, size: 28),
+                GestureDetector(
+                  onTap: _prevMonth,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.5),
+                      shape: BoxShape.circle,
                     ),
-                    Text(
-                      "${_monthNames[month - 1]} $year",
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: _nextMonth,
-                      child: const Icon(Icons.chevron_right_rounded, size: 28),
-                    ),
-                  ],
-                ),
-                // Show "Today" button only when not on current month
-                if (_displayMonth.year != _today.year ||
-                    _displayMonth.month != _today.month)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: GestureDetector(
-                      onTap: _goToToday,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.6),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.orange, width: 1.2),
-                        ),
-                        child: const Text(
-                          'Go to Today',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.deepOrange,
-                          ),
-                        ),
-                      ),
-                    ),
+                    child: const Icon(Icons.chevron_left_rounded, size: 24, color: Colors.black87),
                   ),
+                ),
+                Text(
+                  "${_monthNames[month - 1]} $year",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: _nextMonth,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.5),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.chevron_right_rounded, size: 24, color: Colors.black87),
+                  ),
+                ),
               ],
             ),
           ),
 
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
+          if (_displayMonth.year != _today.year || _displayMonth.month != _today.month)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: GestureDetector(
+                onTap: _goToToday,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF5E5),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Back to Today',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFFFF9900),
+                    ),
+                  ),
+                ),
+              ),
+            ),
 
           // Weekday labels
           Padding(
@@ -250,7 +260,7 @@ class _CalendaScreenState extends State<CalendaScreen> {
             ),
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
 
           // Calendar grid
           Padding(
@@ -260,7 +270,7 @@ class _CalendaScreenState extends State<CalendaScreen> {
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 7,
-                mainAxisSpacing: 4,
+                mainAxisSpacing: 8,
                 crossAxisSpacing: 0,
                 childAspectRatio: 1,
               ),
@@ -291,28 +301,27 @@ class _CalendaScreenState extends State<CalendaScreen> {
                   },
                   child: Center(
                     child: Container(
-                      width: 36,
-                      height: 36,
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? Colors.orangeAccent
+                            ? const Color(0xFFFF9900)
                             : isToday
-                            ? const Color(0xFFFFC93C)
+                            ? const Color(0xFFFFF5E5)
                             : Colors.transparent,
-                        borderRadius: BorderRadius.circular(10),
-                        border: isToday && !isSelected
-                            ? Border.all(color: Colors.orange, width: 1.5)
-                            : null,
+                        shape: BoxShape.circle,
                       ),
                       child: Center(
                         child: Text(
                           "$dayNum",
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 15,
                             fontWeight: isToday || isSelected
-                                ? FontWeight.w700
-                                : FontWeight.w400,
-                            color: isSelected ? Colors.white : Colors.black87,
+                                ? FontWeight.w800
+                                : FontWeight.w600,
+                            color: isSelected 
+                                ? Colors.white 
+                                : (isToday ? const Color(0xFFFF9900) : Colors.black87),
                           ),
                         ),
                       ),
@@ -323,7 +332,7 @@ class _CalendaScreenState extends State<CalendaScreen> {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -334,61 +343,100 @@ class _CalendaScreenState extends State<CalendaScreen> {
   // -------------------------------------------------------
 
   Widget _weeklyButton() {
-    return SizedBox(
-      width: 260,
-      height: 48,
-      child: ElevatedButton.icon(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFFFC93C),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        icon: const Icon(Icons.calendar_today_rounded, color: Colors.black87),
-        label: const Text(
-          "Weekly report",
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-        ),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const WeeklyReportScreen()),
-          );
-        },
-      ),
+    return _buildReportCard(
+      title: "Weekly report",
+      subtitle: "View your trends for the week",
+      icon: Icons.calendar_view_week_rounded,
+      color: const Color(0xFFE8F5E9),
+      iconColor: Colors.green.shade600,
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const WeeklyReportScreen()),
+        );
+      },
     );
   }
 
   Widget _monthlyButton() {
-    return SizedBox(
-      width: 260,
-      height: 48,
-      child: ElevatedButton.icon(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFFFC93C),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+    return _buildReportCard(
+      title: "Monthly report",
+      subtitle: "See your progress over the month",
+      icon: Icons.calendar_month_rounded,
+      color: const Color(0xFFE3F2FD),
+      iconColor: Colors.blue.shade600,
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const MonthlyReportScreen()),
+        );
+      },
+    );
+  }
+
+  Widget _buildReportCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required Color iconColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.grey.withOpacity(0.15)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        icon: const Icon(Icons.calendar_month_rounded, color: Colors.black87),
-        label: const Text(
-          "Monthly report",
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: iconColor, size: 26),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400, size: 28),
+          ],
         ),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const MonthlyReportScreen()),
-          );
-        },
       ),
     );
   }

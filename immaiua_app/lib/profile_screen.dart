@@ -101,6 +101,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   decoration: BoxDecoration(
                     color: peach,
                     borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.orange.withOpacity(0.15),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Column(
                     children: [
@@ -121,13 +128,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       // ปุ่ม Edit -> EditProfileScreen
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.yellow,
+                          backgroundColor: Colors.orange,
+                          foregroundColor: Colors.white,
+                          elevation: 3,
+                          shadowColor: Colors.orange.withOpacity(0.4),
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 6,
+                            horizontal: 20,
+                            vertical: 8,
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(20),
                           ),
                         ),
                         icon: const Icon(Icons.edit, size: 18),
@@ -284,6 +294,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFFFE1C7),
         borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.orange.withOpacity(0.12),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(children: children),
     );

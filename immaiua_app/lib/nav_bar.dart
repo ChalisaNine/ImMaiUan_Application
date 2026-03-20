@@ -22,21 +22,22 @@ class MainScaffold extends StatelessWidget {
         elevation: 0,
         backgroundColor: Colors.white,
         toolbarHeight: 68,
-        automaticallyImplyLeading: false,
-        title: Row(
-          children: [
-            const SizedBox(width: 40),
-            Expanded(
-              child: Center(
-                child: Image.asset("assets/immaiuan_logo.jpg", height: 38),
-              ),
-            ),
-            IconButton(
-              onPressed: () => onTap(4),
-              icon: const Icon(Icons.tune_rounded, size: 26),
-            ),
-          ],
-        ),
+        iconTheme: const IconThemeData(color: Colors.black87),
+        leading: Navigator.canPop(context) 
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                onPressed: () => Navigator.pop(context),
+              )
+            : null,
+        centerTitle: true,
+        title: Image.asset("assets/immaiuan_logo.jpg", height: 38),
+        actions: [
+          IconButton(
+            onPressed: () => onTap(4),
+            icon: const Icon(Icons.tune_rounded, size: 26, color: Colors.black87),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
 
       // ---------------- BODY with Modern Gradient Background ----------------
@@ -61,6 +62,7 @@ class MainScaffold extends StatelessWidget {
         width: 74,
         height: 74,
         child: FloatingActionButton(
+          heroTag: null,
           backgroundColor: const Color(0xFF825C2A),
           elevation: 6,
           shape: const CircleBorder(),
@@ -78,7 +80,7 @@ class MainScaffold extends StatelessWidget {
         color: peach,
         height: 63,
         shape: const CircularNotchedRectangle(),
-        notchMargin: 10,
+        notchMargin: 0,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [

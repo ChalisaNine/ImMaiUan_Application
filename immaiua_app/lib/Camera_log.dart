@@ -296,6 +296,31 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
     }
     if (ingredientText.isEmpty) ingredientText = "No ingredients data.";
 
+    final categoryName = foodDetails?['category'] ?? "Unknown";
+
+    IconData _getCategoryIcon(String category) {
+      switch (category.toLowerCase()) {
+        case 'boiled':
+          return Icons.soup_kitchen;
+        case 'fried':
+          return Icons.ramen_dining; // or rice_bowl / fastfood
+        case 'curry':
+          return Icons.set_meal;
+        case 'stir-fried':
+          return Icons.local_dining;
+        case 'grilled':
+          return Icons.kebab_dining;
+        case 'beverage':
+          return Icons.local_cafe;
+        case 'dessert':
+          return Icons.cake;
+        default:
+          return Icons.fastfood;
+      }
+    }
+
+    final categoryIcon = _getCategoryIcon(categoryName);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
       child: Column(
@@ -359,13 +384,17 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.asset(
-                    'assets/sample_food.jpg', // Placeholder image
-                    height: 120,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
+                Container(
+                  height: 120,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    categoryIcon,
+                    size: 60,
+                    color: Colors.orangeAccent,
                   ),
                 ),
                 const SizedBox(height: 12),

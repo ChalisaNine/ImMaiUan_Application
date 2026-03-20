@@ -232,13 +232,9 @@ class _MacroSettingsScreenState extends State<MacroSettingsScreen> {
                         padding: const EdgeInsets.only(top: 8, bottom: 4),
                         child: Row(
                           children: [
-                            IconButton(
-                              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-                              onPressed: () => Navigator.pop(context),
-                              color: Colors.black87,
-                            ),
                             const Expanded(
-                              child: Center(
+                              child: Align(
+                                alignment: Alignment.centerLeft,
                                 child: Text(
                                   'Edit Nutrition Percentage',
                                   style: TextStyle(

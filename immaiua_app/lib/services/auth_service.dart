@@ -11,10 +11,17 @@ class AuthService {
 
   PersistCookieJar? get cookieJar => _cookieJar;
 
-  // Base URL for Android Emulator (10.0.2.2) or iOS Simulator (127.0.0.1)
-  // Adjust this based on where the Flask server is running.
-  // Assuming localhost for now, but for Android emulator use 10.0.2.2
-  static const String _baseUrl = 'http://127.0.0.1:5000';
+  // Optional override: flutter run --dart-define=API_BASE_URL=http://<ip>:5000
+  static const String _envBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: '',
+  );
+  static String get _baseUrl {
+    if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
+    if (Platform.isAndroid) return 'http://10.0.2.2:5000';
+    if (Platform.isIOS) return 'http://127.0.0.1:5000';
+    return 'http://127.0.0.1:5000';
+  }
 
   AuthService() {
     _dio = Dio(
@@ -72,6 +79,35 @@ class AuthService {
   Future<Response> updateProfile(Map<String, dynamic> data) async {
     try {
       final response = await _dio.put('/profile/', data: data);
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Response> getGoal() async {
+    try {
+      final response = await _dio.get('/profile/goal');
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Response> updateGoal({
+    required String goalType,
+    double? targetWeight,
+    int? durationMonths,
+  }) async {
+    try {
+      final response = await _dio.put(
+        '/profile/goal',
+        data: {
+          'goal_type': goalType,
+          if (targetWeight != null) 'target_weight': targetWeight,
+          if (durationMonths != null) 'duration_months': durationMonths,
+        },
+      );
       return response;
     } catch (e) {
       rethrow;
