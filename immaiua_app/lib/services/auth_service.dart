@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:path_provider/path_provider.dart';
+import '../models/allergy_option.dart';
 
 class AuthService {
   late Dio _dio;
@@ -70,6 +71,31 @@ class AuthService {
   Future<Response> getProfile() async {
     try {
       final response = await _dio.get('/profile/');
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<AllergyOption>> getAllergyOptions() async {
+    try {
+      final response = await _dio.get('/profile/allergies/options');
+      final rawAllergies = response.data['allergies'] as List<dynamic>? ?? [];
+      return rawAllergies
+          .whereType<Map<String, dynamic>>()
+          .map(AllergyOption.fromJson)
+          .toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Response> updateAllergies(List<int> allergyIds) async {
+    try {
+      final response = await _dio.put(
+        '/profile/allergies',
+        data: {'allergy_ids': allergyIds},
+      );
       return response;
     } catch (e) {
       rethrow;

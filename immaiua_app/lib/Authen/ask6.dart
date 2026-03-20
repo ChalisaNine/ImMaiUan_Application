@@ -12,12 +12,8 @@ class Ask6Screen extends StatefulWidget {
 }
 
 class _Ask6ScreenState extends State<Ask6Screen> {
-  final TextEditingController _nameController = TextEditingController(
-    text: "Monserzaza007",
-  );
-  final TextEditingController _dobController = TextEditingController(
-    text: "09/29/2003",
-  );
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _dobController = TextEditingController();
 
   @override
   void dispose() {
@@ -147,6 +143,8 @@ class _Ask6ScreenState extends State<Ask6Screen> {
                           horizontal: 12,
                           vertical: 10,
                         ),
+                        hintText: "Enter your name",
+                        hintStyle: const TextStyle(color: Colors.grey),
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
@@ -177,6 +175,8 @@ class _Ask6ScreenState extends State<Ask6Screen> {
                                 horizontal: 12,
                                 vertical: 10,
                               ),
+                              hintText: "Select your date of birth",
+                              hintStyle: const TextStyle(color: Colors.grey),
                               filled: true,
                               fillColor: Colors.white,
                               border: OutlineInputBorder(

@@ -111,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     validator: (v) => (v == null || v.isEmpty)
                         ? "Please enter username"
                         : null,
-                    decoration: _inputDecoration(),
+                    decoration: _inputDecoration("Enter your username"),
                   ),
 
                   const SizedBox(height: 16),
@@ -135,7 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     validator: (v) => (v == null || v.isEmpty)
                         ? "Please enter password"
                         : null,
-                    decoration: _inputDecoration(),
+                    decoration: _inputDecoration("Enter your password"),
                   ),
 
                   const SizedBox(height: 6),
@@ -220,10 +220,12 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  InputDecoration _inputDecoration() {
+  InputDecoration _inputDecoration(String hintText) {
     return InputDecoration(
       isDense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      hintText: hintText,
+      hintStyle: const TextStyle(color: Colors.grey),
       filled: true,
       fillColor: Colors.white,
       border: OutlineInputBorder(

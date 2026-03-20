@@ -298,7 +298,7 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
 
     final categoryName = foodDetails?['category'] ?? "Unknown";
 
-    IconData _getCategoryIcon(String category) {
+    IconData getCategoryIcon(String category) {
       switch (category.toLowerCase()) {
         case 'boiled':
           return Icons.soup_kitchen;
@@ -319,7 +319,7 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
       }
     }
 
-    final categoryIcon = _getCategoryIcon(categoryName);
+    final categoryIcon = getCategoryIcon(categoryName);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),

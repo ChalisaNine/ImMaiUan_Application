@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'ask4.dart';
-import 'ask6.dart'; // หน้าถัดไป
 import 'package:provider/provider.dart';
+import '../models/allergy_option.dart';
 import '../providers/profile_setup_provider.dart';
+import 'ask4.dart';
+import 'ask6.dart';
 
 class Ask5Screen extends StatefulWidget {
   const Ask5Screen({super.key});
@@ -12,8 +13,78 @@ class Ask5Screen extends StatefulWidget {
 }
 
 class _Ask5ScreenState extends State<Ask5Screen> {
-  final TextEditingController _controller = TextEditingController();
-  final List<String> _allergies = [];
+  final List<AllergyOption> _selectedAllergies = [];
+  List<AllergyOption> _availableAllergies = [];
+  AllergyOption? _dropdownValue;
+  bool _isLoading = true;
+  String? _loadError;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(_loadAllergyOptions);
+  }
+
+  Future<void> _loadAllergyOptions() async {
+    final provider = context.read<ProfileSetupProvider>();
+
+    setState(() {
+      _selectedAllergies
+        ..clear()
+        ..addAll(provider.allergies);
+      _isLoading = true;
+      _loadError = null;
+    });
+
+    try {
+      final allergies = await provider.fetchAllergyOptions();
+      if (!mounted) return;
+
+      setState(() {
+        _availableAllergies = allergies;
+        _dropdownValue = allergies.firstWhere(
+          (item) =>
+              !_selectedAllergies.any((selected) => selected.id == item.id),
+          orElse: () => allergies.isNotEmpty ? allergies.first : _emptyOption,
+        );
+        if (_dropdownValue == _emptyOption) {
+          _dropdownValue = null;
+        }
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loadError = 'Failed to load allergy list';
+        _isLoading = false;
+      });
+    }
+  }
+
+  static const AllergyOption _emptyOption = AllergyOption(id: -1, name: '');
+
+  void _addSelectedAllergy() {
+    final allergy = _dropdownValue;
+    if (allergy == null) return;
+    if (_selectedAllergies.any((item) => item.id == allergy.id)) return;
+
+    setState(() {
+      _selectedAllergies.add(allergy);
+      _dropdownValue = _availableAllergies.cast<AllergyOption?>().firstWhere(
+        (item) =>
+            item != null &&
+            !_selectedAllergies.any((selected) => selected.id == item.id),
+        orElse: () => null,
+      );
+    });
+  }
+
+  void _removeSelectedAllergy(AllergyOption allergy) {
+    setState(() {
+      _selectedAllergies.removeWhere((item) => item.id == allergy.id);
+      _dropdownValue ??= allergy;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +99,6 @@ class _Ask5ScreenState extends State<Ask5Screen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Back button (top)
               Align(
                 alignment: Alignment.topLeft,
                 child: ElevatedButton(
@@ -50,7 +120,7 @@ class _Ask5ScreenState extends State<Ask5Screen> {
                     );
                   },
                   child: const Text(
-                    "<< back",
+                    '<< back',
                     style: TextStyle(
                       color: Colors.black87,
                       fontWeight: FontWeight.w600,
@@ -58,10 +128,7 @@ class _Ask5ScreenState extends State<Ask5Screen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 40),
-
-              // Icon
               Container(
                 padding: const EdgeInsets.all(22),
                 decoration: const BoxDecoration(
@@ -74,22 +141,17 @@ class _Ask5ScreenState extends State<Ask5Screen> {
                   color: Colors.black87,
                 ),
               ),
-
               const SizedBox(height: 28),
-
               const Text(
-                "Do you have any allergy?",
+                'Do you have any allergy?',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
               const Text(
-                "(skip if don’t)",
+                '(skip if none)',
                 style: TextStyle(fontSize: 13, color: Colors.black54),
               ),
-
               const SizedBox(height: 24),
-
-              // Allergy box
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 14,
@@ -103,54 +165,93 @@ class _Ask5ScreenState extends State<Ask5Screen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // TextField + Add
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _controller,
-                            decoration: const InputDecoration(
-                              hintText: "Enter allergy (e.g. Cow’s milk)",
-                              border: InputBorder.none,
-                              isDense: true,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: buttonColor,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: () {
-                            if (_controller.text.trim().isEmpty) return;
-                            setState(() {
-                              _allergies.add(_controller.text.trim());
-                              _controller.clear();
-                            });
-                          },
-                          icon: const Icon(Icons.edit, size: 16),
-                          label: const Text("Add"),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // List of allergies
-                    if (_allergies.isNotEmpty)
+                    if (_isLoading)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    else if (_loadError != null)
                       Column(
-                        children: _allergies
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _loadError!,
+                            style: const TextStyle(color: Colors.redAccent),
+                          ),
+                          const SizedBox(height: 8),
+                          TextButton(
+                            onPressed: _loadAllergyOptions,
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      )
+                    else ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<AllergyOption>(
+                              value: _dropdownValue,
+                              isExpanded: true,
+                              decoration: const InputDecoration(
+                                hintText: 'Select an allergy',
+                                border: InputBorder.none,
+                                isDense: true,
+                              ),
+                              items: _availableAllergies
+                                  .where(
+                                    (allergy) => !_selectedAllergies.any(
+                                      (selected) => selected.id == allergy.id,
+                                    ),
+                                  )
+                                  .map(
+                                    (allergy) => DropdownMenuItem(
+                                      value: allergy,
+                                      child: Text(allergy.name),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _dropdownValue = value;
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: buttonColor,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            onPressed: _addSelectedAllergy,
+                            icon: const Icon(Icons.add, size: 16),
+                            label: const Text('Add'),
+                          ),
+                        ],
+                      ),
+                      if (_availableAllergies.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8),
+                          child: Text(
+                            'No allergies available from the database.',
+                            style: TextStyle(color: Colors.black54),
+                          ),
+                        ),
+                    ],
+                    const SizedBox(height: 8),
+                    if (_selectedAllergies.isNotEmpty)
+                      Column(
+                        children: _selectedAllergies
                             .map(
                               (item) => Padding(
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 4.0,
+                                  vertical: 4,
                                 ),
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
@@ -163,12 +264,12 @@ class _Ask5ScreenState extends State<Ask5Screen> {
                                     border: Border.all(color: Colors.black12),
                                   ),
                                   child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Expanded(
                                         child: Text(
-                                          item,
+                                          item.type == null || item.type!.isEmpty
+                                              ? item.name
+                                              : '${item.name} (${item.type})',
                                           style: const TextStyle(fontSize: 14),
                                         ),
                                       ),
@@ -178,11 +279,8 @@ class _Ask5ScreenState extends State<Ask5Screen> {
                                           color: Colors.redAccent,
                                           size: 20,
                                         ),
-                                        onPressed: () {
-                                          setState(() {
-                                            _allergies.remove(item);
-                                          });
-                                        },
+                                        onPressed: () =>
+                                            _removeSelectedAllergy(item),
                                       ),
                                     ],
                                   ),
@@ -194,14 +292,10 @@ class _Ask5ScreenState extends State<Ask5Screen> {
                   ],
                 ),
               ),
-
               const Spacer(),
-
-              // Navigation buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // << Previous
                   TextButton(
                     onPressed: () {
                       Navigator.pushReplacement(
@@ -210,15 +304,13 @@ class _Ask5ScreenState extends State<Ask5Screen> {
                       );
                     },
                     child: const Text(
-                      "<< Previous",
+                      '<< Previous',
                       style: TextStyle(
                         color: Colors.orange,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
-
-                  // Next >>
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: buttonColor,
@@ -232,7 +324,7 @@ class _Ask5ScreenState extends State<Ask5Screen> {
                     ),
                     onPressed: () {
                       context.read<ProfileSetupProvider>().setAllergies(
-                        _allergies,
+                        List<AllergyOption>.from(_selectedAllergies),
                       );
                       Navigator.pushReplacement(
                         context,
@@ -243,7 +335,7 @@ class _Ask5ScreenState extends State<Ask5Screen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          "Next ",
+                          'Next ',
                           style: TextStyle(
                             color: Colors.black87,
                             fontWeight: FontWeight.w600,

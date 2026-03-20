@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'ask2.dart';
 import 'ask4.dart'; // ✅ เพิ่ม import หน้า ask4
 import 'package:provider/provider.dart';
@@ -13,10 +14,10 @@ class Ask3Screen extends StatefulWidget {
 
 class _Ask3ScreenState extends State<Ask3Screen> {
   final TextEditingController _heightController = TextEditingController(
-    text: "172",
+    text: "",
   );
   final TextEditingController _weightController = TextEditingController(
-    text: "78",
+    text: "",
   );
 
   @override
@@ -183,9 +184,14 @@ class _Ask3ScreenState extends State<Ask3Screen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+        MarkdownBody(
+          data: "**$label**",
+          shrinkWrap: true,
+          selectable: false,
+          styleSheet: MarkdownStyleSheet(
+            p: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+            strong: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          ),
         ),
         const SizedBox(height: 6),
         Container(
@@ -201,7 +207,13 @@ class _Ask3ScreenState extends State<Ask3Screen> {
                 child: TextField(
                   controller: controller,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(border: InputBorder.none),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    hintText: label == "Height"
+                        ? "Enter your height"
+                        : "Enter your weight",
+                    hintStyle: const TextStyle(color: Colors.grey),
+                  ),
                 ),
               ),
               Text(

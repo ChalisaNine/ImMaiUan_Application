@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/allergy_option.dart';
 import '../services/auth_service.dart';
 
 class ProfileSetupProvider extends ChangeNotifier {
@@ -12,7 +13,7 @@ class ProfileSetupProvider extends ChangeNotifier {
   double? _height;
   double? _weight;
   String? _goal;
-  List<String> _allergies = [];
+  List<AllergyOption> _allergies = [];
   String? _name;
   String? _dob; // MM/DD/YYYY
 
@@ -25,7 +26,7 @@ class ProfileSetupProvider extends ChangeNotifier {
   double? get height => _height;
   double? get weight => _weight;
   String? get goal => _goal;
-  List<String> get allergies => _allergies;
+  List<AllergyOption> get allergies => _allergies;
   String? get name => _name;
   String? get dob => _dob;
   bool get isLoading => _isLoading;
@@ -53,9 +54,13 @@ class ProfileSetupProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setAllergies(List<String> value) {
+  void setAllergies(List<AllergyOption> value) {
     _allergies = value;
     notifyListeners();
+  }
+
+  Future<List<AllergyOption>> fetchAllergyOptions() {
+    return _authService.getAllergyOptions();
   }
 
   void setPersonalInfo(String name, String dob) {
@@ -77,7 +82,8 @@ class ProfileSetupProvider extends ChangeNotifier {
         "height": _height,
         "weight": _weight,
         "goal": _goal,
-        "allergies": _allergies,
+        "allergy_ids": _allergies.map((allergy) => allergy.id).toList(),
+        "allergies": _allergies.map((allergy) => allergy.name).toList(),
         "name": _name,
         "dob": _dob,
       };
