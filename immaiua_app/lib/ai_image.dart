@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'barcode_scanner_screen.dart';
 
 import 'nav_bar.dart';
 import 'main.dart';
@@ -85,6 +86,12 @@ class _CameraBody extends StatefulWidget {
 class _CameraBodyState extends State<_CameraBody> {
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
+  void _openBarcodeScanner() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const BarcodeScannerScreen()),
+    );
+  }
 
   Future<void> _pickImage(ImageSource source) async {
     try {
@@ -248,6 +255,52 @@ class _CameraBodyState extends State<_CameraBody> {
             ],
           ),
         ),
+
+        // ---------- Barcode Scanner ----------
+        if (_imageFile == null)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 110,
+            child: Column(
+                    children: [
+                      InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: _openBarcodeScanner,
+                        child: Container(
+                          width: 62,
+                          height: 62,
+                          decoration: BoxDecoration(
+                            color: peachDeep,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x44000000),
+                                blurRadius: 8,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.qr_code_scanner_rounded, // or barcode
+                            color: Colors.white,
+                            size: 30,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        "BARCODE",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
 
         // ---------- Refresh/Camera ----------
         Positioned(

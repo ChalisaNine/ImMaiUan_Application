@@ -364,6 +364,15 @@ class AuthService {
     }
   }
 
+  Future<Response> addCustomFood(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post('/meals/custom-food', data: data);
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<Response> analyzeImage(File imageFile) async {
     try {
       final formData = FormData.fromMap({
