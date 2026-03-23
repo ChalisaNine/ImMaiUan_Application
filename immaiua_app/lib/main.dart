@@ -219,7 +219,7 @@ class _HomeScreenState extends State<_HomeScreen> {
           final height = profile?['height_cm']?.toString() ?? "0";
           final bmi = profile?['bmi']?.toStringAsFixed(1) ?? "0.0";
           final bmr = profile?['bmr']?.toString() ?? "0";
-          final tdee = profile?['tdee']?.toString() ?? "0";
+          final tdee = _displayTdee(profile);
 
           // Calculate remaining calories
           final remaining = calorieTarget - calories;
@@ -1068,4 +1068,22 @@ class _NutrientChip extends StatelessWidget {
       ),
     );
   }
+}
+
+String _displayTdee(Map<String, dynamic>? profile) {
+  final goalType = (profile?['goal_type'] ?? 'MAINTAIN').toString();
+  final tdee = _readDouble(profile?['tdee']);
+  final calorieTarget = _readDouble(profile?['calorie_target']);
+
+  final effectiveTdee = goalType == 'MAINTAIN'
+      ? (tdee > 0 ? tdee : calorieTarget)
+      : (calorieTarget > 0 ? calorieTarget : tdee);
+
+  if (effectiveTdee <= 0) return '0';
+  return effectiveTdee.round().toString();
+}
+
+double _readDouble(dynamic value) {
+  if (value is num) return value.toDouble();
+  return double.tryParse(value?.toString() ?? '') ?? 0;
 }
