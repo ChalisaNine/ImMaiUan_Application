@@ -87,7 +87,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           final height = profile?['height_cm']?.toString() ?? "-";
           final bmi = profile?['bmi']?.toStringAsFixed(1) ?? "-";
           final bmr = profile?['bmr']?.toString() ?? "-";
-          final tdee = profile?['tdee']?.toString() ?? "-";
+          final tdee = _displayTdee(profile);
 
           return SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 18),
@@ -317,4 +317,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
       minLeadingWidth: 0,
     );
   }
+}
+
+String _displayTdee(Map<String, dynamic>? profile) {
+  final goalType = (profile?['goal_type'] ?? 'MAINTAIN').toString();
+  final tdee = _readDouble(profile?['tdee']);
+  final calorieTarget = _readDouble(profile?['calorie_target']);
+
+  final effectiveTdee = goalType == 'MAINTAIN'
+      ? (tdee > 0 ? tdee : calorieTarget)
+      : (calorieTarget > 0 ? calorieTarget : tdee);
+
+  if (effectiveTdee <= 0) return '-';
+  return effectiveTdee.round().toString();
+}
+
+double _readDouble(dynamic value) {
+  if (value is num) return value.toDouble();
+  return double.tryParse(value?.toString() ?? '') ?? 0;
 }

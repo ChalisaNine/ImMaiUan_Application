@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/allergy_option.dart';
 import '../services/auth_service.dart';
 
 class UserProvider extends ChangeNotifier {
@@ -74,6 +75,31 @@ class UserProvider extends ChangeNotifier {
         return true;
       }
       _error = response.data?['error']?.toString() ?? "Goal update failed";
+      return false;
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<List<AllergyOption>> fetchAllergyOptions() {
+    return _authService.getAllergyOptions();
+  }
+
+  Future<bool> updateAllergies(List<int> allergyIds) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final response = await _authService.updateAllergies(allergyIds);
+      if (response.statusCode == 200) {
+        await fetchProfile();
+        return true;
+      }
+      _error = response.data?['error']?.toString() ?? "Allergy update failed";
       return false;
     } catch (e) {
       _error = e.toString();
