@@ -256,81 +256,51 @@ class _CameraBodyState extends State<_CameraBody> {
           ),
         ),
 
-        // ---------- Barcode Scanner ----------
-        if (_imageFile == null)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 110,
-            child: Column(
-                    children: [
-                      InkWell(
-                        borderRadius: BorderRadius.circular(16),
-                        onTap: _openBarcodeScanner,
-                        child: Container(
-                          width: 62,
-                          height: 62,
-                          decoration: BoxDecoration(
-                            color: peachDeep,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x44000000),
-                                blurRadius: 8,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.qr_code_scanner_rounded, // or barcode
-                            color: Colors.white,
-                            size: 30,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        "BARCODE",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1,
-                          fontSize: 12,
-                        ),
+        // ---------- Refresh/Barcode ----------
+        Positioned(
+          right: 20,
+          bottom: 110,
+          child: Column(
+            children: [
+              InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: _imageFile != null ? _clearImage : _openBarcodeScanner,
+                child: Container(
+                  width: 62,
+                  height: 62,
+                  decoration: BoxDecoration(
+                    color: _imageFile != null ? Colors.white24 : peachDeep,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x44000000),
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
                       ),
                     ],
                   ),
-          ),
-
-        // ---------- Refresh/Camera ----------
-        Positioned(
-          right: 20,
-          bottom: 118,
-          child: Material(
-            color: peachDeep,
-            shape: const CircleBorder(),
-            elevation: 6,
-            child: InkWell(
-              onTap: _imageFile != null
-                  ? _clearImage
-                  : () => _pickImage(ImageSource.camera),
-              customBorder: const CircleBorder(),
-              child: SizedBox(
-                width: 54,
-                height: 54,
-                child: Icon(
-                  _imageFile != null
-                      ? Icons.refresh_rounded
-                      : Icons.camera_alt_rounded,
-                  size: 28,
-                  color: Colors.white,
+                  child: Icon(
+                    _imageFile != null
+                        ? Icons.refresh_rounded
+                        : Icons.qr_code_scanner_rounded, // or barcode
+                    color: Colors.white,
+                    size: 30,
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(height: 6),
+              Text(
+                _imageFile != null ? "RETAKE" : "BARCODE",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1,
+                  fontSize: 12,
+                ),
+              ),
+            ],
           ),
         ),
-
-        // ⭐ ไม่มีปุ่มกล้องบนอีกแล้ว (ลบออก)
       ],
     );
   }

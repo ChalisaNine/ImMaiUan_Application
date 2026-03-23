@@ -32,7 +32,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
   Future<void> _processBarcode(String barcode) async {
     if (_isBarcodeLoading || barcode.isEmpty) return;
     setState(() => _isBarcodeLoading = true);
-    
+
     try {
       final dio = Dio();
       final response = await dio.get(
@@ -41,31 +41,62 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
       if (response.statusCode == 200 && response.data['status'] == 1) {
         final product = response.data['product'];
         final nutrients = product['nutriments'] ?? {};
-        
+
+        double portionQuantity = 100.0;
+        String portionDescription = "100g";
+
+        print("serving_quantity: ${product['serving_quantity']}");
+        print("serving_size: ${product['serving_size']}");
+
+        if (product['serving_quantity'] != null) {
+          portionQuantity =
+              double.tryParse(product['serving_quantity'].toString()) ?? 100.0;
+        }
+        if (product['serving_size'] != null &&
+            product['serving_size'].toString().isNotEmpty) {
+          portionDescription = product['serving_size'].toString();
+        }
+
         final Map<String, dynamic> customData = {
-          "name": product['product_name'] ?? product['product_name_en'] ?? "Unknown Food",
-          "calories_100g": (nutrients['energy-kcal_100g'] ?? 0.0),
-          "protein_100g": (nutrients['proteins_100g'] ?? 0.0),
+          "name":
+              product['product_name'] ??
+              product['product_name_en'] ??
+              "Unknown Food",
+          "energy-kcal_100g": (nutrients['energy-kcal_100g'] ?? 0.0),
+          "proteins_100g": (nutrients['proteins_100g'] ?? 0.0),
           "fat_100g": (nutrients['fat_100g'] ?? 0.0),
-          "carb_100g": (nutrients['carbohydrates_100g'] ?? 0.0),
-          "sugar_100g": (nutrients['sugars_100g'] ?? 0.0),
+          "carbohydrates_100g": (nutrients['carbohydrates_100g'] ?? 0.0),
+          "sugars_100g": (nutrients['sugars_100g'] ?? 0.0),
           "sodium_100g": (nutrients['sodium_100g'] ?? 0.0),
+          "portion_quantity": portionQuantity,
+          "portion_description": portionDescription,
+          "portion_quantity_unit": product['serving_quantity_unit'],
         };
 
+        print("customData: $customData");
+
         if (mounted) {
-          final authProvider = Provider.of<AuthProvider>(context, listen: false);
-          final customFoodRes = await authProvider.authService.addCustomFood(customData);
-          
-          if (customFoodRes.statusCode == 200 || customFoodRes.statusCode == 201) {
+          final authProvider = Provider.of<AuthProvider>(
+            context,
+            listen: false,
+          );
+          final customFoodRes = await authProvider.authService.addCustomFood(
+            customData,
+          );
+
+          if (customFoodRes.statusCode == 200 ||
+              customFoodRes.statusCode == 201) {
             final foodId = customFoodRes.data['food_id'];
             if (mounted) {
               // We use pushReplacement to pop the scanner off the stack completely
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (_) => CameraLogScreen(
-                  foodId: foodId,
-                  foodName: customData["name"],
-                )),
+                MaterialPageRoute(
+                  builder: (_) => CameraLogScreen(
+                    foodId: foodId,
+                    foodName: customData["name"],
+                  ),
+                ),
               );
               return;
             }
@@ -74,15 +105,17 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Food not found in OpenFoodFacts database.')),
+            const SnackBar(
+              content: Text('Food not found in OpenFoodFacts database.'),
+            ),
           );
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Barcode scan error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Barcode scan error: $e')));
       }
     } finally {
       if (mounted) setState(() => _isBarcodeLoading = false);
@@ -95,7 +128,9 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
     if (image != null) {
       setState(() => _isBarcodeLoading = true);
       try {
-        final BarcodeCapture? capture = await _controller.analyzeImage(image.path);
+        final BarcodeCapture? capture = await _controller.analyzeImage(
+          image.path,
+        );
         if (capture != null && capture.barcodes.isNotEmpty) {
           final code = capture.barcodes.first.rawValue;
           if (code != null) {
@@ -112,7 +147,8 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
         if (mounted) {
           _showManualEntryDialog(
             title: "Scanner Error",
-            message: "Unable to analyze the image on this device. Please enter the barcode manually.",
+            message:
+                "Unable to analyze the image on this device. Please enter the barcode manually.",
           );
         }
       } finally {
@@ -185,7 +221,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
               }
             },
           ),
-          
+
           // Target Area Outline
           Center(
             child: Container(
@@ -203,7 +239,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
               ),
             ),
           ),
-          
+
           // Gradient Bottom Profile
           Positioned(
             left: 0,
@@ -222,7 +258,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
               ),
             ),
           ),
-          
+
           // Back Button top left
           SafeArea(
             child: Align(
@@ -234,7 +270,10 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
                   shape: const CircleBorder(),
                   child: IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -246,10 +285,12 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
             Positioned.fill(
               child: Container(
                 color: Colors.black54,
-                child: const Center(child: CircularProgressIndicator(color: peachDeep)),
+                child: const Center(
+                  child: CircularProgressIndicator(color: peachDeep),
+                ),
               ),
             ),
-          
+
           // Controls
           if (!_isBarcodeLoading) ...[
             // Upload from Gallery Button
@@ -268,15 +309,26 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
                         color: Colors.white24,
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Icon(Icons.photo_library_rounded, color: Colors.white, size: 28),
+                      child: const Icon(
+                        Icons.photo_library_rounded,
+                        color: Colors.white,
+                        size: 28,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text("UPLOAD", style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                  const Text(
+                    "UPLOAD",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             ),
-            
+
             // Manual Entry Button
             Positioned(
               right: 30,
@@ -293,15 +345,26 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
                         color: Colors.white24,
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Icon(Icons.keyboard_rounded, color: Colors.white, size: 28),
+                      child: const Icon(
+                        Icons.keyboard_rounded,
+                        color: Colors.white,
+                        size: 28,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text("MANUAL", style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                  const Text(
+                    "MANUAL",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             ),
-            
+
             // Snap Button
             Positioned(
               bottom: 40,
@@ -315,7 +378,9 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
                       _processBarcode(_lastDetectedBarcode!);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please align a barcode in view first')),
+                        const SnackBar(
+                          content: Text('Please align a barcode in view first'),
+                        ),
                       );
                     }
                   },
@@ -334,7 +399,11 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
                         ),
                       ],
                     ),
-                    child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 32),
+                    child: const Icon(
+                      Icons.camera_alt_rounded,
+                      color: Colors.white,
+                      size: 32,
+                    ),
                   ),
                 ),
               ),
