@@ -20,6 +20,13 @@ class _AiResultScreenState extends State<AiResultScreen> {
   String _errorMessage = "";
   List<dynamic> _detections = [];
   String? _annotatedImageBase64;
+  double? _originalGlobalDepth;
+  double? _currentGlobalDepth;
+  
+  double get _depthRatio {
+    if (_originalGlobalDepth == null || _originalGlobalDepth == 0) return 1.0;
+    return (_currentGlobalDepth ?? 1.0) / _originalGlobalDepth!;
+  }
 
   @override
   void initState() {
@@ -39,6 +46,8 @@ class _AiResultScreenState extends State<AiResultScreen> {
         if (mounted) {
           setState(() {
             _detections = response.data['detections'] ?? [];
+            _originalGlobalDepth = (response.data['global_center_depth_m'] ?? 0.5).toDouble();
+            _currentGlobalDepth = _originalGlobalDepth;
             _annotatedImageBase64 = response.data['annotated_image_base64'];
             _isAnalyzing = false;
           });
@@ -63,10 +72,21 @@ class _AiResultScreenState extends State<AiResultScreen> {
   }
 
   void _proceedToLog() {
+    final adjustedDetections = _detections.map((item) {
+      final updated = Map<String, dynamic>.from(item);
+      double origDepth = double.tryParse(updated['center_depth_m']?.toString() ?? '0') ?? 0;
+      double origMass = double.tryParse(updated['estimated_portion_g']?.toString() ?? '0') ?? 0;
+      
+      updated['center_depth_m'] = double.parse((origDepth * _depthRatio).toStringAsFixed(2));
+      updated['estimated_portion_g'] = double.parse((origMass * _depthRatio * _depthRatio).toStringAsFixed(2));
+      
+      return updated;
+    }).toList();
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => CameraLogScreen(detections: _detections),
+        builder: (_) => CameraLogScreen(detections: adjustedDetections),
       ),
     );
   }
@@ -199,6 +219,50 @@ class _AiResultScreenState extends State<AiResultScreen> {
           ),
           const SizedBox(height: 16),
 
+          // Slider for Depth
+          if (_currentGlobalDepth != null && _detections.isNotEmpty)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Camera Distance (Depth)",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      "${_currentGlobalDepth!.toStringAsFixed(2)} m",
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: peachDeep),
+                    ),
+                  ],
+                ),
+                Slider(
+                  value: _currentGlobalDepth!,
+                  min: 0.1,
+                  max: 2.0,
+                  divisions: 190,
+                  activeColor: peachDeep,
+                  onChanged: (val) {
+                    setState(() {
+                      _currentGlobalDepth = val;
+                    });
+                  },
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    "Adjust this slider if the estimated food weight seems off. Modifying the depth mathematically recalibrates the estimated mass.",
+                    style: TextStyle(fontSize: 12, color: Colors.black54),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
+            ),
+
           if (_detections.isEmpty)
             const Padding(
               padding: EdgeInsets.only(bottom: 16.0),
@@ -256,9 +320,16 @@ class _AiResultScreenState extends State<AiResultScreen> {
   Widget _buildItemDetection(Map<String, dynamic> item) {
     String className = item['class']?.toString() ?? 'Unknown';
     String focalLen = item['focal_length_px']?.toString() ?? 'N/A';
-    String depth = item['center_depth_m']?.toString() ?? 'N/A';
     String pct = item['mask_region_pct']?.toString() ?? 'N/A';
-    String mass = item['estimated_portion_g']?.toString() ?? 'N/A';
+
+    double origDepth = double.tryParse(item['center_depth_m']?.toString() ?? '0') ?? 0;
+    double origMass = double.tryParse(item['estimated_portion_g']?.toString() ?? '0') ?? 0;
+
+    double adjDepth = origDepth * _depthRatio;
+    double adjMass = origMass * _depthRatio * _depthRatio;
+
+    String depth = adjDepth.toStringAsFixed(2);
+    String mass = adjMass.toStringAsFixed(1);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16.0),

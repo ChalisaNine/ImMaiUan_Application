@@ -40,7 +40,19 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
       );
       if (response.statusCode == 200 && response.data['status'] == 1) {
         final product = response.data['product'];
-        final nutrients = product['nutriments'] ?? {};
+        final nutrients = product['nutriments'];
+        
+        // Validate nutrition and name
+        if (nutrients == null || nutrients.isEmpty) {
+          if (mounted) {
+            _showErrorDialog(
+              'Nutrition Not Found',
+              'We found the product, but unfortunately it does not have nutrition information available.',
+              showManualEntry: true,
+            );
+          }
+          return;
+        }
 
         double portionQuantity = 100.0;
         String portionDescription = "100g";
@@ -104,22 +116,91 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Food not found in OpenFoodFacts database.'),
-            ),
+          _showErrorDialog(
+            'Product Not Found',
+            'This barcode is not in our food database. Please try another item or enter the nutrition manually.',
+            showManualEntry: true,
           );
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Barcode scan error: $e')));
+        _showErrorDialog(
+          'Scan Error',
+          'Oops! We had trouble processing this barcode. Please check your internet connection or try again.',
+          showRetry: true,
+        );
       }
     } finally {
       if (mounted) setState(() => _isBarcodeLoading = false);
     }
+  }
+
+  void _showErrorDialog(
+    String title,
+    String message, {
+    bool showManualEntry = false,
+    bool showRetry = false,
+  }) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              const Icon(Icons.error_outline_rounded, color: Colors.red),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("CANCEL", style: TextStyle(color: Colors.grey)),
+            ),
+            if (showManualEntry)
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFFA94D),
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () {
+                  Navigator.pop(context); // Close error dialog
+                  _showManualEntryDialog(); // Open manual entry
+                },
+                child: const Text("ENTER MANUALLY", style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            if (showRetry)
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFFA94D),
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () {
+                  Navigator.pop(context); // Close error dialog
+                  if (_lastDetectedBarcode != null) {
+                    _processBarcode(_lastDetectedBarcode!);
+                  }
+                },
+                child: const Text("TRY AGAIN", style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _pickImage() async {
