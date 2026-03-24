@@ -37,79 +37,25 @@ class _Ask3ScreenState extends State<Ask3Screen> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // ---------- ปุ่ม back ไป Ask2 ----------
-              Align(
-                alignment: Alignment.topLeft,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: buttonColor,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 6,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // ---------- ปุ่ม back ไป Ask2 ----------
+                Align(
+                  alignment: Alignment.topLeft,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: buttonColor,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 6,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    elevation: 0,
-                  ),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const Ask2Screen()),
-                    );
-                  },
-                  child: const Text(
-                    "<< back",
-                    style: TextStyle(
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 50),
-
-              // ---------- ไอคอน ----------
-              Container(
-                padding: const EdgeInsets.all(22),
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFFFFD84E),
-                ),
-                child: const Icon(
-                  Icons.tune_rounded,
-                  size: 80,
-                  color: Colors.black87,
-                ),
-              ),
-
-              const SizedBox(height: 28),
-
-              const Text(
-                "Height & Weight",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-
-              const SizedBox(height: 28),
-
-              // ---------- ช่องกรอกข้อมูล ----------
-              _buildInputField("Height", _heightController, "cm"),
-              const SizedBox(height: 20),
-              _buildInputField("Weight", _weightController, "kg"),
-
-              const Spacer(),
-
-              // ---------- ปุ่ม Previous / Next ----------
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // << Previous → Ask2
-                  TextButton(
                     onPressed: () {
                       Navigator.pushReplacement(
                         context,
@@ -117,58 +63,114 @@ class _Ask3ScreenState extends State<Ask3Screen> {
                       );
                     },
                     child: const Text(
-                      "<< Previous",
+                      "<< back",
                       style: TextStyle(
-                        color: Colors.orange,
-                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
+                ),
 
-                  // >> Next → Ask4 ✅
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: buttonColor,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 8,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onPressed: () {
-                      final h = double.tryParse(_heightController.text);
-                      final w = double.tryParse(_weightController.text);
-                      if (h != null && w != null) {
-                        context.read<ProfileSetupProvider>().setBodyStats(h, w);
+                const SizedBox(height: 50),
+
+                // ---------- ไอคอน ----------
+                Container(
+                  padding: const EdgeInsets.all(22),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFFFFD84E),
+                  ),
+                  child: const Icon(
+                    Icons.tune_rounded,
+                    size: 80,
+                    color: Colors.black87,
+                  ),
+                ),
+
+                const SizedBox(height: 28),
+
+                const Text(
+                  "Height & Weight",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+
+                const SizedBox(height: 28),
+
+                // ---------- ช่องกรอกข้อมูล ----------
+                _buildInputField("Height", _heightController, "cm"),
+                const SizedBox(height: 20),
+                _buildInputField("Weight", _weightController, "kg"),
+
+                const SizedBox(height: 40),
+
+                // ---------- ปุ่ม Previous / Next ----------
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // << Previous → Ask2
+                    TextButton(
+                      onPressed: () {
                         Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(builder: (_) => const Ask4Screen()),
+                          MaterialPageRoute(builder: (_) => const Ask2Screen()),
                         );
-                      }
-                    },
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          "Next ",
-                          style: TextStyle(
-                            color: Colors.black87,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      },
+                      child: const Text(
+                        "<< Previous",
+                        style: TextStyle(
+                          color: Colors.orange,
+                          fontWeight: FontWeight.w500,
                         ),
-                        Icon(
-                          Icons.double_arrow_rounded,
-                          size: 16,
-                          color: Colors.black87,
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+
+                    // >> Next → Ask4 ✅
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: buttonColor,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        final h = double.tryParse(_heightController.text);
+                        final w = double.tryParse(_weightController.text);
+                        if (h != null && w != null) {
+                          context.read<ProfileSetupProvider>().setBodyStats(h, w);
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (_) => const Ask4Screen()),
+                          );
+                        }
+                      },
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            "Next ",
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Icon(
+                            Icons.double_arrow_rounded,
+                            size: 16,
+                            color: Colors.black87,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

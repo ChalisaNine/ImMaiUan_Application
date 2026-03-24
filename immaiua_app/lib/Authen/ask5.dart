@@ -96,207 +96,24 @@ class _Ask5ScreenState extends State<Ask5Screen> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Align(
-                alignment: Alignment.topLeft,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: buttonColor,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 6,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    elevation: 0,
-                  ),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const Ask4Screen()),
-                    );
-                  },
-                  child: const Text(
-                    '<< back',
-                    style: TextStyle(
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 40),
-              Container(
-                padding: const EdgeInsets.all(22),
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFFFFD84E),
-                ),
-                child: const Icon(
-                  Icons.medical_services_rounded,
-                  size: 80,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 28),
-              const Text(
-                'Do you have any allergy?',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                '(skip if none)',
-                style: TextStyle(fontSize: 13, color: Colors.black54),
-              ),
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.black12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (_isLoading)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8),
-                        child: Center(child: CircularProgressIndicator()),
-                      )
-                    else if (_loadError != null)
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _loadError!,
-                            style: const TextStyle(color: Colors.redAccent),
-                          ),
-                          const SizedBox(height: 8),
-                          TextButton(
-                            onPressed: _loadAllergyOptions,
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      )
-                    else ...[
-                      Row(
-                        children: [
-                          Expanded(
-                            child: DropdownButtonFormField<AllergyOption>(
-                              value: _dropdownValue,
-                              isExpanded: true,
-                              decoration: const InputDecoration(
-                                hintText: 'Select an allergy',
-                                border: InputBorder.none,
-                                isDense: true,
-                              ),
-                              items: _availableAllergies
-                                  .where(
-                                    (allergy) => !_selectedAllergies.any(
-                                      (selected) => selected.id == allergy.id,
-                                    ),
-                                  )
-                                  .map(
-                                    (allergy) => DropdownMenuItem(
-                                      value: allergy,
-                                      child: Text(allergy.name),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: (value) {
-                                setState(() {
-                                  _dropdownValue = value;
-                                });
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: buttonColor,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            onPressed: _addSelectedAllergy,
-                            icon: const Icon(Icons.add, size: 16),
-                            label: const Text('Add'),
-                          ),
-                        ],
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Align(
+                  alignment: Alignment.topLeft,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: buttonColor,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 6,
                       ),
-                      if (_availableAllergies.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.only(top: 8),
-                          child: Text(
-                            'No allergies available from the database.',
-                            style: TextStyle(color: Colors.black54),
-                          ),
-                        ),
-                    ],
-                    const SizedBox(height: 8),
-                    if (_selectedAllergies.isNotEmpty)
-                      Column(
-                        children: _selectedAllergies
-                            .map(
-                              (item) => Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 4,
-                                ),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 10,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFFFF7E9),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.black12),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          item.type == null || item.type!.isEmpty
-                                              ? item.name
-                                              : '${item.name} (${item.type})',
-                                          style: const TextStyle(fontSize: 14),
-                                        ),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.delete,
-                                          color: Colors.redAccent,
-                                          size: 20,
-                                        ),
-                                        onPressed: () =>
-                                            _removeSelectedAllergy(item),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            )
-                            .toList(),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  TextButton(
+                      elevation: 0,
+                    ),
                     onPressed: () {
                       Navigator.pushReplacement(
                         context,
@@ -304,54 +121,239 @@ class _Ask5ScreenState extends State<Ask5Screen> {
                       );
                     },
                     child: const Text(
-                      '<< Previous',
+                      '<< back',
                       style: TextStyle(
-                        color: Colors.orange,
-                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: buttonColor,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 8,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onPressed: () {
-                      context.read<ProfileSetupProvider>().setAllergies(
-                        List<AllergyOption>.from(_selectedAllergies),
-                      );
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const Ask6Screen()),
-                      );
-                    },
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Next ',
-                          style: TextStyle(
-                            color: Colors.black87,
-                            fontWeight: FontWeight.w600,
+                ),
+                const SizedBox(height: 40),
+                Container(
+                  padding: const EdgeInsets.all(22),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFFFFD84E),
+                  ),
+                  child: const Icon(
+                    Icons.medical_services_rounded,
+                    size: 80,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 28),
+                const Text(
+                  'Do you have any allergy?',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  '(skip if none)',
+                  style: TextStyle(fontSize: 13, color: Colors.black54),
+                ),
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: Colors.black12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (_isLoading)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      else if (_loadError != null)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _loadError!,
+                              style: const TextStyle(color: Colors.redAccent),
+                            ),
+                            const SizedBox(height: 8),
+                            TextButton(
+                              onPressed: _loadAllergyOptions,
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        )
+                      else ...[
+                        Row(
+                          children: [
+                            Expanded(
+                              child: DropdownButtonFormField<AllergyOption>(
+                                value: _dropdownValue,
+                                isExpanded: true,
+                                decoration: const InputDecoration(
+                                  hintText: 'Select an allergy',
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                ),
+                                items: _availableAllergies
+                                    .where(
+                                      (allergy) => !_selectedAllergies.any(
+                                        (selected) => selected.id == allergy.id,
+                                      ),
+                                    )
+                                    .map(
+                                      (allergy) => DropdownMenuItem(
+                                        value: allergy,
+                                        child: Text(allergy.name),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    _dropdownValue = value;
+                                  });
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: buttonColor,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              onPressed: _addSelectedAllergy,
+                              icon: const Icon(Icons.add, size: 16),
+                              label: const Text('Add'),
+                            ),
+                          ],
+                        ),
+                        if (_availableAllergies.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 8),
+                            child: Text(
+                              'No allergies available from the database.',
+                              style: TextStyle(color: Colors.black54),
+                            ),
                           ),
-                        ),
-                        Icon(
-                          Icons.double_arrow_rounded,
-                          size: 16,
-                          color: Colors.black87,
-                        ),
                       ],
-                    ),
+                      const SizedBox(height: 8),
+                      if (_selectedAllergies.isNotEmpty)
+                        Column(
+                          children: _selectedAllergies
+                              .map(
+                                (item) => Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 4,
+                                  ),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFF7E9),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: Colors.black12),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            item.type == null || item.type!.isEmpty
+                                                ? item.name
+                                                : '${item.name} (${item.type})',
+                                            style: const TextStyle(fontSize: 14),
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.delete,
+                                            color: Colors.redAccent,
+                                            size: 20,
+                                          ),
+                                          onPressed: () =>
+                                              _removeSelectedAllergy(item),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                    ],
                   ),
-                ],
-              ),
-            ],
+                ),
+                const SizedBox(height: 30),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const Ask4Screen()),
+                        );
+                      },
+                      child: const Text(
+                        '<< Previous',
+                        style: TextStyle(
+                          color: Colors.orange,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: buttonColor,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        context.read<ProfileSetupProvider>().setAllergies(
+                          List<AllergyOption>.from(_selectedAllergies),
+                        );
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const Ask6Screen()),
+                        );
+                      },
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Next ',
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Icon(
+                            Icons.double_arrow_rounded,
+                            size: 16,
+                            color: Colors.black87,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

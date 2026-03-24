@@ -23,128 +23,104 @@ class _Ask1ScreenState extends State<Ask1Screen> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 20),
-          child: Column(
-            children: [
-              // Back button
-              Align(
-                alignment: Alignment.topLeft,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: buttonColor,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 6,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    elevation: 0,
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                const SizedBox(height: 60),
+
+                // Icon in circle
+                Container(
+                  padding: const EdgeInsets.all(22),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFFFFD84E),
                   ),
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    "<< back",
-                    style: TextStyle(
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  child: const Icon(
+                    Icons.transgender_rounded,
+                    size: 80,
+                    color: Colors.black87,
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 60),
+                const SizedBox(height: 28),
 
-              // Icon in circle
-              Container(
-                padding: const EdgeInsets.all(22),
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFFFFD84E),
+                const Text(
+                  "Biological Genders",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
-                child: const Icon(
-                  Icons.transgender_rounded,
-                  size: 80,
-                  color: Colors.black87,
+
+                const SizedBox(height: 28),
+
+                // Male / Female buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _genderButton(
+                      icon: Icons.male_rounded,
+                      label: "Male",
+                      selected: _isMale == true,
+                      onTap: () => setState(() => _isMale = true),
+                    ),
+                    const SizedBox(width: 14),
+                    _genderButton(
+                      icon: Icons.female_rounded,
+                      label: "Female",
+                      selected: _isMale == false,
+                      onTap: () => setState(() => _isMale = false),
+                    ),
+                  ],
                 ),
-              ),
 
-              const SizedBox(height: 28),
+                const SizedBox(height: 30),
 
-              const Text(
-                "Biological Genders",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-
-              const SizedBox(height: 28),
-
-              // Male / Female buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _genderButton(
-                    icon: Icons.male_rounded,
-                    label: "Male",
-                    selected: _isMale == true,
-                    onTap: () => setState(() => _isMale = true),
-                  ),
-                  const SizedBox(width: 14),
-                  _genderButton(
-                    icon: Icons.female_rounded,
-                    label: "Female",
-                    selected: _isMale == false,
-                    onTap: () => setState(() => _isMale = false),
-                  ),
-                ],
-              ),
-
-              const Spacer(),
-
-              // Next button
-              Align(
-                alignment: Alignment.bottomRight,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: buttonColor,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 8,
+                // Next button
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: buttonColor,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: _isMale != null
-                      ? () {
-                          context.read<ProfileSetupProvider>().setGender(
-                            _isMale! ? "Male" : "Female",
-                          );
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const Ask2Screen(),
-                            ),
-                          );
-                        }
-                      : null,
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        "Next  ",
-                        style: TextStyle(
-                          color: Colors.black87,
-                          fontWeight: FontWeight.w600,
+                    onPressed: _isMale != null
+                        ? () {
+                            context.read<ProfileSetupProvider>().setGender(
+                              _isMale! ? "Male" : "Female",
+                            );
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const Ask2Screen(),
+                              ),
+                            );
+                          }
+                        : null,
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "Next  ",
+                          style: TextStyle(
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      Icon(
-                        Icons.double_arrow_rounded,
-                        size: 16,
-                        color: Colors.black87,
-                      ),
-                    ],
+                        Icon(
+                          Icons.double_arrow_rounded,
+                          size: 16,
+                          color: Colors.black87,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
