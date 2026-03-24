@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../activity_level_options.dart';
 import '../models/allergy_option.dart';
 import '../services/auth_service.dart';
 
@@ -39,7 +40,7 @@ class ProfileSetupProvider extends ChangeNotifier {
   }
 
   void setActivityLevel(String value) {
-    _activityLevel = value;
+    _activityLevel = normalizeActivityLevel(value) ?? value;
     notifyListeners();
   }
 

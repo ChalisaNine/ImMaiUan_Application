@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../activity_level_options.dart';
+import '../providers/profile_setup_provider.dart';
 import 'ask1.dart';
 import 'ask3.dart';
-import 'package:provider/provider.dart';
-import '../providers/profile_setup_provider.dart';
 
 class Ask2Screen extends StatefulWidget {
   const Ask2Screen({super.key});
@@ -15,16 +17,17 @@ class _Ask2ScreenState extends State<Ask2Screen> {
   String? _selectedLevel;
 
   @override
+  void initState() {
+    super.initState();
+    _selectedLevel = normalizeActivityLevel(
+      context.read<ProfileSetupProvider>().activityLevel,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     const bg = Color(0xFFFFE1C7);
     const buttonColor = Color(0xFFFFA94D);
-
-    final List<String> levels = [
-      "Sedentary (office job)",
-      "Light exercise (1–2 days/week)",
-      "Moderate exercise (3–5 days/week)",
-      "Heavy training (6–7 days/week)",
-    ];
 
     return Scaffold(
       backgroundColor: bg,
@@ -34,7 +37,6 @@ class _Ask2ScreenState extends State<Ask2Screen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // ---------- Back button (ไป Ask1) ----------
               Align(
                 alignment: Alignment.topLeft,
                 child: ElevatedButton(
@@ -56,7 +58,7 @@ class _Ask2ScreenState extends State<Ask2Screen> {
                     );
                   },
                   child: const Text(
-                    "<< back",
+                    '<< back',
                     style: TextStyle(
                       color: Colors.black87,
                       fontWeight: FontWeight.w600,
@@ -64,10 +66,7 @@ class _Ask2ScreenState extends State<Ask2Screen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 50),
-
-              // ---------- Icon ----------
               Container(
                 padding: const EdgeInsets.all(22),
                 decoration: const BoxDecoration(
@@ -80,21 +79,15 @@ class _Ask2ScreenState extends State<Ask2Screen> {
                   color: Colors.black87,
                 ),
               ),
-
               const SizedBox(height: 28),
-
-              // ---------- Title ----------
               const Text(
-                "How many workouts\ndo you do per week ?",
+                'How many workouts\ndo you do per week ?',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-
               const SizedBox(height: 28),
-
-              // ---------- Options ----------
               Column(
-                children: levels
+                children: activityLevelOptions
                     .map(
                       (text) => Padding(
                         padding: const EdgeInsets.symmetric(vertical: 6),
@@ -135,14 +128,10 @@ class _Ask2ScreenState extends State<Ask2Screen> {
                     )
                     .toList(),
               ),
-
               const Spacer(),
-
-              // ---------- Bottom buttons ----------
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // << Previous (กลับไป Ask1)
                   TextButton(
                     onPressed: () {
                       Navigator.pushReplacement(
@@ -151,15 +140,13 @@ class _Ask2ScreenState extends State<Ask2Screen> {
                       );
                     },
                     child: const Text(
-                      "<< Previous",
+                      '<< Previous',
                       style: TextStyle(
                         color: Colors.orange,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
-
-                  // Next >> (ไป Ask3)
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: buttonColor,
@@ -171,8 +158,9 @@ class _Ask2ScreenState extends State<Ask2Screen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    onPressed: _selectedLevel != null
-                        ? () {
+                    onPressed: _selectedLevel == null
+                        ? null
+                        : () {
                             context
                                 .read<ProfileSetupProvider>()
                                 .setActivityLevel(_selectedLevel!);
@@ -182,13 +170,12 @@ class _Ask2ScreenState extends State<Ask2Screen> {
                                 builder: (_) => const Ask3Screen(),
                               ),
                             );
-                          }
-                        : null,
+                          },
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          "Next ",
+                          'Next ',
                           style: TextStyle(
                             color: Colors.black87,
                             fontWeight: FontWeight.w600,

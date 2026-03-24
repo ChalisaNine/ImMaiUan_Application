@@ -32,6 +32,7 @@ class _MealScreenState extends State<MealScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MealProvider>().fetchFoods(reset: true);
       context.read<MealProvider>().fetchCategories();
+      context.read<UserProvider>().fetchProfile();
     });
 
     // Add scroll listener for pagination
@@ -194,9 +195,7 @@ class _MealScreenState extends State<MealScreen> {
         child: Consumer2<MealProvider, UserProvider>(
           builder: (context, mealProvider, userProvider, child) {
             final items = mealProvider.foodList;
-            final tdee =
-                (userProvider.profile?['tdee'] as num?)?.toInt() ?? 2000;
-            final safeTdee = tdee > 0 ? tdee : 2000;
+            final safeTdee = _effectiveTdee(userProvider.profile);
 
             return CustomScrollView(
               controller: _scrollController,
@@ -392,6 +391,24 @@ class _MealScreenState extends State<MealScreen> {
       ),
     );
   }
+}
+
+int _effectiveTdee(Map<String, dynamic>? profile) {
+  final goalType = (profile?['goal_type'] ?? 'MAINTAIN').toString();
+  final tdee = _readDouble(profile?['tdee']);
+  final calorieTarget = _readDouble(profile?['calorie_target']);
+
+  final effectiveTdee = goalType == 'MAINTAIN'
+      ? (tdee > 0 ? tdee : calorieTarget)
+      : (calorieTarget > 0 ? calorieTarget : tdee);
+
+  if (effectiveTdee <= 0) return 2000;
+  return effectiveTdee.round();
+}
+
+double _readDouble(dynamic value) {
+  if (value is num) return value.toDouble();
+  return double.tryParse(value?.toString() ?? '') ?? 0;
 }
 
 /* ===================================================================== */

@@ -20,15 +20,16 @@ class AuthService {
   static String get _baseUrl {
     if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
     final ipAddress = dotenv.env['IP_ADDRESS'] ?? '127.0.0.1';
-    return 'http://$ipAddress:5001';
+    final apiPort = dotenv.env['API_PORT'] ?? '5000';
+    return 'http://$ipAddress:$apiPort';
   }
 
   AuthService() {
-    _dio = Dio(
+        _dio = Dio(
       BaseOptions(
         baseUrl: _baseUrl,
-        connectTimeout: const Duration(seconds: 120),
-        receiveTimeout: const Duration(seconds: 120),
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 15),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -306,7 +307,10 @@ class AuthService {
 
   Future<bool> checkAuthStatus() async {
     try {
-      final response = await _dio.get('/auth/me');
+      final response = await _dio.get(
+        '/auth/me',
+        options: Options(receiveTimeout: const Duration(seconds: 5)),
+      );
       print("🕵️ checkAuthStatus Response: ${response.statusCode}"); // DEBUG
       return response.statusCode == 200;
     } catch (e) {

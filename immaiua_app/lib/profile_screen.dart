@@ -7,6 +7,7 @@ import 'ai_image.dart';
 import 'Calenda.dart';
 import 'nav_bar.dart';
 import 'EditProfile.dart';
+import 'activity_settings.dart';
 import 'adjust_goal.dart';
 import 'Setting_macro.dart';
 import 'providers/auth_provider.dart';
@@ -212,7 +213,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       );
                     },
                   ),
-                  _menuItem(Icons.settings, "Setting", onTap: () {}),
+                  _menuItem(
+                    Icons.settings,
+                    "Setting",
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ActivitySettingsScreen(),
+                        ),
+                      ).then((_) {
+                        context.read<UserProvider>().fetchProfile();
+                      });
+                    },
+                  ),
                 ]),
 
                 const SizedBox(height: 18),
