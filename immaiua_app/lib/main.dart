@@ -13,7 +13,12 @@ import 'providers/profile_setup_provider.dart';
 import 'providers/user_provider.dart';
 import 'providers/meal_provider.dart';
 
-void main() => runApp(const ImMaiUanApp());
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+Future<void> main() async {
+  await dotenv.load(fileName: ".env");
+  runApp(const ImMaiUanApp());
+}
 
 class ImMaiUanApp extends StatelessWidget {
   const ImMaiUanApp({super.key});

@@ -216,8 +216,11 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
             onDetect: (capture) {
               final barcodes = capture.barcodes;
               if (barcodes.isNotEmpty && barcodes.first.rawValue != null) {
-                // Keep the most recent valid barcode
-                _lastDetectedBarcode = barcodes.first.rawValue;
+                final code = barcodes.first.rawValue!;
+                if (!_isBarcodeLoading && _lastDetectedBarcode != code) {
+                  _lastDetectedBarcode = code;
+                  _processBarcode(code);
+                }
               }
             },
           ),

@@ -4,12 +4,14 @@ class MainScaffold extends StatelessWidget {
   final Widget body;
   final int currentIndex;
   final Function(int) onTap;
+  final VoidCallback? onCameraTap;
 
   const MainScaffold({
     super.key,
     required this.body,
     required this.currentIndex,
     required this.onTap,
+    this.onCameraTap,
   });
 
   @override
@@ -66,7 +68,7 @@ class MainScaffold extends StatelessWidget {
           backgroundColor: const Color(0xFF825C2A),
           elevation: 6,
           shape: const CircleBorder(),
-          onPressed: () => onTap(2),
+          onPressed: onCameraTap ?? () => onTap(2),
           child: const Icon(
             Icons.camera_alt_rounded,
             color: Colors.white,

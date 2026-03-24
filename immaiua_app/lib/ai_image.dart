@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:camera/camera.dart';
 import 'barcode_scanner_screen.dart';
 
 import 'nav_bar.dart';
@@ -20,6 +21,7 @@ class AiImageScreen extends StatefulWidget {
 
 class _AiImageScreenState extends State<AiImageScreen> {
   int _index = 2; // Capture tab
+  final GlobalKey<_CameraBodyState> _cameraKey = GlobalKey<_CameraBodyState>();
 
   void _onTap(int i) {
     setState(() => _index = i);
@@ -67,7 +69,10 @@ class _AiImageScreenState extends State<AiImageScreen> {
     return MainScaffold(
       currentIndex: _index,
       onTap: _onTap,
-      body: const _CameraBody(),
+      onCameraTap: () {
+        _cameraKey.currentState?._handleCameraAction();
+      },
+      body: _CameraBody(key: _cameraKey),
     );
   }
 }
@@ -77,15 +82,67 @@ class _AiImageScreenState extends State<AiImageScreen> {
 /* ========================================================================= */
 
 class _CameraBody extends StatefulWidget {
-  const _CameraBody();
+  const _CameraBody({super.key});
 
   @override
   State<_CameraBody> createState() => _CameraBodyState();
 }
 
-class _CameraBodyState extends State<_CameraBody> {
+class _CameraBodyState extends State<_CameraBody> with WidgetsBindingObserver {
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
+  
+  CameraController? _cameraController;
+  List<CameraDescription>? _cameras;
+  bool _isCameraInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _initCamera();
+  }
+
+  Future<void> _initCamera() async {
+    try {
+      _cameras = await availableCameras();
+      if (_cameras != null && _cameras!.isNotEmpty) {
+        _cameraController = CameraController(
+          _cameras![0],
+          ResolutionPreset.high,
+          enableAudio: false,
+        );
+        await _cameraController!.initialize();
+        if (mounted) {
+          setState(() {
+            _isCameraInitialized = true;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error initializing camera: $e");
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _cameraController?.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_cameraController == null || !_cameraController!.value.isInitialized) {
+      return;
+    }
+    if (state == AppLifecycleState.inactive) {
+      _cameraController?.dispose();
+    } else if (state == AppLifecycleState.resumed) {
+      _initCamera();
+    }
+  }
+
   void _openBarcodeScanner() {
     Navigator.push(
       context,
@@ -103,6 +160,31 @@ class _CameraBodyState extends State<_CameraBody> {
       }
     } catch (e) {
       debugPrint("Error picking image: $e");
+    }
+  }
+
+  Future<void> _takePicture() async {
+    if (_cameraController == null || !_cameraController!.value.isInitialized) {
+      return;
+    }
+    // Cannot take a new picture if we already have one
+    if (_imageFile != null) return;
+    
+    try {
+      final XFile image = await _cameraController!.takePicture();
+      setState(() {
+        _imageFile = File(image.path);
+      });
+    } catch (e) {
+      debugPrint("Error taking picture: $e");
+    }
+  }
+
+  void _handleCameraAction() {
+    if (_imageFile == null) {
+      _takePicture();
+    } else {
+      _mockScanToLog();
     }
   }
 
@@ -136,26 +218,15 @@ class _CameraBodyState extends State<_CameraBody> {
         Positioned.fill(
           child: _imageFile != null
               ? Image.file(_imageFile!, fit: BoxFit.cover)
-              : Container(
-                  color: Colors.black87,
-                  child: const Center(
-                    child: Text(
-                      "Tap the camera to start",
-                      style: TextStyle(color: Colors.white54, fontSize: 16),
-                    ),
-                  ),
-                ),
+              : (_isCameraInitialized
+                  ? CameraPreview(_cameraController!)
+                  : Container(
+                      color: Colors.black,
+                      child: const Center(
+                        child: CircularProgressIndicator(color: peachDeep),
+                      ),
+                    )),
         ),
-
-        // ---------- Center Target Area (Camera tap area if empty) ----------
-        if (_imageFile == null)
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: () => _pickImage(ImageSource.camera),
-              behavior: HitTestBehavior.opaque,
-              child: const SizedBox.expand(),
-            ),
-          ),
 
         // ---------- วงกลมเล็ง ----------
         IgnorePointer(

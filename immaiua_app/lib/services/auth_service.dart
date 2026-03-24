@@ -3,7 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:path_provider/path_provider.dart';
-import '../models/allergy_option.dart';
+import '../models/allergy_option.dart';import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AuthService {
   late Dio _dio;
@@ -19,9 +19,8 @@ class AuthService {
   );
   static String get _baseUrl {
     if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
-    if (Platform.isAndroid) return 'http://10.0.2.2:5000';
-    if (Platform.isIOS) return 'http://127.0.0.1:5000';
-    return 'http://127.0.0.1:5000';
+    final ipAddress = dotenv.env['IP_ADDRESS'] ?? '127.0.0.1';
+    return 'http://$ipAddress:5001';
   }
 
   AuthService() {
