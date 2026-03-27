@@ -2,8 +2,10 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:cookie_jar/cookie_jar.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
-import '../models/allergy_option.dart';import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../models/allergy_option.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AuthService {
   late Dio _dio;
@@ -17,15 +19,23 @@ class AuthService {
     'API_BASE_URL',
     defaultValue: '',
   );
+
+  static String get _defaultHost {
+    if (kIsWeb) return '127.0.0.1';
+    if (Platform.isAndroid) return '10.0.2.2';
+    return '127.0.0.1';
+  }
+
   static String get _baseUrl {
     if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
-    final ipAddress = dotenv.env['IP_ADDRESS'] ?? '127.0.0.1';
+    final ipAddress = (dotenv.env['IP_ADDRESS'] ?? '').trim();
     final apiPort = dotenv.env['API_PORT'] ?? '5000';
-    return 'http://$ipAddress:$apiPort';
+    final host = ipAddress.isNotEmpty ? ipAddress : _defaultHost;
+    return 'http://$host:$apiPort';
   }
 
   AuthService() {
-        _dio = Dio(
+    _dio = Dio(
       BaseOptions(
         baseUrl: _baseUrl,
         connectTimeout: const Duration(seconds: 20),
@@ -144,6 +154,7 @@ class AuthService {
     required int carbPercent,
     required int proteinPercent,
     required int fatPercent,
+    int? calorieTarget,
   }) async {
     try {
       final response = await _dio.post(
@@ -152,6 +163,7 @@ class AuthService {
           'carb_percent': carbPercent,
           'protein_percent': proteinPercent,
           'fat_percent': fatPercent,
+          if (calorieTarget != null) 'calorie_target': calorieTarget,
         },
       );
       return response;

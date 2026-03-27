@@ -88,46 +88,51 @@ class _Ask2ScreenState extends State<Ask2Screen> {
                 ),
                 const SizedBox(height: 28),
                 Column(
-                  children: activityLevelOptions
-                      .map(
-                        (text) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          child: GestureDetector(
-                            onTap: () => setState(() => _selectedLevel = text),
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 12,
-                                horizontal: 10,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _selectedLevel == text
-                                    ? const Color(0xFFFFD84E)
-                                    : Colors.white,
-                                borderRadius: BorderRadius.circular(22),
-                                border: Border.all(
-                                  color: _selectedLevel == text
-                                      ? Colors.black87
-                                      : Colors.black26,
-                                  width: 1.3,
-                                ),
-                              ),
-                              child: Text(
-                                text,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: _selectedLevel == text
-                                      ? Colors.black
-                                      : Colors.black87,
-                                  fontWeight: FontWeight.w500,
+                  children:
+                      activityLevelOptions
+                          .map(
+                            (text) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 6),
+                              child: GestureDetector(
+                                onTap:
+                                    () => setState(() => _selectedLevel = text),
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                    horizontal: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        _selectedLevel == text
+                                            ? const Color(0xFFFFD84E)
+                                            : Colors.white,
+                                    borderRadius: BorderRadius.circular(22),
+                                    border: Border.all(
+                                      color:
+                                          _selectedLevel == text
+                                              ? Colors.black87
+                                              : Colors.black26,
+                                      width: 1.3,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    text,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color:
+                                          _selectedLevel == text
+                                              ? Colors.black
+                                              : Colors.black87,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                      )
-                      .toList(),
+                          )
+                          .toList(),
                 ),
                 const SizedBox(height: 30),
                 Row(
@@ -159,19 +164,20 @@ class _Ask2ScreenState extends State<Ask2Screen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: _selectedLevel == null
-                          ? null
-                          : () {
-                              context
-                                  .read<ProfileSetupProvider>()
-                                  .setActivityLevel(_selectedLevel!);
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const Ask3Screen(),
-                                ),
-                              );
-                            },
+                      onPressed:
+                          _selectedLevel == null
+                              ? null
+                              : () {
+                                context
+                                    .read<ProfileSetupProvider>()
+                                    .setActivityLevel(_selectedLevel!);
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const Ask3Screen(),
+                                  ),
+                                );
+                              },
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [

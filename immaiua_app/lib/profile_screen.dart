@@ -88,16 +88,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           final height = profile?['height_cm']?.toString() ?? "-";
           final bmi = profile?['bmi']?.toStringAsFixed(1) ?? "-";
           final bmr = profile?['bmr']?.toString() ?? "-";
-          final tdee = _displayTdee(profile);
+          final tdee = _displayRawTdee(profile);
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 18),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Column(
               children: [
                 const SizedBox(height: 16),
 
                 // ================= PROFILE HEADER =================
                 Container(
+                  width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   decoration: BoxDecoration(
                     color: peach,
@@ -159,8 +160,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 18),
 
                       // ================= METRICS ROW =================
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      Wrap(
+                        alignment: WrapAlignment.spaceEvenly,
+                        spacing: 28,
+                        runSpacing: 12,
                         children: [
                           _metric("Weight", "$weight kg", Icons.fitness_center),
                           _metric("Height", "$height cm", Icons.height),
@@ -333,17 +336,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-String _displayTdee(Map<String, dynamic>? profile) {
-  final goalType = (profile?['goal_type'] ?? 'MAINTAIN').toString();
+String _displayRawTdee(Map<String, dynamic>? profile) {
   final tdee = _readDouble(profile?['tdee']);
-  final calorieTarget = _readDouble(profile?['calorie_target']);
 
-  final effectiveTdee = goalType == 'MAINTAIN'
-      ? (tdee > 0 ? tdee : calorieTarget)
-      : (calorieTarget > 0 ? calorieTarget : tdee);
-
-  if (effectiveTdee <= 0) return '-';
-  return effectiveTdee.round().toString();
+  if (tdee <= 0) return '-';
+  return tdee.round().toString();
 }
 
 double _readDouble(dynamic value) {

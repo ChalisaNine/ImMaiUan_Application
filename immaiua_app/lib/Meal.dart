@@ -139,12 +139,13 @@ class _MealScreenState extends State<MealScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => _FavoritesSheet(
-        onTapFood: (foodId, foodName) {
-          Navigator.pop(context);
-          _openDetail(foodId: foodId, foodName: foodName);
-        },
-      ),
+      builder:
+          (context) => _FavoritesSheet(
+            onTapFood: (foodId, foodName) {
+              Navigator.pop(context);
+              _openDetail(foodId: foodId, foodName: foodName);
+            },
+          ),
     );
   }
 
@@ -195,7 +196,6 @@ class _MealScreenState extends State<MealScreen> {
         child: Consumer2<MealProvider, UserProvider>(
           builder: (context, mealProvider, userProvider, child) {
             final items = mealProvider.foodList;
-            final safeTdee = _effectiveTdee(userProvider.profile);
 
             return CustomScrollView(
               controller: _scrollController,
@@ -217,12 +217,13 @@ class _MealScreenState extends State<MealScreen> {
                           icon: const Icon(Icons.search_rounded),
                           hintText: 'Search by name..',
                           border: InputBorder.none,
-                          suffixIcon: _searchController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: _clearSearch,
-                                )
-                              : null,
+                          suffixIcon:
+                              _searchController.text.isNotEmpty
+                                  ? IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    onPressed: _clearSearch,
+                                  )
+                                  : null,
                         ),
                       ),
                     ),
@@ -360,13 +361,10 @@ class _MealScreenState extends State<MealScreen> {
 
                           final item = items[index];
                           final kcal = (item['calories'] as num).toInt();
-                          final percent = (kcal / safeTdee * 100)
-                              .toStringAsFixed(1);
 
                           return _MealRecentItem(
                             name: item['name'] ?? "Unknown Food",
-                            subtitle:
-                                "$percent% of calories per day (TDEE: $safeTdee)",
+                            subtitle: item['category_name']?.toString(),
                             kcal: kcal.toString(),
                             categoryName: item['category_name'],
                             onTap: () {
@@ -391,24 +389,6 @@ class _MealScreenState extends State<MealScreen> {
       ),
     );
   }
-}
-
-int _effectiveTdee(Map<String, dynamic>? profile) {
-  final goalType = (profile?['goal_type'] ?? 'MAINTAIN').toString();
-  final tdee = _readDouble(profile?['tdee']);
-  final calorieTarget = _readDouble(profile?['calorie_target']);
-
-  final effectiveTdee = goalType == 'MAINTAIN'
-      ? (tdee > 0 ? tdee : calorieTarget)
-      : (calorieTarget > 0 ? calorieTarget : tdee);
-
-  if (effectiveTdee <= 0) return 2000;
-  return effectiveTdee.round();
-}
-
-double _readDouble(dynamic value) {
-  if (value is num) return value.toDouble();
-  return double.tryParse(value?.toString() ?? '') ?? 0;
 }
 
 /* ===================================================================== */
@@ -439,12 +419,16 @@ class _MealCategoryCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFFFFB84D) : const Color(0xFFFFE1C7),
           borderRadius: BorderRadius.circular(14),
-          border: isSelected
-              ? Border.all(color: const Color(0xFFFF9900), width: 2)
-              : null,
+          border:
+              isSelected
+                  ? Border.all(color: const Color(0xFFFF9900), width: 2)
+                  : null,
           boxShadow: [
             BoxShadow(
-              color: isSelected ? Colors.orange.withOpacity(0.3) : Colors.grey.withOpacity(0.15),
+              color:
+                  isSelected
+                      ? Colors.orange.withOpacity(0.3)
+                      : Colors.grey.withOpacity(0.15),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -478,14 +462,14 @@ class _MealCategoryCard extends StatelessWidget {
 class _MealRecentItem extends StatelessWidget {
   const _MealRecentItem({
     required this.name,
-    required this.subtitle,
     required this.kcal,
     required this.onTap,
+    this.subtitle,
     this.categoryName,
   });
 
   final String name;
-  final String subtitle;
+  final String? subtitle;
   final String kcal;
   final VoidCallback onTap;
   final String? categoryName;
@@ -515,10 +499,14 @@ class _MealRecentItem extends StatelessWidget {
                       fontSize: 14,
                     ),
                   ),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(fontSize: 12, color: Colors.black54),
-                  ),
+                  if (subtitle != null && subtitle!.trim().isNotEmpty)
+                    Text(
+                      subtitle!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black54,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -611,9 +599,10 @@ class CategorySelectionSheet extends StatelessWidget {
                   color: Color(0xFFFF9900),
                 ),
                 title: const Text('All Categories'),
-                trailing: selectedId == null
-                    ? const Icon(Icons.check, color: Color(0xFFFF9900))
-                    : null,
+                trailing:
+                    selectedId == null
+                        ? const Icon(Icons.check, color: Color(0xFFFF9900))
+                        : null,
                 selected: selectedId == null,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -643,12 +632,15 @@ class CategorySelectionSheet extends StatelessWidget {
                         name,
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
-                      subtitle: description.isNotEmpty
-                          ? Text(description)
-                          : null,
-                      trailing: selectedId == id
-                          ? const Icon(Icons.check, color: Color(0xFFFF9900))
-                          : null,
+                      subtitle:
+                          description.isNotEmpty ? Text(description) : null,
+                      trailing:
+                          selectedId == id
+                              ? const Icon(
+                                Icons.check,
+                                color: Color(0xFFFF9900),
+                              )
+                              : null,
                       selected: selectedId == id,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -717,10 +709,8 @@ class _FavoritesSheetState extends State<_FavoritesSheet> {
 
   Future<void> _loadFavorites() async {
     try {
-      final authService = Provider.of<AuthProvider>(
-        context,
-        listen: false,
-      ).authService;
+      final authService =
+          Provider.of<AuthProvider>(context, listen: false).authService;
       final response = await authService.getFavorites();
       if (mounted) {
         setState(() {
@@ -779,66 +769,72 @@ class _FavoritesSheetState extends State<_FavoritesSheet> {
             const Divider(height: 1),
             // Body
             Expanded(
-              child: _loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _error != null
-                  ? Center(child: Text('Error: $_error'))
-                  : _favorites.isEmpty
-                  ? const Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.favorite_border,
-                            size: 48,
-                            color: Colors.grey,
-                          ),
-                          SizedBox(height: 12),
-                          Text(
-                            'No favorites yet',
-                            style: TextStyle(color: Colors.grey, fontSize: 15),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.separated(
-                      controller: scrollController,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      itemCount: _favorites.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
-                      itemBuilder: (context, index) {
-                        final food = _favorites[index];
-                        final foodId = food['food_id'] as int? ?? 0;
-                        final name = food['name'] as String? ?? 'Unknown';
-                        final calories = food['calories']?.toString() ?? '0';
-                        final categoryName = food['category_name'] as String?;
-
-                        return ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 4,
-                          ),
-                          leading: CircleAvatar(
-                            backgroundColor: const Color(0xFFFFE1C7),
-                            child: Icon(
-                              _getCategoryIcon(categoryName),
-                              color: const Color(0xFFFF9900),
-                              size: 20,
+              child:
+                  _loading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _error != null
+                      ? Center(child: Text('Error: $_error'))
+                      : _favorites.isEmpty
+                      ? const Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.favorite_border,
+                              size: 48,
+                              color: Colors.grey,
                             ),
-                          ),
-                          title: Text(
-                            name,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          subtitle: Text('$calories kcal'),
-                          trailing: const Icon(Icons.chevron_right_rounded),
-                          onTap: () => widget.onTapFood(foodId, name),
-                        );
-                      },
-                    ),
+                            SizedBox(height: 12),
+                            Text(
+                              'No favorites yet',
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                      : ListView.separated(
+                        controller: scrollController,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        itemCount: _favorites.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final food = _favorites[index];
+                          final foodId = food['food_id'] as int? ?? 0;
+                          final name = food['name'] as String? ?? 'Unknown';
+                          final calories = food['calories']?.toString() ?? '0';
+                          final categoryName = food['category_name'] as String?;
+
+                          return ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 4,
+                            ),
+                            leading: CircleAvatar(
+                              backgroundColor: const Color(0xFFFFE1C7),
+                              child: Icon(
+                                _getCategoryIcon(categoryName),
+                                color: const Color(0xFFFF9900),
+                                size: 20,
+                              ),
+                            ),
+                            title: Text(
+                              name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            subtitle: Text('$calories kcal'),
+                            trailing: const Icon(Icons.chevron_right_rounded),
+                            onTap: () => widget.onTapFood(foodId, name),
+                          );
+                        },
+                      ),
             ),
           ],
         );
@@ -892,10 +888,8 @@ class _MyListSheetState extends State<_MyListSheet> {
 
   Future<void> _loadMenus() async {
     try {
-      final authService = Provider.of<AuthProvider>(
-        context,
-        listen: false,
-      ).authService;
+      final authService =
+          Provider.of<AuthProvider>(context, listen: false).authService;
       final response = await authService.getMenus();
       if (mounted) {
         setState(() {
@@ -921,44 +915,50 @@ class _MyListSheetState extends State<_MyListSheet> {
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Create Menu'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'Menu name *',
-                border: OutlineInputBorder(),
+      builder:
+          (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: const Text('Create Menu'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Menu name *',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: descController,
+                  decoration: const InputDecoration(
+                    labelText: 'Description (optional)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: descController,
-              decoration: const InputDecoration(
-                labelText: 'Description (optional)',
-                border: OutlineInputBorder(),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF9900),
+                ),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text(
+                  'Create',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            ],
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFF9900),
-            ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Create', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
     );
 
     if (confirmed != true) return;
@@ -966,10 +966,8 @@ class _MyListSheetState extends State<_MyListSheet> {
     if (name.isEmpty) return;
 
     try {
-      final authService = Provider.of<AuthProvider>(
-        context,
-        listen: false,
-      ).authService;
+      final authService =
+          Provider.of<AuthProvider>(context, listen: false).authService;
       final response = await authService.createMenu(
         name,
         description: descController.text.trim(),
@@ -990,10 +988,8 @@ class _MyListSheetState extends State<_MyListSheet> {
 
   Future<void> _deleteMenu(int menuId, int index) async {
     try {
-      final authService = Provider.of<AuthProvider>(
-        context,
-        listen: false,
-      ).authService;
+      final authService =
+          Provider.of<AuthProvider>(context, listen: false).authService;
       await authService.deleteMenu(menuId);
       if (mounted) {
         setState(() => _menus.removeAt(index));
@@ -1068,95 +1064,99 @@ class _MyListSheetState extends State<_MyListSheet> {
             const Divider(height: 1),
             // Body
             Expanded(
-              child: _loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _error != null
-                  ? Center(child: Text('Error: $_error'))
-                  : _menus.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.list_alt_rounded,
-                            size: 48,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'No menus yet',
-                            style: TextStyle(color: Colors.grey, fontSize: 15),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton.icon(
-                            onPressed: _showCreateDialog,
-                            icon: const Icon(Icons.add),
-                            label: const Text('Create your first menu'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFFF9900),
-                              foregroundColor: Colors.white,
+              child:
+                  _loading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _error != null
+                      ? Center(child: Text('Error: $_error'))
+                      : _menus.isEmpty
+                      ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.list_alt_rounded,
+                              size: 48,
+                              color: Colors.grey,
                             ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.separated(
-                      controller: scrollController,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      itemCount: _menus.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
-                      itemBuilder: (context, index) {
-                        final menu = _menus[index];
-                        final menuId = menu['menu_id'] as int? ?? 0;
-                        final name = menu['name'] as String? ?? 'Unnamed';
-                        final desc = menu['description'] as String?;
-                        final count = menu['item_count'] as int? ?? 0;
+                            const SizedBox(height: 12),
+                            const Text(
+                              'No menus yet',
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 15,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              onPressed: _showCreateDialog,
+                              icon: const Icon(Icons.add),
+                              label: const Text('Create your first menu'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFFF9900),
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                      : ListView.separated(
+                        controller: scrollController,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        itemCount: _menus.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final menu = _menus[index];
+                          final menuId = menu['menu_id'] as int? ?? 0;
+                          final name = menu['name'] as String? ?? 'Unnamed';
+                          final desc = menu['description'] as String?;
+                          final count = menu['item_count'] as int? ?? 0;
 
-                        return Dismissible(
-                          key: Key('menu_$menuId'),
-                          direction: DismissDirection.endToStart,
-                          background: Container(
-                            alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.only(right: 20),
-                            color: Colors.red.shade100,
-                            child: const Icon(
-                              Icons.delete_outline,
-                              color: Colors.red,
-                            ),
-                          ),
-                          onDismissed: (_) => _deleteMenu(menuId, index),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 4,
-                              vertical: 4,
-                            ),
-                            leading: CircleAvatar(
-                              backgroundColor: const Color(0xFFFFE1C7),
+                          return Dismissible(
+                            key: Key('menu_$menuId'),
+                            direction: DismissDirection.endToStart,
+                            background: Container(
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.only(right: 20),
+                              color: Colors.red.shade100,
                               child: const Icon(
-                                Icons.restaurant_menu_rounded,
-                                color: Color(0xFFFF9900),
-                                size: 20,
+                                Icons.delete_outline,
+                                color: Colors.red,
                               ),
                             ),
-                            title: Text(
-                              name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
+                            onDismissed: (_) => _deleteMenu(menuId, index),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 4,
                               ),
+                              leading: CircleAvatar(
+                                backgroundColor: const Color(0xFFFFE1C7),
+                                child: const Icon(
+                                  Icons.restaurant_menu_rounded,
+                                  color: Color(0xFFFF9900),
+                                  size: 20,
+                                ),
+                              ),
+                              title: Text(
+                                name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              subtitle: Text(
+                                desc != null && desc.isNotEmpty
+                                    ? desc
+                                    : '$count item${count == 1 ? '' : 's'}',
+                              ),
+                              trailing: const Icon(Icons.chevron_right_rounded),
                             ),
-                            subtitle: Text(
-                              desc != null && desc.isNotEmpty
-                                  ? desc
-                                  : '$count item${count == 1 ? '' : 's'}',
-                            ),
-                            trailing: const Icon(Icons.chevron_right_rounded),
-                          ),
-                        );
-                      },
-                    ),
+                          );
+                        },
+                      ),
             ),
           ],
         );

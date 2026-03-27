@@ -77,6 +77,7 @@ class _AdjustGoalScreenState extends State<AdjustGoalScreen> {
           final profile = userProvider.profile;
           final bmi = _readDouble(profile?['bmi']);
           final goalType = (profile?['goal_type'] ?? 'MAINTAIN').toString();
+          final recommendation = _buildRecommendation(profile);
 
           return SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
@@ -174,15 +175,17 @@ class _AdjustGoalScreenState extends State<AdjustGoalScreen> {
                                 color: Colors.blueAccent,
                                 fontWeight: FontWeight.w500,
                               ),
-                              recognizer: TapGestureRecognizer()
-                                ..onTap = () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const KnowledgeScreen(),
-                                    ),
-                                  );
-                                },
+                              recognizer:
+                                  TapGestureRecognizer()
+                                    ..onTap = () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (_) => const KnowledgeScreen(),
+                                        ),
+                                      );
+                                    },
                             ),
                           ],
                         ),
@@ -210,6 +213,51 @@ class _AdjustGoalScreenState extends State<AdjustGoalScreen> {
                   label: "Gain Weight",
                   selected: goalType == "GAIN",
                   onTap: () => _goToAdjustGoal2("GAIN"),
+                ),
+                const SizedBox(height: 22),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.06),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Recommended Intake",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        recommendation.caloriesLabel,
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFFF8F00),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        recommendation.summary,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 if (userProvider.error != null) ...[
                   const SizedBox(height: 16),
@@ -250,9 +298,10 @@ class _AdjustGoalScreenState extends State<AdjustGoalScreen> {
         decoration: BoxDecoration(
           color: selected ? const Color(0xFFFFD2A6) : const Color(0xFFFFE1C7),
           borderRadius: BorderRadius.circular(16),
-          border: selected
-              ? Border.all(color: const Color(0xFFFFA94D), width: 2)
-              : null,
+          border:
+              selected
+                  ? Border.all(color: const Color(0xFFFFA94D), width: 2)
+                  : null,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.06),
@@ -283,9 +332,93 @@ class _AdjustGoalScreenState extends State<AdjustGoalScreen> {
   }
 }
 
+class _GoalRecommendation {
+  final String caloriesLabel;
+  final String summary;
+
+  const _GoalRecommendation({
+    required this.caloriesLabel,
+    required this.summary,
+  });
+}
+
 double _readDouble(dynamic value) {
   if (value is num) return value.toDouble();
   return double.tryParse(value?.toString() ?? '') ?? 0;
+}
+
+_GoalRecommendation _buildRecommendation(Map<String, dynamic>? profile) {
+  final goalType = (profile?['goal_type'] ?? 'MAINTAIN').toString();
+  final currentWeight = _readDouble(profile?['weight_kg']);
+  final targetWeight = _readDouble(profile?['goal_target_weight']);
+  final tdee = _readDouble(profile?['tdee']);
+  final calorieTarget = _readDouble(profile?['calorie_target']);
+  final durationDays = _daysUntil(profile?['goal_end_date']);
+
+  if (goalType == 'MAINTAIN') {
+    final maintainCalories = calorieTarget > 0 ? calorieTarget : tdee;
+    return _GoalRecommendation(
+      caloriesLabel: _formatCalories(maintainCalories),
+      summary: 'Maintain your current weight with your current calorie target.',
+    );
+  }
+
+  if (currentWeight <= 0 || targetWeight <= 0 || durationDays == null) {
+    final fallbackCalories = calorieTarget > 0 ? calorieTarget : tdee;
+    return _GoalRecommendation(
+      caloriesLabel: _formatCalories(fallbackCalories),
+      summary:
+          'Set target weight and duration to calculate a goal-based intake.',
+    );
+  }
+
+  final weightDelta = (targetWeight - currentWeight).abs();
+  final dailyAdjustment = (weightDelta * 7700) / durationDays;
+  double recommendedCalories = tdee;
+
+  if (goalType == 'LOSE') {
+    recommendedCalories -= dailyAdjustment;
+  } else if (goalType == 'GAIN') {
+    recommendedCalories += dailyAdjustment;
+  }
+
+  if (recommendedCalories < 1200) {
+    recommendedCalories = 1200;
+  }
+
+  final action = goalType == 'LOSE' ? 'lose' : 'gain';
+  final monthsText = _formatDuration(profile?['goal_end_date']);
+
+  return _GoalRecommendation(
+    caloriesLabel: _formatCalories(recommendedCalories),
+    summary:
+        'To $action ${weightDelta.toStringAsFixed(1)} kg in $monthsText, aim for about ${dailyAdjustment.round()} kcal ${goalType == 'LOSE' ? 'below' : 'above'} your TDEE.',
+  );
+}
+
+String _formatCalories(double value) {
+  if (value <= 0) return '-';
+  return '${value.round()} kcal';
+}
+
+int? _daysUntil(dynamic isoDate) {
+  if (isoDate == null) return null;
+  final endDate = DateTime.tryParse(isoDate.toString());
+  if (endDate == null) return null;
+  final now = DateTime.now();
+  final difference =
+      endDate.difference(DateTime(now.year, now.month, now.day)).inDays;
+  return difference <= 0 ? null : difference;
+}
+
+String _formatDuration(dynamic isoDate) {
+  final days = _daysUntil(isoDate);
+  if (days == null) return 'your selected duration';
+  final months = days / 30.44;
+  if (months < 1.5) {
+    return 'about 1 month';
+  }
+  return 'about ${months.round()} months';
 }
 
 String _bmiLabel(double bmi) {

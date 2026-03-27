@@ -26,6 +26,9 @@ class _MacroSettingsScreenState extends State<MacroSettingsScreen> {
   int _protein = 20;
   int _fat = 30;
   double _calorieTarget = 2000;
+  double _bmr = 0;
+  double _tdee = 0;
+  final TextEditingController _calorieController = TextEditingController();
 
   double get _carbGrams => (_calorieTarget * _carb / 100) / 4;
   double get _proteinGrams => (_calorieTarget * _protein / 100) / 4;
@@ -89,6 +92,9 @@ class _MacroSettingsScreenState extends State<MacroSettingsScreen> {
       _protein = normalized[1];
       _fat = normalized[2];
       _calorieTarget = _readAsDouble(profile['calorie_target'], 2000);
+      _bmr = _readAsDouble(profile['bmr'], 0);
+      _tdee = _readAsDouble(profile['tdee'], 0);
+      _calorieController.text = _calorieTarget.round().toString();
       _isLoading = false;
     });
   }
@@ -160,12 +166,33 @@ class _MacroSettingsScreenState extends State<MacroSettingsScreen> {
       return [first, remaining - first];
     }
 
-    final first = ((remaining * otherA) / otherTotal).round().clamp(0, remaining);
+    final first = ((remaining * otherA) / otherTotal).round().clamp(
+      0,
+      remaining,
+    );
     return [first, remaining - first];
   }
 
   Future<void> _savePreferences() async {
     if (_isSaving) return;
+    final parsedCalories = double.tryParse(_calorieController.text.trim());
+    if (parsedCalories == null || parsedCalories <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a valid calorie target')),
+      );
+      return;
+    }
+    if (_bmr > 0 && parsedCalories < _bmr) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Calories cannot be lower than your BMR (${_bmr.round()} kcal)',
+          ),
+        ),
+      );
+      return;
+    }
+
     setState(() => _isSaving = true);
 
     try {
@@ -174,6 +201,7 @@ class _MacroSettingsScreenState extends State<MacroSettingsScreen> {
         carbPercent: _carb,
         proteinPercent: _protein,
         fatPercent: _fat,
+        calorieTarget: parsedCalories.round(),
       );
 
       if (!mounted) return;
@@ -185,9 +213,11 @@ class _MacroSettingsScreenState extends State<MacroSettingsScreen> {
           const SnackBar(content: Text('Macro percentages updated')),
         );
       } else {
-        final message = response.data is Map<String, dynamic>
-            ? (response.data['error']?.toString() ?? 'Failed to update macros')
-            : 'Failed to update macros';
+        final message =
+            response.data is Map<String, dynamic>
+                ? (response.data['error']?.toString() ??
+                    'Failed to update macros')
+                : 'Failed to update macros';
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(message)));
@@ -202,6 +232,20 @@ class _MacroSettingsScreenState extends State<MacroSettingsScreen> {
         setState(() => _isSaving = false);
       }
     }
+  }
+
+  @override
+  void dispose() {
+    _calorieController.dispose();
+    super.dispose();
+  }
+
+  void _resetCaloriesToTdee() {
+    if (_tdee <= 0) return;
+    setState(() {
+      _calorieTarget = _tdee;
+      _calorieController.text = _tdee.round().toString();
+    });
   }
 
   @override
@@ -221,143 +265,183 @@ class _MacroSettingsScreenState extends State<MacroSettingsScreen> {
           ),
         ),
         child: SafeArea(
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8, bottom: 4),
-                        child: Row(
-                          children: [
-                            const Expanded(
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  'Edit Nutrition Percentage',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+          child:
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8, bottom: 4),
+                          child: Row(
+                            children: [
+                              const Expanded(
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    'Edit Nutrition Percentage',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 48),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                        child: Text(
-                          'Current Goal',
-                          style: TextStyle(
-                            color: Colors.black54,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
+                              const SizedBox(width: 48),
+                            ],
                           ),
                         ),
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
+                        const SizedBox(height: 10),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 4,
+                          ),
+                          child: Text(
+                            'Current Goal',
+                            style: TextStyle(
+                              color: Colors.black54,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
                             ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            _buildMacroRow('Calories', '${_calorieTarget.round()}', null, primaryOrange),
-                            Divider(height: 1, indent: 16, color: Colors.grey.withOpacity(0.2)),
-                            _buildMacroRow('Carbohydrates', '${_carbGrams.toStringAsFixed(1)} g', '$_carb%', primaryOrange),
-                            Divider(height: 1, indent: 16, color: Colors.grey.withOpacity(0.2)),
-                            _buildMacroRow('Protein', '${_proteinGrams.toStringAsFixed(1)} g', '$_protein%', primaryOrange),
-                            Divider(height: 1, indent: 16, color: Colors.grey.withOpacity(0.2)),
-                            _buildMacroRow('Fat', '${_fatGrams.toStringAsFixed(1)} g', '$_fat%', primaryOrange),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                        child: Text(
-                          'Adjust Macro Split',
-                          style: TextStyle(
-                            color: Colors.black54,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                      ),
-                      _sliderCard(
-                        child: Column(
-                          children: [
-                            _macroSlider(
-                              label: 'Carbohydrates',
-                              value: _carb.toDouble(),
-                              onChanged: (v) => _setMacro(_MacroType.carb, v),
-                              activeColor: const Color(0xFFFB8C00),
-                            ),
-                            _macroSlider(
-                              label: 'Protein',
-                              value: _protein.toDouble(),
-                              onChanged: (v) => _setMacro(_MacroType.protein, v),
-                              activeColor: const Color(0xFF43A047),
-                            ),
-                            _macroSlider(
-                              label: 'Fat',
-                              value: _fat.toDouble(),
-                              onChanged: (v) => _setMacro(_MacroType.fat, v),
-                              activeColor: const Color(0xFF8E24AA),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Total: ${_carb + _protein + _fat}%',
-                              style: const TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                          ],
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              _buildCalorieEditor(primaryOrange),
+                              Divider(
+                                height: 1,
+                                indent: 16,
+                                color: Colors.grey.withOpacity(0.2),
+                              ),
+                              _buildMacroRow(
+                                'Carbohydrates',
+                                '${_carbGrams.toStringAsFixed(1)} g',
+                                '$_carb%',
+                                primaryOrange,
+                              ),
+                              Divider(
+                                height: 1,
+                                indent: 16,
+                                color: Colors.grey.withOpacity(0.2),
+                              ),
+                              _buildMacroRow(
+                                'Protein',
+                                '${_proteinGrams.toStringAsFixed(1)} g',
+                                '$_protein%',
+                                primaryOrange,
+                              ),
+                              Divider(
+                                height: 1,
+                                indent: 16,
+                                color: Colors.grey.withOpacity(0.2),
+                              ),
+                              _buildMacroRow(
+                                'Fat',
+                                '${_fatGrams.toStringAsFixed(1)} g',
+                                '$_fat%',
+                                primaryOrange,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 18),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _isSaving ? null : _savePreferences,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryOrange,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                        const SizedBox(height: 24),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 4,
+                          ),
+                          child: Text(
+                            'Adjust Macro Split',
+                            style: TextStyle(
+                              color: Colors.black54,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                          child: _isSaving
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Text(
-                                  'Save Macro Percentages',
-                                  style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        _sliderCard(
+                          child: Column(
+                            children: [
+                              _macroSlider(
+                                label: 'Carbohydrates',
+                                value: _carb.toDouble(),
+                                onChanged: (v) => _setMacro(_MacroType.carb, v),
+                                activeColor: const Color(0xFFFB8C00),
+                              ),
+                              _macroSlider(
+                                label: 'Protein',
+                                value: _protein.toDouble(),
+                                onChanged:
+                                    (v) => _setMacro(_MacroType.protein, v),
+                                activeColor: const Color(0xFF43A047),
+                              ),
+                              _macroSlider(
+                                label: 'Fat',
+                                value: _fat.toDouble(),
+                                onChanged: (v) => _setMacro(_MacroType.fat, v),
+                                activeColor: const Color(0xFF8E24AA),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Total: ${_carb + _protein + _fat}%',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
                                 ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 80),
-                    ],
+                        const SizedBox(height: 18),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _isSaving ? null : _savePreferences,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryOrange,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child:
+                                _isSaving
+                                    ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                    : const Text(
+                                      'Save Macro Percentages',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                          ),
+                        ),
+                        const SizedBox(height: 80),
+                      ],
+                    ),
                   ),
-                ),
         ),
       ),
     );
@@ -394,14 +478,16 @@ class _MacroSettingsScreenState extends State<MacroSettingsScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-            Text('${value.round()}%', style: const TextStyle(fontWeight: FontWeight.w700)),
+            Text(
+              '${value.round()}%',
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
           ],
         ),
         SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            activeTrackColor: activeColor,
-            thumbColor: activeColor,
-          ),
+          data: SliderTheme.of(
+            context,
+          ).copyWith(activeTrackColor: activeColor, thumbColor: activeColor),
           child: Slider(
             min: 0,
             max: 100,
@@ -414,7 +500,12 @@ class _MacroSettingsScreenState extends State<MacroSettingsScreen> {
     );
   }
 
-  Widget _buildMacroRow(String label, String value, String? percentage, Color accentColor) {
+  Widget _buildMacroRow(
+    String label,
+    String value,
+    String? percentage,
+    Color accentColor,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
@@ -465,6 +556,79 @@ class _MacroSettingsScreenState extends State<MacroSettingsScreen> {
                 ),
               ],
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCalorieEditor(Color accentColor) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Calories',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 110,
+                child: TextField(
+                  controller: _calorieController,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.end,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    suffixText: 'kcal',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: accentColor, width: 1.5),
+                    ),
+                  ),
+                  onChanged: (value) {
+                    final parsed = double.tryParse(value);
+                    if (parsed == null || parsed <= 0) return;
+                    if (_bmr > 0 && parsed < _bmr) return;
+                    setState(() {
+                      _calorieTarget = parsed;
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+          if (_bmr > 0) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Minimum allowed: ${_bmr.round()} kcal (BMR)',
+                    style: const TextStyle(fontSize: 12, color: Colors.black54),
+                  ),
+                ),
+                TextButton(
+                  onPressed: _resetCaloriesToTdee,
+                  child: const Text('Use TDEE'),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
