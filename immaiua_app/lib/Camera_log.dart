@@ -45,10 +45,8 @@ class _CameraLogScreenState extends State<CameraLogScreen> {
 
   Future<void> _checkFavorite() async {
     try {
-      final authService = Provider.of<AuthProvider>(
-        context,
-        listen: false,
-      ).authService;
+      final authService =
+          Provider.of<AuthProvider>(context, listen: false).authService;
       final isFav = await authService.checkFavorite(widget.foodId!);
       if (mounted) setState(() => _isFavorite = isFav);
     } catch (_) {}
@@ -58,10 +56,8 @@ class _CameraLogScreenState extends State<CameraLogScreen> {
     if (_isFavoriteLoading) return;
     setState(() => _isFavoriteLoading = true);
     try {
-      final authService = Provider.of<AuthProvider>(
-        context,
-        listen: false,
-      ).authService;
+      final authService =
+          Provider.of<AuthProvider>(context, listen: false).authService;
       final newState = await authService.toggleFavorite(widget.foodId!);
       if (mounted) {
         setState(() => _isFavorite = newState);
@@ -92,10 +88,8 @@ class _CameraLogScreenState extends State<CameraLogScreen> {
     });
 
     try {
-      final authService = Provider.of<AuthProvider>(
-        context,
-        listen: false,
-      ).authService;
+      final authService =
+          Provider.of<AuthProvider>(context, listen: false).authService;
       final response = await authService.getFoodDetails(widget.foodId!);
       if (response.statusCode == 200) {
         setState(() {
@@ -157,21 +151,23 @@ class _CameraLogScreenState extends State<CameraLogScreen> {
         },
       );
     } else {
-      bodyContent = _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-          ? Center(child: Text("Error: $_error"))
-          : _CameraLogBody(
-              foodDetails: _foodDetails,
-              fallbackName: widget.foodName,
-              selectedMealType: _selectedMealType,
-              isFavorite: _isFavorite,
-              isFavoriteLoading: _isFavoriteLoading,
-              onToggleFavorite: widget.foodId != null ? _toggleFavorite : null,
-              onMealTypeChanged: (val) {
-                if (val != null) setState(() => _selectedMealType = val);
-              },
-            );
+      bodyContent =
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _error != null
+              ? Center(child: Text("Error: $_error"))
+              : _CameraLogBody(
+                foodDetails: _foodDetails,
+                fallbackName: widget.foodName,
+                selectedMealType: _selectedMealType,
+                isFavorite: _isFavorite,
+                isFavoriteLoading: _isFavoriteLoading,
+                onToggleFavorite:
+                    widget.foodId != null ? _toggleFavorite : null,
+                onMealTypeChanged: (val) {
+                  if (val != null) setState(() => _selectedMealType = val);
+                },
+              );
     }
 
     return MainScaffold(currentIndex: _index, onTap: _onTap, body: bodyContent);
@@ -208,6 +204,7 @@ class _CameraLogBody extends StatefulWidget {
 class _CameraLogBodyState extends State<_CameraLogBody> {
   double _quantity = 1.0;
   late final TextEditingController _qtyController;
+  double _consumedCaloriesToday = 0;
 
   @override
   void initState() {
@@ -218,7 +215,23 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
       if (userProvider.profile == null && !userProvider.isLoading) {
         userProvider.fetchProfile();
       }
+      _loadTodaySummary();
     });
+  }
+
+  Future<void> _loadTodaySummary() async {
+    try {
+      final authService = context.read<AuthProvider>().authService;
+      final response = await authService.getDailySummary(
+        _formatDate(DateTime.now()),
+      );
+      if (response.statusCode == 200 && mounted) {
+        final total = response.data?['total'] ?? {};
+        setState(() {
+          _consumedCaloriesToday = _readAsDouble(total['calories']);
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -232,9 +245,10 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
       _quantity = (_quantity + delta).clamp(0.5, 99.0);
       // Round to 1 decimal if not whole
       _quantity = double.parse(_quantity.toStringAsFixed(1));
-      _qtyController.text = _quantity == _quantity.truncateToDouble()
-          ? _quantity.toInt().toString()
-          : _quantity.toString();
+      _qtyController.text =
+          _quantity == _quantity.truncateToDouble()
+              ? _quantity.toInt().toString()
+              : _quantity.toString();
     });
   }
 
@@ -263,9 +277,15 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
     final sodium = sodiumValue.toStringAsFixed(1);
 
     final profile = context.watch<UserProvider>().profile;
+    final calorieTarget = _readAsDouble(profile?['calorie_target']);
     final carbTarget = _readAsDouble(profile?['carb_prefer']);
     final proteinTarget = _readAsDouble(profile?['protein_prefer']);
     final fatTarget = _readAsDouble(profile?['fat_prefer']);
+    final projectedCalories = _consumedCaloriesToday + scaledCal;
+    final calorieWarning = _buildCalorieWarning(
+      projectedCalories,
+      calorieTarget,
+    );
 
     final carbPercent = _calculatePercent(carbValue, carbTarget);
     final proteinPercent = _calculatePercent(proteinValue, proteinTarget);
@@ -287,6 +307,8 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
           label: "Fat",
           value: "${(fatValue - fatTarget).toStringAsFixed(1)} g",
         ),
+      if (calorieWarning != null)
+        _ExcessData(label: "Calories", value: calorieWarning),
     ];
 
     final ingredientsList = (foodDetails?['ingredients'] as List?) ?? [];
@@ -354,7 +376,7 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
                   ),
                   const SizedBox(height: 6),
                   const Text(
-                    "This meal exceeds your macro target.",
+                    "This meal is close to or exceeds your nutrition target.",
                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 10),
@@ -362,12 +384,15 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
                     spacing: 8.0,
                     runSpacing: 4.0,
                     alignment: WrapAlignment.spaceBetween,
-                    children: excessRows
-                        .map(
-                          (item) =>
-                              _ExcessRow(label: item.label, value: item.value),
-                        )
-                        .toList(),
+                    children:
+                        excessRows
+                            .map(
+                              (item) => _ExcessRow(
+                                label: item.label,
+                                value: item.value,
+                              ),
+                            )
+                            .toList(),
                   ),
                 ],
               ),
@@ -417,22 +442,21 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
                     if (widget.onToggleFavorite != null)
                       widget.isFavoriteLoading
                           ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
                           : GestureDetector(
-                              onTap: widget.onToggleFavorite,
-                              child: Icon(
-                                widget.isFavorite
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
-                                color: widget.isFavorite
-                                    ? Colors.red
-                                    : Colors.grey,
-                                size: 26,
-                              ),
+                            onTap: widget.onToggleFavorite,
+                            child: Icon(
+                              widget.isFavorite
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color:
+                                  widget.isFavorite ? Colors.red : Colors.grey,
+                              size: 26,
                             ),
+                          ),
                   ],
                 ),
                 // Hide or update confidence if not AI based
@@ -544,12 +568,10 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
               value: widget.selectedMealType,
               underline: const SizedBox(),
               isExpanded: true,
-              items: [
-                "Breakfast",
-                "Lunch",
-                "Dinner",
-                "Snack",
-              ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+              items:
+                  ["Breakfast", "Lunch", "Dinner", "Snack"]
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .toList(),
               onChanged: widget.onMealTypeChanged,
             ),
           ),
@@ -641,12 +663,15 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () => _showExcessWarningDialog(
-                    context,
-                    foodDetails ?? {},
-                    widget.selectedMealType,
-                    _quantity,
-                  ),
+                  onPressed:
+                      () => _showExcessWarningDialog(
+                        context,
+                        foodDetails ?? {},
+                        widget.selectedMealType,
+                        _quantity,
+                        _consumedCaloriesToday,
+                        calorieTarget,
+                      ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFA6F1A6),
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -690,6 +715,8 @@ void _showExcessWarningDialog(
   Map<String, dynamic> foodDetails,
   String mealType,
   double quantity,
+  double consumedCaloriesToday,
+  double calorieTarget,
 ) {
   bool isLogging = false;
 
@@ -702,11 +729,18 @@ void _showExcessWarningDialog(
       final carb = _safeToDouble(nutrients['Carb']) * quantity;
       final protein = _safeToDouble(nutrients['Protein']) * quantity;
       final fat = _safeToDouble(nutrients['Fat']) * quantity;
+      final kcal =
+          ((foodDetails['calories'] as num?)?.toDouble() ?? 0.0) * quantity;
 
       final profile = Provider.of<UserProvider>(context, listen: false).profile;
       final carbTarget = _safeToDouble(profile?['carb_prefer']);
       final proteinTarget = _safeToDouble(profile?['protein_prefer']);
       final fatTarget = _safeToDouble(profile?['fat_prefer']);
+      final projectedCalories = consumedCaloriesToday + kcal;
+      final calorieWarning = _buildCalorieWarning(
+        projectedCalories,
+        calorieTarget,
+      );
 
       final carbPercent = _calculatePercent(carb, carbTarget);
       final proteinPercent = _calculatePercent(protein, proteinTarget);
@@ -728,6 +762,8 @@ void _showExcessWarningDialog(
             label: "Fat",
             value: "${(fat - fatTarget).toStringAsFixed(1)} g",
           ),
+        if (calorieWarning != null)
+          _ExcessData(label: "Calories", value: calorieWarning),
       ];
 
       return StatefulBuilder(
@@ -750,14 +786,15 @@ void _showExcessWarningDialog(
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: excessRows
-                          .map(
-                            (item) => _ExcessRow(
-                              label: item.label,
-                              value: item.value,
-                            ),
-                          )
-                          .toList(),
+                      children:
+                          excessRows
+                              .map(
+                                (item) => _ExcessRow(
+                                  label: item.label,
+                                  value: item.value,
+                                ),
+                              )
+                              .toList(),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -797,10 +834,11 @@ void _showExcessWarningDialog(
                           onPressed: () async {
                             setState(() => isLogging = true);
                             try {
-                              final authService = Provider.of<AuthProvider>(
-                                context,
-                                listen: false,
-                              ).authService;
+                              final authService =
+                                  Provider.of<AuthProvider>(
+                                    context,
+                                    listen: false,
+                                  ).authService;
 
                               await authService.logFood({
                                 "meal_type": mealType,
@@ -863,6 +901,27 @@ double _safeToDouble(dynamic value) {
 int _calculatePercent(double value, double target) {
   if (target <= 0) return value <= 0 ? 0 : 100;
   return ((value / target) * 100).toInt();
+}
+
+String? _buildCalorieWarning(double projectedCalories, double calorieTarget) {
+  if (calorieTarget <= 0) return null;
+
+  if (projectedCalories > calorieTarget) {
+    return '${(projectedCalories - calorieTarget).round()} kcal over target';
+  }
+
+  if (projectedCalories >= calorieTarget * 0.9) {
+    return '${(calorieTarget - projectedCalories).round()} kcal left to target';
+  }
+
+  return null;
+}
+
+String _formatDate(DateTime date) {
+  final year = date.year.toString().padLeft(4, '0');
+  final month = date.month.toString().padLeft(2, '0');
+  final day = date.day.toString().padLeft(2, '0');
+  return '$year-$month-$day';
 }
 
 class _ExcessData {
@@ -956,19 +1015,37 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
   // Store adjusted grams per detection index
   late List<double> _grams;
   bool _isLogging = false;
+  double _consumedCaloriesToday = 0;
 
   @override
   void initState() {
     super.initState();
-    _grams = widget.detections
-        .map((d) => _safeToDouble(d['estimated_portion_g']))
-        .toList();
+    _grams =
+        widget.detections
+            .map((d) => _safeToDouble(d['estimated_portion_g']))
+            .toList();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userProvider = context.read<UserProvider>();
       if (userProvider.profile == null && !userProvider.isLoading) {
         userProvider.fetchProfile();
       }
+      _loadTodaySummary();
     });
+  }
+
+  Future<void> _loadTodaySummary() async {
+    try {
+      final authService = context.read<AuthProvider>().authService;
+      final response = await authService.getDailySummary(
+        _formatDate(DateTime.now()),
+      );
+      if (response.statusCode == 200 && mounted) {
+        final total = response.data?['total'] ?? {};
+        setState(() {
+          _consumedCaloriesToday = _safeToDouble(total['calories']);
+        });
+      }
+    } catch (_) {}
   }
 
   void _changeGrams(int index, double delta) {
@@ -980,10 +1057,8 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
   Future<void> _submitMultiMeal() async {
     setState(() => _isLogging = true);
     try {
-      final authService = Provider.of<AuthProvider>(
-        context,
-        listen: false,
-      ).authService;
+      final authService =
+          Provider.of<AuthProvider>(context, listen: false).authService;
       List<Map<String, dynamic>> items = [];
 
       for (int i = 0; i < widget.detections.length; i++) {
@@ -1044,9 +1119,15 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
     }
 
     final profile = context.watch<UserProvider>().profile;
+    final calorieTarget = _safeToDouble(profile?['calorie_target']);
     final carbTarget = _safeToDouble(profile?['carb_prefer']);
     final proteinTarget = _safeToDouble(profile?['protein_prefer']);
     final fatTarget = _safeToDouble(profile?['fat_prefer']);
+    final projectedCalories = _consumedCaloriesToday + totalKcal;
+    final calorieWarning = _buildCalorieWarning(
+      projectedCalories,
+      calorieTarget,
+    );
 
     final carbPercent = _calculatePercent(totalCarb, carbTarget);
     final proteinPercent = _calculatePercent(totalProtein, proteinTarget);
@@ -1068,6 +1149,8 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
           label: "Fat",
           value: "${(totalFat - fatTarget).toStringAsFixed(1)} g",
         ),
+      if (calorieWarning != null)
+        _ExcessData(label: "Calories", value: calorieWarning),
     ];
 
     return SingleChildScrollView(
@@ -1102,7 +1185,7 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
                   ),
                   const SizedBox(height: 6),
                   const Text(
-                    "This meal exceeds your macro target.",
+                    "This meal is close to or exceeds your nutrition target.",
                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 10),
@@ -1110,12 +1193,15 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
                     spacing: 8.0,
                     runSpacing: 4.0,
                     alignment: WrapAlignment.spaceBetween,
-                    children: excessRows
-                        .map(
-                          (item) =>
-                              _ExcessRow(label: item.label, value: item.value),
-                        )
-                        .toList(),
+                    children:
+                        excessRows
+                            .map(
+                              (item) => _ExcessRow(
+                                label: item.label,
+                                value: item.value,
+                              ),
+                            )
+                            .toList(),
                   ),
                 ],
               ),
@@ -1192,12 +1278,10 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
               value: widget.selectedMealType,
               underline: const SizedBox(),
               isExpanded: true,
-              items: [
-                "Breakfast",
-                "Lunch",
-                "Dinner",
-                "Snack",
-              ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+              items:
+                  ["Breakfast", "Lunch", "Dinner", "Snack"]
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .toList(),
               onChanged: widget.onMealTypeChanged,
             ),
           ),
@@ -1215,10 +1299,11 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
             final nuts = d['per_100g_nutrients'] ?? {};
 
             // Only calc kcal if we have food_id, otherwise 0
-            final kcal = d['food_id'] != null
-                ? (_safeToDouble(nuts['calories']) * (_grams[i] / 100.0))
-                      .round()
-                : 0;
+            final kcal =
+                d['food_id'] != null
+                    ? (_safeToDouble(nuts['calories']) * (_grams[i] / 100.0))
+                        .round()
+                    : 0;
 
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
@@ -1293,48 +1378,48 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
           _isLogging
               ? const Center(child: CircularProgressIndicator())
               : Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Text(
-                          "Cancel",
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      ),
+                      child: const Text(
+                        "Cancel",
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _submitMultiMeal,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          backgroundColor: const Color(0xFFA6F1A6),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _submitMultiMeal,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: const Color(0xFFA6F1A6),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Text(
-                          "Save Meal",
-                          style: TextStyle(
-                            color: Colors.black87,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      ),
+                      child: const Text(
+                        "Save Meal",
+                        style: TextStyle(
+                          color: Colors.black87,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
+              ),
           const SizedBox(height: 40),
         ],
       ),

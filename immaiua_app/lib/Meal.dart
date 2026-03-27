@@ -196,6 +196,10 @@ class _MealScreenState extends State<MealScreen> {
         child: Consumer2<MealProvider, UserProvider>(
           builder: (context, mealProvider, userProvider, child) {
             final items = mealProvider.foodList;
+            final calorieTarget = _readDouble(
+              userProvider.profile?['calorie_target'],
+            );
+            final safeCalorieTarget = calorieTarget > 0 ? calorieTarget : 2000;
 
             return CustomScrollView(
               controller: _scrollController,
@@ -344,40 +348,44 @@ class _MealScreenState extends State<MealScreen> {
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          // Show loading indicator at bottom when loading more
-                          if (index >= items.length) {
-                            if (mealProvider.isLoadingMore) {
-                              return const Padding(
-                                padding: EdgeInsets.all(16.0),
-                                child: Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              );
-                            }
-                            return const SizedBox.shrink();
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        // Show loading indicator at bottom when loading more
+                        if (index >= items.length) {
+                          if (mealProvider.isLoadingMore) {
+                            return const Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: Center(child: CircularProgressIndicator()),
+                            );
                           }
+                          return const SizedBox.shrink();
+                        }
 
-                          final item = items[index];
-                          final kcal = (item['calories'] as num).toInt();
+                        final item = items[index];
+                        final kcal = (item['calories'] as num).toInt();
+                        final percent =
+                            safeCalorieTarget > 0
+                                ? ((kcal / safeCalorieTarget) * 100)
+                                    .toStringAsFixed(1)
+                                : '0.0';
+                        final overCalories = kcal - safeCalorieTarget.round();
+                        final subtitle =
+                            overCalories > 0
+                                ? "$percent% of your calorie target (Target: ${safeCalorieTarget.round()} kcal, Over: $overCalories kcal)"
+                                : "$percent% of your calorie target (Target: ${safeCalorieTarget.round()} kcal)";
 
-                          return _MealRecentItem(
-                            name: item['name'] ?? "Unknown Food",
-                            subtitle: item['category_name']?.toString(),
-                            kcal: kcal.toString(),
-                            categoryName: item['category_name'],
-                            onTap: () {
-                              _openDetail(
-                                foodId: item['food_id'],
-                                foodName: item['name'],
-                              );
-                            },
-                          );
-                        },
-                        childCount:
-                            items.length + (mealProvider.hasMore ? 1 : 0),
-                      ),
+                        return _MealRecentItem(
+                          name: item['name'] ?? "Unknown Food",
+                          subtitle: subtitle,
+                          kcal: kcal.toString(),
+                          categoryName: item['category_name'],
+                          onTap: () {
+                            _openDetail(
+                              foodId: item['food_id'],
+                              foodName: item['name'],
+                            );
+                          },
+                        );
+                      }, childCount: items.length + (mealProvider.hasMore ? 1 : 0)),
                     ),
                   ),
 
@@ -389,6 +397,11 @@ class _MealScreenState extends State<MealScreen> {
       ),
     );
   }
+}
+
+double _readDouble(dynamic value) {
+  if (value is num) return value.toDouble();
+  return double.tryParse(value?.toString() ?? '') ?? 0;
 }
 
 /* ===================================================================== */
@@ -500,12 +513,24 @@ class _MealRecentItem extends StatelessWidget {
                     ),
                   ),
                   if (subtitle != null && subtitle!.trim().isNotEmpty)
-                    Text(
-                      subtitle!,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.black54,
-                      ),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.pie_chart_outline_rounded,
+                          size: 14,
+                          color: Colors.black54,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            subtitle!,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                 ],
               ),
