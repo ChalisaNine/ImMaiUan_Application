@@ -5,7 +5,6 @@ import 'main.dart';
 import 'Meal.dart';
 import 'ai_image.dart';
 import 'profile_screen.dart';
-import 'Calenda.dart';
 import 'providers/auth_provider.dart';
 import 'providers/user_provider.dart';
 
@@ -150,35 +149,6 @@ class _ReportBodyState extends State<_ReportBody> {
           children: [
             const SizedBox(height: 12),
 
-            /* ---------------- BACK BUTTON ---------------- */
-            Align(
-              alignment: Alignment.centerLeft,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFFC93C),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 6,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const CalendaScreen()),
-                  );
-                },
-                child: const Text(
-                  "« back",
-                  style: TextStyle(
-                    color: Colors.black87,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
 
             const SizedBox(height: 6),
 

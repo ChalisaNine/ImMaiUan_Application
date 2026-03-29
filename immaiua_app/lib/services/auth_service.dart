@@ -367,15 +367,76 @@ class AuthService {
     }
   }
 
-  Future<Response> createMenu(String name, {String? description}) async {
+  Future<Response> createMenu({
+    required String name,
+    String? description,
+    int? categoryId,
+    double? kcal,
+    double? protein,
+    double? fat,
+    double? carb,
+    double? sugar,
+    double? sodium,
+    double? portionQty,
+    String? portionUnit,
+  }) async {
     try {
+      final data = {
+        'name': name.trim(),
+        if (description != null && description.isNotEmpty) 'description': description.trim(),
+        if (categoryId != null) 'category_id': categoryId,
+        if (kcal != null) 'kcal': kcal,
+        if (protein != null) 'protein': protein,
+        if (fat != null) 'fat': fat,
+        if (carb != null) 'carb': carb,
+        if (sugar != null) 'sugar': sugar,
+        if (sodium != null) 'sodium': sodium,
+        if (portionQty != null) 'portion_qty': portionQty,
+        if (portionUnit != null && portionUnit.isNotEmpty) 'portion_unit': portionUnit,
+      };
+
       final response = await _dio.post(
         '/meals/menus',
-        data: {
-          'name': name,
-          if (description != null && description.isNotEmpty)
-            'description': description,
-        },
+        data: data,
+      );
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Response> editMenu({
+    required int menuId,
+    required String name,
+    String? description,
+    int? categoryId,
+    double? kcal,
+    double? protein,
+    double? fat,
+    double? carb,
+    double? sugar,
+    double? sodium,
+    double? portionQty,
+    String? portionUnit,
+  }) async {
+    try {
+      final data = {
+        'name': name.trim(),
+        if (description != null && description.isNotEmpty) 'description': description.trim(),
+        if (categoryId != null) 'category_id': categoryId,
+        if (kcal != null) 'kcal': kcal,
+        if (protein != null) 'protein': protein,
+        if (fat != null) 'fat': fat,
+        if (carb != null) 'carb': carb,
+        if (sugar != null) 'sugar': sugar,
+        if (sodium != null) 'sodium': sodium,
+        if (portionQty != null) 'portion_qty': portionQty,
+        if (portionUnit != null && portionUnit.isNotEmpty) 'portion_unit': portionUnit,
+      };
+
+      final response = await _dio.put(
+        '/meals/menus/$menuId',
+        data: data,
       );
       return response;
     } catch (e) {
