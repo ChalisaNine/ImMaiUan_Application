@@ -317,6 +317,15 @@ class AuthService {
     }
   }
 
+  Future<Response> logFoodV2(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post('/meals/logfood-v2', data: data);
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<void> deleteMeal(int mealId) async {
     try {
       await _dio.delete('/meals/$mealId');

@@ -1108,7 +1108,7 @@ void _showExcessWarningDialog(
                                     listen: false,
                                   ).authService;
 
-                              await authService.logFood({
+                              await authService.logFoodV2({
                                 "meal_type": mealType,
                                 "items": [
                                   {
@@ -1343,7 +1343,7 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
         throw Exception("No valid database foods detected to log.");
       }
 
-      await authService.logFood({
+      await authService.logFoodV2({
         "meal_type": widget.selectedMealType,
         "items": items,
       });
