@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
@@ -203,13 +206,17 @@ class _CameraLogBody extends StatefulWidget {
 
 class _CameraLogBodyState extends State<_CameraLogBody> {
   double _quantity = 1.0;
+  late final TextEditingController _portionController;
   late final TextEditingController _qtyController;
   double _consumedCaloriesToday = 0;
+  int? _initializedFoodId;
 
   @override
   void initState() {
     super.initState();
+    _portionController = TextEditingController(text: '1');
     _qtyController = TextEditingController(text: '1');
+    _syncQuantityInputFromFoodDetails();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userProvider = context.read<UserProvider>();
       if (userProvider.profile == null && !userProvider.isLoading) {
@@ -217,6 +224,16 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
       }
       _loadTodaySummary();
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant _CameraLogBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldFoodId = oldWidget.foodDetails?['food_id'] as int?;
+    final newFoodId = widget.foodDetails?['food_id'] as int?;
+    if (oldFoodId != newFoodId) {
+      _syncQuantityInputFromFoodDetails(force: true);
+    }
   }
 
   Future<void> _loadTodaySummary() async {
@@ -236,20 +253,210 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
 
   @override
   void dispose() {
+    _portionController.dispose();
     _qtyController.dispose();
     super.dispose();
   }
 
-  void _changeQty(double delta) {
-    setState(() {
-      _quantity = (_quantity + delta).clamp(0.5, 99.0);
-      // Round to 1 decimal if not whole
-      _quantity = double.parse(_quantity.toStringAsFixed(1));
-      _qtyController.text =
-          _quantity == _quantity.truncateToDouble()
-              ? _quantity.toInt().toString()
-              : _quantity.toString();
-    });
+  void _syncQuantityInputFromFoodDetails({bool force = false}) {
+    final foodId = widget.foodDetails?['food_id'] as int?;
+    if (!force && _initializedFoodId == foodId) return;
+
+    final defaultPortionQty = _defaultPortionQuantity;
+    _initializedFoodId = foodId;
+    _quantity = 1.0;
+    _portionController.text = _formatNumber(defaultPortionQty);
+    _qtyController.text = '1';
+  }
+
+  double get _defaultPortionQuantity {
+    final value = _readAsDouble(widget.foodDetails?['quantity']);
+    return value > 0 ? value : 1.0;
+  }
+
+  String get _portionUnit {
+    final unit = widget.foodDetails?['unit']?.toString().trim() ?? '';
+    return unit.isNotEmpty ? unit : 'serving';
+  }
+
+  double get _enteredPortionAmount {
+    final entered = double.tryParse(_portionController.text);
+    if (entered != null && entered > 0) return entered;
+    return _defaultPortionQuantity;
+  }
+
+  double get _portionMultiplier => _enteredPortionAmount / _defaultPortionQuantity;
+
+  double get _totalMultiplier => _portionMultiplier * _quantity;
+
+  List<double> _buildPickerValues({
+    required double currentValue,
+    required double min,
+    required double max,
+    required double step,
+  }) {
+    final values = <double>{};
+    for (double value = min; value <= max + (step / 2); value += step) {
+      values.add(double.parse(value.toStringAsFixed(2)));
+    }
+    values.add(double.parse(currentValue.toStringAsFixed(2)));
+
+    final sorted = values.toList()..sort();
+    return sorted;
+  }
+
+  int _findClosestIndex(List<double> values, double target) {
+    int closestIndex = 0;
+    double closestDelta = double.infinity;
+
+    for (int i = 0; i < values.length; i++) {
+      final delta = (values[i] - target).abs();
+      if (delta < closestDelta) {
+        closestDelta = delta;
+        closestIndex = i;
+      }
+    }
+
+    return closestIndex;
+  }
+
+  Future<void> _showValuePicker({
+    required String title,
+    required List<double> values,
+    required double currentValue,
+    required ValueChanged<double> onSelected,
+  }) async {
+    final initialIndex = _findClosestIndex(values, currentValue);
+    double selectedValue = values[initialIndex];
+    final scrollController = FixedExtentScrollController(
+      initialItem: initialIndex,
+    );
+
+    await showCupertinoModalPopup<void>(
+      context: context,
+      builder:
+          (pickerContext) => Container(
+            height: 300,
+            color: Colors.white,
+            child: Column(
+              children: [
+                Container(
+                  height: 52,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: Color(0xFFE6E6E6)),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      CupertinoButton(
+                        padding: EdgeInsets.zero,
+                        onPressed: () => Navigator.of(pickerContext).pop(),
+                        child: const Text("Cancel"),
+                      ),
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.brown,
+                          decoration: TextDecoration.none,
+                        ),
+                      ),
+                      CupertinoButton(
+                        padding: EdgeInsets.zero,
+                        onPressed: () {
+                          onSelected(selectedValue);
+                          Navigator.of(pickerContext).pop();
+                        },
+                        child: const Text("Done"),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: CupertinoPicker(
+                    scrollController: scrollController,
+                    itemExtent: 40,
+                    onSelectedItemChanged: (index) {
+                      selectedValue = values[index];
+                    },
+                    children:
+                        values
+                            .map(
+                              (value) => Center(
+                                child: Text(
+                                  _formatNumber(value),
+                                  style: const TextStyle(fontSize: 22),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
+  Future<void> _showPortionPicker() async {
+    final currentValue = _enteredPortionAmount;
+    final step =
+        _defaultPortionQuantity >= 100
+            ? 10.0
+            : _defaultPortionQuantity >= 10
+            ? 5.0
+            : _defaultPortionQuantity >= 1
+            ? 0.5
+            : 0.1;
+    final maxValue = math.max(_defaultPortionQuantity * 10, 20.0);
+    final values = _buildPickerValues(
+      currentValue: currentValue,
+      min: step,
+      max: maxValue,
+      step: step,
+    );
+
+    await _showValuePicker(
+      title: "Portion",
+      values: values,
+      currentValue: currentValue,
+      onSelected: (value) {
+        setState(() {
+          _portionController.text = _formatNumber(value);
+        });
+      },
+    );
+  }
+
+  Future<void> _showQuantityPicker() async {
+    final currentValue = _quantity;
+    final values = _buildPickerValues(
+      currentValue: currentValue,
+      min: 1,
+      max: math.max(currentValue + 10, 20),
+      step: 1,
+    );
+
+    await _showValuePicker(
+      title: "Quantity",
+      values: values,
+      currentValue: currentValue,
+      onSelected: (value) {
+        setState(() {
+          _quantity = value;
+          _qtyController.text = _formatNumber(value);
+        });
+      },
+    );
+  }
+
+  String _formatNumber(double value) {
+    final text = value.toStringAsFixed(2);
+    return text.replaceFirst(RegExp(r'\.?0+$'), '');
   }
 
   @override
@@ -260,15 +467,18 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
     final foodDetails = widget.foodDetails;
     final name = foodDetails?['name'] ?? widget.fallbackName ?? "Unknown Food";
     final baseCalDouble = (foodDetails?['calories'] as num?)?.toDouble() ?? 0.0;
-    final scaledCal = (baseCalDouble * _quantity).round();
-    final portionStr = "per ${foodDetails?['portion'] ?? 'serving'}";
+    final scaledCal = (baseCalDouble * _totalMultiplier).round();
+    final portionAmount = _formatNumber(_enteredPortionAmount);
+    final quantityAmount = _formatNumber(_quantity);
 
     final nutrients = foodDetails?['nutrients'] ?? {};
-    final sugarValue = _readAsDouble(nutrients['Sugar']) * _quantity; // g
-    final carbValue = _readAsDouble(nutrients['Carb']) * _quantity; // g
-    final proteinValue = _readAsDouble(nutrients['Protein']) * _quantity; // g
-    final fatValue = _readAsDouble(nutrients['Fat']) * _quantity; // g
-    final sodiumValue = _readAsDouble(nutrients['Sodium']) * _quantity; // mg
+    final sugarValue = _readAsDouble(nutrients['Sugar']) * _totalMultiplier; // g
+    final carbValue = _readAsDouble(nutrients['Carb']) * _totalMultiplier; // g
+    final proteinValue =
+        _readAsDouble(nutrients['Protein']) * _totalMultiplier; // g
+    final fatValue = _readAsDouble(nutrients['Fat']) * _totalMultiplier; // g
+    final sodiumValue =
+        _readAsDouble(nutrients['Sodium']) * _totalMultiplier; // mg
 
     final sugar = sugarValue.toStringAsFixed(1);
     final carb = carbValue.toStringAsFixed(1);
@@ -474,7 +684,7 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
                   ),
                 ),
                 Text(
-                  "${_quantity == _quantity.truncateToDouble() ? _quantity.toInt() : _quantity} × $portionStr",
+                  "$quantityAmount × $portionAmount $_portionUnit",
                   style: const TextStyle(fontSize: 13, color: Colors.black54),
                 ),
               ],
@@ -577,65 +787,123 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
           ),
           const SizedBox(height: 18),
 
-          /* ---------------- QUANTITY STEPPER ---------------- */
-          const Text(
-            "Quantity",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE6E6E6)),
-            ),
-            child: Row(
-              children: [
-                // Minus button
-                IconButton(
-                  onPressed: () => _changeQty(-0.5),
-                  icon: const Icon(Icons.remove_circle_outline_rounded),
-                  color: Colors.orange,
-                  iconSize: 28,
-                ),
-                // Editable number field
-                Expanded(
-                  child: TextField(
-                    controller: _qtyController,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
+          /* ---------------- PORTION + QUANTITY ---------------- */
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Portion",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE6E6E6)),
+                      ),
+                      child: InkWell(
+                        onTap: _showPortionPicker,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  portionAmount,
+                                  textAlign: TextAlign.right,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                _portionUnit,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black54,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(
+                                Icons.unfold_more_rounded,
+                                color: Colors.black38,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                    decoration: const InputDecoration(
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Quantity",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                    onChanged: (val) {
-                      final parsed = double.tryParse(val);
-                      if (parsed != null && parsed > 0) {
-                        setState(() => _quantity = parsed.clamp(0.5, 99.0));
-                      }
-                    },
-                  ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE6E6E6)),
+                      ),
+                      child: InkWell(
+                        onTap: _showQuantityPicker,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  quantityAmount,
+                                  textAlign: TextAlign.right,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(
+                                Icons.unfold_more_rounded,
+                                color: Colors.black38,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                // Plus button
-                IconButton(
-                  onPressed: () => _changeQty(0.5),
-                  icon: const Icon(Icons.add_circle_outline_rounded),
-                  color: Colors.orange,
-                  iconSize: 28,
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
           const SizedBox(height: 4),
           Text(
-            'servings  ·  $scaledCal kcal total',
+            '$quantityAmount × $portionAmount $_portionUnit  ·  $scaledCal kcal',
             style: const TextStyle(fontSize: 12, color: Colors.black54),
           ),
 
@@ -668,7 +936,7 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
                         context,
                         foodDetails ?? {},
                         widget.selectedMealType,
-                        _quantity,
+                        _totalMultiplier,
                         _consumedCaloriesToday,
                         calorieTarget,
                       ),

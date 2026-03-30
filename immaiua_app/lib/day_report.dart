@@ -657,7 +657,14 @@ class _MealBlockState extends State<_MealBlock> {
                       name: item['food_name'] as String? ?? 'Unknown',
                       categoryName: item['category_name'] as String?,
                       kcal: item['kcal'] as int? ?? 0,
+                      quantity: (item['quantity'] as num?)?.toDouble() ?? 1.0,
                       mealItemId: item['meal_item_id'] as int? ?? 0,
+                      mealIds: widget.mealIds,
+                      shouldDeleteMealAfterRemoval:
+                          widget.items.length <= 1 ||
+                          (widget.totalMealKcal -
+                                  (item['kcal'] as int? ?? 0)) <=
+                              0,
                       onDeleted: widget.onDeleted,
                     ),
                   ),
@@ -696,14 +703,20 @@ class _MealItemRow extends StatefulWidget {
   const _MealItemRow({
     required this.name,
     required this.kcal,
+    required this.quantity,
     required this.mealItemId,
+    required this.mealIds,
+    required this.shouldDeleteMealAfterRemoval,
     required this.onDeleted,
     this.categoryName,
   });
 
   final String name;
   final int kcal;
+  final double quantity;
   final int mealItemId;
+  final List<int> mealIds;
+  final bool shouldDeleteMealAfterRemoval;
   final String? categoryName;
   final VoidCallback onDeleted;
 
@@ -782,6 +795,11 @@ class _MealItemRowState extends State<_MealItemRow> {
       final authService =
           Provider.of<AuthProvider>(context, listen: false).authService;
       await authService.deleteMealItem(widget.mealItemId);
+      if (widget.shouldDeleteMealAfterRemoval) {
+        for (final mealId in widget.mealIds) {
+          await authService.deleteMeal(mealId);
+        }
+      }
       widget.onDeleted();
     } catch (e) {
       if (mounted) {
@@ -826,14 +844,30 @@ class _MealItemRowState extends State<_MealItemRow> {
               child: _getCategoryIcon(widget.categoryName),
             ),
             const SizedBox(width: 12),
-            // Food name
+            // Food name + quantity
             Expanded(
-              child: Text(
-                widget.name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      widget.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'x${widget.quantity % 1 == 0 ? widget.quantity.toInt().toString() : widget.quantity.toStringAsFixed(1)}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(width: 8),
