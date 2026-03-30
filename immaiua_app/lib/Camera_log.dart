@@ -1315,7 +1315,7 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
 
         items.add({
           "food_id": d['food_id'],
-          "quantity": _grams[i] / _safeToDouble(d['portion_qty'] ?? 100.0),
+          "grams": _grams[i],
         });
       }
 
@@ -1323,7 +1323,7 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
         throw Exception("No valid database foods detected to log.");
       }
 
-      await authService.logFoodV2({
+      await authService.logFoodAI({
         "meal_type": widget.selectedMealType,
         "items": items,
       });

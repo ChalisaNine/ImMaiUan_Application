@@ -117,10 +117,8 @@ class _ReportBodyState extends State<_ReportBody> {
 
   Future<void> _loadData() async {
     try {
-      final authService = Provider.of<AuthProvider>(
-        context,
-        listen: false,
-      ).authService;
+      final authService =
+          Provider.of<AuthProvider>(context, listen: false).authService;
       final userProvider = Provider.of<UserProvider>(context, listen: false);
       final response = await authService.getDaySummary(widget.date);
       await userProvider.fetchProfile();
@@ -149,7 +147,6 @@ class _ReportBodyState extends State<_ReportBody> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 12),
-
 
             const SizedBox(height: 6),
 
@@ -211,8 +208,7 @@ class _ReportBodyState extends State<_ReportBody> {
     final protein = (rawNutrients['protein'] as num?)?.toDouble() ?? 0.0;
     final fat = (rawNutrients['fat'] as num?)?.toDouble() ?? 0.0;
     final sodium = (rawNutrients['sodium'] as num?)?.toDouble() ?? 0.0;
-    final carbTarget =
-        (profile?['carb_prefer'] as num?)?.toDouble() ?? 300.0;
+    final carbTarget = (profile?['carb_prefer'] as num?)?.toDouble() ?? 300.0;
     final proteinTarget =
         (profile?['protein_prefer'] as num?)?.toDouble() ?? 50.0;
     final fatTarget = (profile?['fat_prefer'] as num?)?.toDouble() ?? 70.0;
@@ -431,56 +427,67 @@ class _ReportBodyState extends State<_ReportBody> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               // Progress Bar
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: LinearProgressIndicator(
-                  value: calorieTarget > 0 ? (dailyTotal / calorieTarget).clamp(0.0, 1.0) : 0,
+                  value:
+                      calorieTarget > 0
+                          ? (dailyTotal / calorieTarget).clamp(0.0, 1.0)
+                          : 0,
                   minHeight: 12,
                   backgroundColor: const Color(0xFFF0F0F0),
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    dailyTotal > calorieTarget ? Colors.red.shade400 : const Color(0xFFFFC93C),
+                    dailyTotal > calorieTarget
+                        ? Colors.red.shade400
+                        : const Color(0xFFFFC93C),
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Remaining Calories Container
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
-                  color: kcalRemaining < 0 
-                    ? Colors.red.withOpacity(0.1) 
-                    : const Color(0xFFF4F9F4),
+                  color:
+                      kcalRemaining < 0
+                          ? Colors.red.withOpacity(0.1)
+                          : const Color(0xFFF4F9F4),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      kcalRemaining < 0 
-                        ? Icons.warning_amber_rounded 
-                        : Icons.check_circle_outline_rounded,
-                      color: kcalRemaining < 0 
-                        ? Colors.red.shade700 
-                        : Colors.green.shade700,
+                      kcalRemaining < 0
+                          ? Icons.warning_amber_rounded
+                          : Icons.check_circle_outline_rounded,
+                      color:
+                          kcalRemaining < 0
+                              ? Colors.red.shade700
+                              : Colors.green.shade700,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      kcalRemaining < 0 
-                        ? '${kcalRemaining.abs()} kcal over target'
-                        : '$kcalRemaining kcal remaining',
+                      kcalRemaining < 0
+                          ? '${kcalRemaining.abs()} kcal over target'
+                          : '$kcalRemaining kcal remaining',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 14,
-                        color: kcalRemaining < 0 
-                          ? Colors.red.shade700 
-                          : Colors.green.shade800,
+                        color:
+                            kcalRemaining < 0
+                                ? Colors.red.shade700
+                                : Colors.green.shade800,
                       ),
                     ),
                   ],
@@ -526,39 +533,42 @@ class _MealBlockState extends State<_MealBlock> {
   Future<void> _confirmDelete() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            const Icon(Icons.delete_outline_rounded, color: Colors.red),
-            const SizedBox(width: 8),
-            Text('Delete ${widget.title}?'),
-          ],
-        ),
-        content: Text(
-          'This will permanently delete all ${widget.title.toLowerCase()} items for this day.'
-          ' This cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+      builder:
+          (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Row(
+              children: [
+                const Icon(Icons.delete_outline_rounded, color: Colors.red),
+                const SizedBox(width: 8),
+                Text('Delete ${widget.title}?'),
+              ],
+            ),
+            content: Text(
+              'This will permanently delete all ${widget.title.toLowerCase()} items for this day.'
+              ' This cannot be undone.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
               ),
-            ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text(
-              'Delete',
-              style: TextStyle(color: Colors.white),
-            ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
 
     if (confirmed != true || !mounted) return;
@@ -610,28 +620,28 @@ class _MealBlockState extends State<_MealBlock> {
               ),
               _deleting
                   ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.red,
-                      ),
-                    )
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.red,
+                    ),
+                  )
                   : GestureDetector(
-                      onTap: _confirmDelete,
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.delete_outline_rounded,
-                          color: Colors.red,
-                          size: 20,
-                        ),
+                    onTap: _confirmDelete,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.delete_outline_rounded,
+                        color: Colors.red,
+                        size: 20,
                       ),
                     ),
+                  ),
             ],
           ),
           const SizedBox(height: 10),
@@ -655,10 +665,15 @@ class _MealBlockState extends State<_MealBlock> {
                 else
                   ...widget.items.map(
                     (item) => _MealItemRow(
+                      key: ValueKey(item['meal_item_id'] as int? ?? item['food_name']),
                       name: item['food_name'] as String? ?? 'Unknown',
                       categoryName: item['category_name'] as String?,
                       kcal: item['kcal'] as int? ?? 0,
                       quantity: (item['quantity'] as num?)?.toDouble() ?? 1.0,
+                      portionAmount: (item['portion'] as num?)?.toDouble(),
+                      portionUnit: item['portion_unit'] as String?,
+                      portionDescription:
+                          item['portion_description'] as String?,
                       mealItemId: item['meal_item_id'] as int? ?? 0,
                       mealIds: widget.mealIds,
                       shouldDeleteMealAfterRemoval:
@@ -702,9 +717,13 @@ class _MealBlockState extends State<_MealBlock> {
 
 class _MealItemRow extends StatefulWidget {
   const _MealItemRow({
+    super.key,
     required this.name,
     required this.kcal,
     required this.quantity,
+    required this.portionAmount,
+    required this.portionUnit,
+    required this.portionDescription,
     required this.mealItemId,
     required this.mealIds,
     required this.shouldDeleteMealAfterRemoval,
@@ -715,6 +734,9 @@ class _MealItemRow extends StatefulWidget {
   final String name;
   final int kcal;
   final double quantity;
+  final double? portionAmount;
+  final String? portionUnit;
+  final String? portionDescription;
   final int mealItemId;
   final List<int> mealIds;
   final bool shouldDeleteMealAfterRemoval;
@@ -736,37 +758,64 @@ class _MealItemRowState extends State<_MealItemRow> {
     );
   }
 
+  String _formatAmount(double value) {
+    if (value % 1 == 0) return value.toInt().toString();
+    return value.toStringAsFixed(1);
+  }
+
+  String _buildPortionText() {
+    final amount = widget.portionAmount;
+    final unit = widget.portionUnit?.trim() ?? '';
+    final description = widget.portionDescription?.trim() ?? '';
+
+    if (amount != null && amount > 0 && unit.isNotEmpty) {
+      return '${_formatAmount(amount)} $unit';
+    }
+
+    if (description.isNotEmpty) {
+      return widget.quantity > 1
+          ? '${_formatAmount(widget.quantity)} x $description'
+          : description;
+    }
+
+    return 'Qty ${_formatAmount(widget.quantity)}';
+  }
+
   Future<void> _deleteItem() async {
     // Quick confirm via dialog
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        contentPadding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-        title: const Text('Remove item?'),
-        content: Text(
-          'Remove "${widget.name}" from this meal?',
-          style: const TextStyle(fontSize: 14),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
+      builder:
+          (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
             ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text(
-              'Remove',
-              style: TextStyle(color: Colors.white),
+            contentPadding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+            title: const Text('Remove item?'),
+            content: Text(
+              'Remove "${widget.name}" from this meal?',
+              style: const TextStyle(fontSize: 14),
             ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text(
+                  'Remove',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
 
     if (confirmed != true || !mounted) return;
@@ -827,24 +876,23 @@ class _MealItemRowState extends State<_MealItemRow> {
             const SizedBox(width: 12),
             // Food name + quantity
             Expanded(
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Flexible(
-                    child: Text(
-                      widget.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
                   Text(
-                    'x${widget.quantity % 1 == 0 ? widget.quantity.toInt().toString() : widget.quantity.toStringAsFixed(1)}',
-                    style: TextStyle(
+                    widget.name,
+                    style: const TextStyle(
                       fontWeight: FontWeight.w600,
-                      fontSize: 11,
+                      fontSize: 12,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _buildPortionText(),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 10.5,
                       color: Colors.grey.shade600,
                     ),
                   ),
@@ -872,21 +920,21 @@ class _MealItemRowState extends State<_MealItemRow> {
             // Delete button
             _deleting
                 ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.red,
-                    ),
-                  )
-                : GestureDetector(
-                    onTap: _deleteItem,
-                    child: Icon(
-                      Icons.remove_circle_outline_rounded,
-                      color: Colors.red.withOpacity(0.7),
-                      size: 22,
-                    ),
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.red,
                   ),
+                )
+                : GestureDetector(
+                  onTap: _deleteItem,
+                  child: Icon(
+                    Icons.remove_circle_outline_rounded,
+                    color: Colors.red.withOpacity(0.7),
+                    size: 22,
+                  ),
+                ),
           ],
         ),
       ),
