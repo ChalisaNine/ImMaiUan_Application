@@ -28,8 +28,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String? _tdee;
   int? _age;
   double _multiplier = 1.2;
-  String _goalType = 'MAINTAIN';
-  double _goalCalorieAdjustment = 0;
 
   final List<AllergyOption> _selectedAllergies = [];
   List<AllergyOption> _availableAllergies = [];
@@ -58,19 +56,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _isMale = (profile['gender'] == 'Male');
     _bmr = (profile['bmr'] ?? '').toString();
     _age = _readInt(profile['age']);
-    _goalType = (profile['goal_type'] ?? 'MAINTAIN').toString();
-
     final bmrVal = _readDouble(profile['bmr']);
     final rawTdeeVal = _readDouble(profile['tdee']);
-    final calorieTarget = _readDouble(profile['calorie_target']);
 
     if (bmrVal > 0 && rawTdeeVal > 0) {
       _multiplier = rawTdeeVal / bmrVal;
     }
 
-    _goalCalorieAdjustment =
-        _goalType == 'MAINTAIN' ? 0 : calorieTarget - rawTdeeVal;
-    _tdee = _effectiveTdeeValue(rawTdeeVal).toString();
+    _tdee = rawTdeeVal.round().toString();
   }
 
   void _calculateMetrics() {
@@ -91,17 +84,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       setState(() {
         _bmr = bmrVal.round().toString();
-        _tdee = _effectiveTdeeValue(rawTdee).toString();
+        _tdee = rawTdee.round().toString();
       });
     }
   }
 
-  int _effectiveTdeeValue(double rawTdee) {
-    final effectiveTdee = _goalType == 'MAINTAIN'
-        ? rawTdee
-        : rawTdee + _goalCalorieAdjustment;
-    return effectiveTdee.round();
-  }
 
   void _onTap(int i) {
     setState(() => _index = i);
@@ -681,7 +668,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               : _allergyError != null
               ? Text(_allergyError!)
               : DropdownButtonFormField<AllergyOption>(
-                  value: _dropdownValue,
+                  initialValue: _dropdownValue,
                   isExpanded: true,
                   decoration: const InputDecoration(
                     hintText: 'Select an allergy',

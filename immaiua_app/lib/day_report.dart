@@ -241,12 +241,17 @@ class _ReportBodyState extends State<_ReportBody> {
             final mealType = meal['meal_type'] as String? ?? 'other';
             final items = List<Map<String, dynamic>>.from(meal['items'] ?? []);
             final mealTotal = meal['total_kcal'] as int? ?? 0;
+            final mealIds = List<int>.from(
+              (meal['meal_ids'] as List?)?.map((e) => e as int) ?? [],
+            );
             return Padding(
               padding: const EdgeInsets.only(bottom: 20),
               child: _MealBlock(
                 title: _capitalize(mealType),
                 items: items,
                 totalMealKcal: mealTotal,
+                mealIds: mealIds,
+                onDeleted: _loadData,
               ),
             );
           }),
@@ -495,16 +500,90 @@ class _ReportBodyState extends State<_ReportBody> {
 /*                           MEAL BLOCK                                   */
 /* ---------------------------------------------------------------------- */
 
-class _MealBlock extends StatelessWidget {
+class _MealBlock extends StatefulWidget {
   const _MealBlock({
     required this.title,
     required this.items,
     required this.totalMealKcal,
+    required this.mealIds,
+    required this.onDeleted,
   });
 
   final String title;
   final List<Map<String, dynamic>> items;
   final int totalMealKcal;
+  final List<int> mealIds;
+  final VoidCallback onDeleted;
+
+  @override
+  State<_MealBlock> createState() => _MealBlockState();
+}
+
+class _MealBlockState extends State<_MealBlock> {
+  bool _deleting = false;
+
+  Future<void> _confirmDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.delete_outline_rounded, color: Colors.red),
+            const SizedBox(width: 8),
+            Text('Delete ${widget.title}?'),
+          ],
+        ),
+        content: Text(
+          'This will permanently delete all ${widget.title.toLowerCase()} items for this day.'
+          ' This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _deleting = true);
+    try {
+      final authService =
+          Provider.of<AuthProvider>(context, listen: false).authService;
+      // Delete all meal IDs in this group
+      for (final id in widget.mealIds) {
+        await authService.deleteMeal(id);
+      }
+      widget.onDeleted();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _deleting = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -517,12 +596,42 @@ class _MealBlock extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              title,
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-            ),
+          // Header row: title + delete button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                widget.title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ),
+              ),
+              _deleting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.red,
+                      ),
+                    )
+                  : GestureDetector(
+                      onTap: _confirmDelete,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.delete_outline_rounded,
+                          color: Colors.red,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+            ],
           ),
           const SizedBox(height: 10),
 
@@ -534,7 +643,7 @@ class _MealBlock extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             child: Column(
               children: [
-                if (items.isEmpty)
+                if (widget.items.isEmpty)
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 8),
                     child: Text(
@@ -543,11 +652,13 @@ class _MealBlock extends StatelessWidget {
                     ),
                   )
                 else
-                  ...items.map(
+                  ...widget.items.map(
                     (item) => _MealItemRow(
                       name: item['food_name'] as String? ?? 'Unknown',
                       categoryName: item['category_name'] as String?,
                       kcal: item['kcal'] as int? ?? 0,
+                      mealItemId: item['meal_item_id'] as int? ?? 0,
+                      onDeleted: widget.onDeleted,
                     ),
                   ),
 
@@ -560,7 +671,7 @@ class _MealBlock extends StatelessWidget {
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                     Text(
-                      '$totalMealKcal kcal',
+                      '${widget.totalMealKcal} kcal',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
@@ -581,16 +692,27 @@ class _MealBlock extends StatelessWidget {
 /*                           MEAL ITEM ROW                                */
 /* ---------------------------------------------------------------------- */
 
-class _MealItemRow extends StatelessWidget {
+class _MealItemRow extends StatefulWidget {
   const _MealItemRow({
     required this.name,
     required this.kcal,
+    required this.mealItemId,
+    required this.onDeleted,
     this.categoryName,
   });
 
   final String name;
   final int kcal;
+  final int mealItemId;
   final String? categoryName;
+  final VoidCallback onDeleted;
+
+  @override
+  State<_MealItemRow> createState() => _MealItemRowState();
+}
+
+class _MealItemRowState extends State<_MealItemRow> {
+  bool _deleting = false;
 
   Icon _getCategoryIcon(String? category) {
     const color = Color(0xFFFF9900);
@@ -620,12 +742,66 @@ class _MealItemRow extends StatelessWidget {
     }
   }
 
+  Future<void> _deleteItem() async {
+    // Quick confirm via dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        contentPadding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+        title: const Text('Remove item?'),
+        content: Text(
+          'Remove "${widget.name}" from this meal?',
+          style: const TextStyle(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text(
+              'Remove',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _deleting = true);
+    try {
+      final authService =
+          Provider.of<AuthProvider>(context, listen: false).authService;
+      await authService.deleteMealItem(widget.mealItemId);
+      widget.onDeleted();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to remove item: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() => _deleting = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -640,36 +816,62 @@ class _MealItemRow extends StatelessWidget {
         ),
         child: Row(
           children: [
+            // Category icon
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: const Color(0xFFFFE1C7).withOpacity(0.5),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: _getCategoryIcon(categoryName),
+              child: _getCategoryIcon(widget.categoryName),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 12),
+            // Food name
             Expanded(
               child: Text(
-                name,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                widget.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
               ),
             ),
+            const SizedBox(width: 8),
+            // Kcal badge
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 color: const Color(0xFFFFF5E5),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                '$kcal kcal',
+                '${widget.kcal} kcal',
                 style: const TextStyle(
-                  fontWeight: FontWeight.w700, 
-                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
                   color: Color(0xFFFF8A47),
                 ),
               ),
             ),
+            const SizedBox(width: 8),
+            // Delete button
+            _deleting
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.red,
+                    ),
+                  )
+                : GestureDetector(
+                    onTap: _deleteItem,
+                    child: Icon(
+                      Icons.remove_circle_outline_rounded,
+                      color: Colors.red.withOpacity(0.7),
+                      size: 22,
+                    ),
+                  ),
           ],
         ),
       ),

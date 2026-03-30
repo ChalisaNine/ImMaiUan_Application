@@ -989,8 +989,8 @@ class _SummaryCard extends StatelessWidget {
                             : "Obese")
                       : "-",
                 ),
-                _SummaryCell(title: "TDEE", subtitle: "$tdee kcal"),
-                _SummaryCell(title: "BMR", subtitle: "$bmr kcal"),
+                _SummaryCell(title: "TDEE $tdee", subtitle: "kcal"),
+                _SummaryCell(title: "BMR $bmr", subtitle: "kcal"),
               ],
             ),
           ),
@@ -1076,16 +1076,14 @@ class _NutrientChip extends StatelessWidget {
 }
 
 String _displayTdee(Map<String, dynamic>? profile) {
-  final goalType = (profile?['goal_type'] ?? 'MAINTAIN').toString();
   final tdee = _readDouble(profile?['tdee']);
+  if (tdee > 0) return tdee.round().toString();
+
+  // Fallback to calorieTarget ONLY if TDEE is missing
   final calorieTarget = _readDouble(profile?['calorie_target']);
+  if (calorieTarget > 0) return calorieTarget.round().toString();
 
-  final effectiveTdee = goalType == 'MAINTAIN'
-      ? (tdee > 0 ? tdee : calorieTarget)
-      : (calorieTarget > 0 ? calorieTarget : tdee);
-
-  if (effectiveTdee <= 0) return '0';
-  return effectiveTdee.round().toString();
+  return '0';
 }
 
 double _readDouble(dynamic value) {

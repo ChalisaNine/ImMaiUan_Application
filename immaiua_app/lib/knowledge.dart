@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'KnowledgeStep2.dart';
 import 'main.dart';
 import 'nav_bar.dart'; // ใช้ MainScaffold
+import 'providers/user_provider.dart';
 
 class KnowledgeScreen extends StatefulWidget {
   const KnowledgeScreen({super.key});
@@ -68,6 +70,17 @@ class BasicKnowledgeBody extends StatelessWidget {
         .headlineSmall
         ?.copyWith(fontWeight: FontWeight.w700);
 
+    final userProvider = context.watch<UserProvider>();
+    final profile = userProvider.profile;
+    final displayName = profile?['display_name'] ?? 'User';
+
+    // Extract metrics with defaults
+    final weight = profile?['weight_kg']?.toString() ?? "78";
+    final height = profile?['height_cm']?.toString() ?? "176";
+    final bmi = profile?['bmi']?.toStringAsFixed(1) ?? "26.1";
+    final bmr = profile?['bmr']?.toString() ?? "2561";
+    final tdee = profile?['tdee']?.toString() ?? "3564";
+
     return SafeArea(
       top: false,
       child: SingleChildScrollView(
@@ -75,33 +88,31 @@ class BasicKnowledgeBody extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             const SizedBox(height: 8),
-            Center(child: Text('Welcome Monser.', style: titleStyle)),
+            Center(child: Text('Welcome $displayName.', style: titleStyle)),
             const SizedBox(height: 12),
-
-            const PeachStrip(
+            PeachStrip(
               items: [
                 PeachMetric(
                     icon: Icons.fitness_center_rounded,
                     label: 'Weight',
-                    value: '78 kg'),
+                    value: '$weight kg'),
                 PeachMetric(
                     icon: Icons.height_rounded,
                     label: 'Height',
-                    value: '176 cm'),
+                    value: '$height cm'),
                 PeachMetric(
                     icon: Icons.monitor_weight_rounded,
                     label: 'BMI',
-                    value: '26.1'),
+                    value: bmi),
                 PeachMetric(
                     icon: Icons.local_fire_department_rounded,
                     label: 'BMR',
-                    value: '2561'),
+                    value: bmr),
                 PeachMetric(
                     icon: Icons.bolt_rounded,
                     label: 'TDEE',
-                    value: '3564'),
+                    value: tdee),
               ],
             ),
 

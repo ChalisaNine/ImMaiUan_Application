@@ -317,6 +317,22 @@ class AuthService {
     }
   }
 
+  Future<void> deleteMeal(int mealId) async {
+    try {
+      await _dio.delete('/meals/$mealId');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> deleteMealItem(int mealItemId) async {
+    try {
+      await _dio.delete('/meals/items/$mealItemId');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<bool> checkAuthStatus() async {
     try {
       final response = await _dio.get(
