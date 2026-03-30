@@ -10,6 +10,7 @@ import 'Meal.dart';
 import 'nav_bar.dart';
 import 'profile_screen.dart';
 import 'Calenda.dart';
+import 'utils/food_icon_helper.dart';
 
 class CameraLogScreen extends StatefulWidget {
   final int? foodId;
@@ -530,28 +531,11 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
 
     final categoryName = foodDetails?['category'] ?? "Unknown";
 
-    IconData getCategoryIcon(String category) {
-      switch (category.toLowerCase()) {
-        case 'boiled':
-          return Icons.soup_kitchen;
-        case 'fried':
-          return Icons.ramen_dining; // or rice_bowl / fastfood
-        case 'curry':
-          return Icons.set_meal;
-        case 'stir-fried':
-          return Icons.local_dining;
-        case 'grilled':
-          return Icons.kebab_dining;
-        case 'beverage':
-          return Icons.local_cafe;
-        case 'dessert':
-          return Icons.cake;
-        default:
-          return Icons.fastfood;
-      }
-    }
-
-    final categoryIcon = getCategoryIcon(categoryName);
+    final categoryIcon = buildFoodCategoryIcon(
+      categoryName: categoryName,
+      size: 60,
+      color: Colors.orangeAccent,
+    );
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
@@ -626,11 +610,7 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
                     color: Colors.white.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
-                    categoryIcon,
-                    size: 60,
-                    color: Colors.orangeAccent,
-                  ),
+                  child: Center(child: categoryIcon),
                 ),
                 const SizedBox(height: 12),
 
@@ -1248,12 +1228,12 @@ class _NutItem extends StatelessWidget {
           style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
         ),
         Text(
-          value,
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-        ),
-        Text(
           percent,
           style: const TextStyle(fontSize: 10, color: Colors.black54),
+        ),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
         ),
       ],
     );

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'KnowledgeStep2.dart';
+import 'Meal.dart';
+import 'Calenda.dart';
+import 'ai_image.dart';
 import 'main.dart';
+import 'profile_screen.dart';
 import 'nav_bar.dart'; // ใช้ MainScaffold
 import 'providers/user_provider.dart';
 
@@ -34,16 +38,28 @@ class _KnowledgeScreenState extends State<KnowledgeScreen> {
         );
         break;
       case 1:
-        Navigator.pushReplacementNamed(context, '/meal');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MealScreen()),
+        );
         break;
       case 2:
-        Navigator.pushReplacementNamed(context, '/capture');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const AiImageScreen()),
+        );
         break;
       case 3:
-        Navigator.pushReplacementNamed(context, '/diary');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const CalendaScreen()),
+        );
         break;
       case 4:
-        Navigator.pushReplacementNamed(context, '/profile');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const ProfileScreen()),
+        );
         break;
     }
   }
@@ -65,10 +81,9 @@ class BasicKnowledgeBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final titleStyle = Theme.of(context)
-        .textTheme
-        .headlineSmall
-        ?.copyWith(fontWeight: FontWeight.w700);
+    final titleStyle = Theme.of(
+      context,
+    ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700);
 
     final userProvider = context.watch<UserProvider>();
     final profile = userProvider.profile;
@@ -80,6 +95,14 @@ class BasicKnowledgeBody extends StatelessWidget {
     final bmi = profile?['bmi']?.toStringAsFixed(1) ?? "26.1";
     final bmr = profile?['bmr']?.toString() ?? "2561";
     final tdee = profile?['tdee']?.toString() ?? "3564";
+    final carbTarget = _readDouble(profile?['carb_prefer']);
+    final proteinTarget = _readDouble(profile?['protein_prefer']);
+    final fatTarget = _readDouble(profile?['fat_prefer']);
+    final sugarTarget =
+        _readDouble(profile?['sugar_target_ideal']) > 0
+            ? _readDouble(profile?['sugar_target_ideal'])
+            : _readDouble(profile?['sugar_target']);
+    final sodiumTarget = _readDouble(profile?['sodium_target']);
 
     return SafeArea(
       top: false,
@@ -94,25 +117,30 @@ class BasicKnowledgeBody extends StatelessWidget {
             PeachStrip(
               items: [
                 PeachMetric(
-                    icon: Icons.fitness_center_rounded,
-                    label: 'Weight',
-                    value: '$weight kg'),
+                  icon: Icons.fitness_center_rounded,
+                  label: 'Weight',
+                  value: '$weight kg',
+                ),
                 PeachMetric(
-                    icon: Icons.height_rounded,
-                    label: 'Height',
-                    value: '$height cm'),
+                  icon: Icons.height_rounded,
+                  label: 'Height',
+                  value: '$height cm',
+                ),
                 PeachMetric(
-                    icon: Icons.monitor_weight_rounded,
-                    label: 'BMI',
-                    value: bmi),
+                  icon: Icons.monitor_weight_rounded,
+                  label: 'BMI',
+                  value: bmi,
+                ),
                 PeachMetric(
-                    icon: Icons.local_fire_department_rounded,
-                    label: 'BMR',
-                    value: bmr),
+                  icon: Icons.local_fire_department_rounded,
+                  label: 'BMR',
+                  value: bmr,
+                ),
                 PeachMetric(
-                    icon: Icons.bolt_rounded,
-                    label: 'TDEE',
-                    value: tdee),
+                  icon: Icons.bolt_rounded,
+                  label: 'TDEE',
+                  value: tdee,
+                ),
               ],
             ),
 
@@ -125,54 +153,63 @@ class BasicKnowledgeBody extends StatelessWidget {
             const SizedBox(height: 8),
 
             CardContainer(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               child: Column(
-                children: const [
+                children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
+                    children: const [
                       CardHeaderRow(left: '', right: 'Daily nutrition'),
                     ],
                   ),
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      DailyItem(
-                        icon: Icons.cookie_rounded,
-                        title: 'Sugar',
-                        line1: '31 g',
-                        line2: 'Suggested',
-                        line3: 'per day',
+                      Expanded(
+                        child: DailyItem(
+                          icon: Icons.cookie_rounded,
+                          title: 'Sugar',
+                          line1: _formatGrams(sugarTarget),
+                          line2: 'Suggested',
+                          line3: 'per day',
+                        ),
                       ),
-                      DailyItem(
-                        icon: Icons.rice_bowl_rounded,
-                        title: 'Carb',
-                        line1: '315 g',
-                        line2: 'Suggested',
-                        line3: 'per day',
+                      Expanded(
+                        child: DailyItem(
+                          icon: Icons.rice_bowl_rounded,
+                          title: 'Carb',
+                          line1: _formatGrams(carbTarget),
+                          line2: 'Suggested',
+                          line3: 'per day',
+                        ),
                       ),
-                      DailyItem(
-                        icon: Icons.egg_rounded,
-                        title: 'Protein',
-                        line1: '120 g',
-                        line2: 'Suggested',
-                        line3: 'per day',
+                      Expanded(
+                        child: DailyItem(
+                          icon: Icons.egg_rounded,
+                          title: 'Protein',
+                          line1: _formatGrams(proteinTarget),
+                          line2: 'Suggested',
+                          line3: 'per day',
+                        ),
                       ),
-                      DailyItem(
-                        icon: Icons.oil_barrel_rounded,
-                        title: 'Fat',
-                        line1: '78 g',
-                        line2: 'Suggested',
-                        line3: 'per day',
+                      Expanded(
+                        child: DailyItem(
+                          icon: Icons.oil_barrel_rounded,
+                          title: 'Fat',
+                          line1: _formatGrams(fatTarget),
+                          line2: 'Suggested',
+                          line3: 'per day',
+                        ),
                       ),
-                      DailyItem(
-                        icon: Icons.snowing,
-                        title: 'Sodium',
-                        line1: '2434 mg',
-                        line2: 'Suggested',
-                        line3: 'per day',
+                      Expanded(
+                        child: DailyItem(
+                          icon: Icons.snowing,
+                          title: 'Sodium',
+                          line1: _formatMilligrams(sodiumTarget),
+                          line2: 'Suggested',
+                          line3: 'per day',
+                        ),
                       ),
                     ],
                   ),
@@ -210,8 +247,7 @@ class BasicKnowledgeBody extends StatelessWidget {
                   InfoRow(
                     icon: Icons.oil_barrel_rounded,
                     title: 'Fat',
-                    text:
-                        'Fat from oils, nuts, cheese; grams × 9 kcal.',
+                    text: 'Fat from oils, nuts, cheese; grams × 9 kcal.',
                   ),
                   SizedBox(height: 10),
                   InfoRow(
@@ -240,7 +276,9 @@ class BasicKnowledgeBody extends StatelessWidget {
                   },
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 18, vertical: 10),
+                      horizontal: 18,
+                      vertical: 10,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -264,6 +302,21 @@ class BasicKnowledgeBody extends StatelessWidget {
   }
 }
 
+double _readDouble(dynamic value) {
+  if (value is num) return value.toDouble();
+  return double.tryParse(value?.toString() ?? '') ?? 0;
+}
+
+String _formatGrams(double value) {
+  if (value <= 0) return '0 g';
+  return '${value.toStringAsFixed(1)} g';
+}
+
+String _formatMilligrams(double value) {
+  if (value <= 0) return '0 mg';
+  return '${value.toStringAsFixed(1)} mg';
+}
+
 /* ======================== METRIC STRIP ======================== */
 
 class PeachStrip extends StatelessWidget {
@@ -284,28 +337,29 @@ class PeachStrip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: items
-            .map(
-              (e) => Expanded(
-                child: Column(
-                  children: [
-                    Icon(e.icon, size: 22, color: Colors.black87),
-                    const SizedBox(height: 6),
-                    Text(e.label, style: const TextStyle(fontSize: 12)),
-                    const SizedBox(height: 2),
-                    Text(
-                      e.value,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: accent,
-                        fontSize: 12,
-                      ),
+        children:
+            items
+                .map(
+                  (e) => Expanded(
+                    child: Column(
+                      children: [
+                        Icon(e.icon, size: 22, color: Colors.black87),
+                        const SizedBox(height: 6),
+                        Text(e.label, style: const TextStyle(fontSize: 12)),
+                        const SizedBox(height: 2),
+                        Text(
+                          e.value,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: accent,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-            )
-            .toList(),
+                  ),
+                )
+                .toList(),
       ),
     );
   }
@@ -362,17 +416,13 @@ class CardHeaderRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context)
-        .textTheme
-        .labelLarge
-        ?.copyWith(fontWeight: FontWeight.w700);
+    final style = Theme.of(
+      context,
+    ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(left, style: style),
-        Text(right, style: style),
-      ],
+      children: [Text(left, style: style), Text(right, style: style)],
     );
   }
 }
@@ -397,33 +447,32 @@ class DailyItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 54,
-      child: Column(
-        children: [
-          Icon(icon, size: 22, color: Colors.black87),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(line1, style: const TextStyle(fontSize: 11)),
-          Text(
-            line2,
-            style:
-                const TextStyle(fontSize: 10, color: Colors.black54),
-          ),
-          Text(
-            line3,
-            style:
-                const TextStyle(fontSize: 10, color: Colors.black54),
-          ),
-        ],
-      ),
+    return Column(
+      children: [
+        Icon(icon, size: 22, color: Colors.black87),
+        const SizedBox(height: 4),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          line1,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 11),
+        ),
+        Text(
+          line2,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 10, color: Colors.black54),
+        ),
+        Text(
+          line3,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 10, color: Colors.black54),
+        ),
+      ],
     );
   }
 }
@@ -469,13 +518,7 @@ class InfoRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 2),
-              Text(
-                text,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  height: 1.25,
-                ),
-              ),
+              Text(text, style: const TextStyle(fontSize: 12.5, height: 1.25)),
             ],
           ),
         ),

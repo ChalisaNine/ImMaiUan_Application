@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'main.dart';
 import 'nav_bar.dart';
@@ -8,6 +9,7 @@ import 'Meal.dart';
 import 'ai_image.dart';
 import 'Calenda.dart';
 import 'profile_screen.dart';
+import 'providers/user_provider.dart';
 
 class KnowledgeStep2Screen extends StatefulWidget {
   const KnowledgeStep2Screen({super.key});
@@ -76,6 +78,22 @@ class _KnowledgeStep2Body extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const peach = Color(0xFFFFE1C7);
+    final userProvider = context.watch<UserProvider>();
+    final profile = userProvider.profile;
+    final displayName = profile?['display_name'] ?? 'User';
+    final weight = profile?['weight_kg']?.toString() ?? '78';
+    final height = profile?['height_cm']?.toString() ?? '176';
+    final bmi = profile?['bmi']?.toStringAsFixed(1) ?? '26.1';
+    final bmr = profile?['bmr']?.toString() ?? '2561';
+    final tdee = profile?['tdee']?.toString() ?? '3564';
+    final carbTarget = _readDouble(profile?['carb_prefer']);
+    final proteinTarget = _readDouble(profile?['protein_prefer']);
+    final fatTarget = _readDouble(profile?['fat_prefer']);
+    final sugarTarget =
+        _readDouble(profile?['sugar_target_ideal']) > 0
+            ? _readDouble(profile?['sugar_target_ideal'])
+            : _readDouble(profile?['sugar_target']);
+    final sodiumTarget = _readDouble(profile?['sodium_target']);
 
     return SafeArea(
       top: false,
@@ -105,7 +123,7 @@ class _KnowledgeStep2Body extends StatelessWidget {
             const SizedBox(height: 8),
             Center(
               child: Text(
-                'Welcome Monser.',
+                'Welcome $displayName.',
                 style: Theme.of(context)
                     .textTheme
                     .headlineSmall
@@ -114,12 +132,12 @@ class _KnowledgeStep2Body extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            const _K2PeachStrip(items: [
-              _K2PeachMetric(icon: Icons.fitness_center_rounded, label: 'Weight', value: '78 kg'),
-              _K2PeachMetric(icon: Icons.height_rounded, label: 'Height', value: '176 cm'),
-              _K2PeachMetric(icon: Icons.monitor_weight_rounded, label: 'BMI', value: '26.1'),
-              _K2PeachMetric(icon: Icons.local_fire_department_rounded, label: 'BMR', value: '2561'),
-              _K2PeachMetric(icon: Icons.bolt_rounded, label: 'TDEE', value: '3564'),
+            _K2PeachStrip(items: [
+              _K2PeachMetric(icon: Icons.fitness_center_rounded, label: 'Weight', value: '$weight kg'),
+              _K2PeachMetric(icon: Icons.height_rounded, label: 'Height', value: '$height cm'),
+              _K2PeachMetric(icon: Icons.monitor_weight_rounded, label: 'BMI', value: bmi),
+              _K2PeachMetric(icon: Icons.local_fire_department_rounded, label: 'BMR', value: bmr),
+              _K2PeachMetric(icon: Icons.bolt_rounded, label: 'TDEE', value: tdee),
             ]),
 
             const SizedBox(height: 16),
@@ -129,23 +147,33 @@ class _KnowledgeStep2Body extends StatelessWidget {
 
             /// Daily Nutrition
             _K2Card(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               child: Column(
-                children: const [
+                children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [ _K2CardHeader(left: '', right: 'Daily nutrition') ],
+                    children: const [ _K2CardHeader(left: '', right: 'Daily nutrition') ],
                   ),
-                  SizedBox(height: 6),
+                  const SizedBox(height: 4),
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _K2DailyTile(icon: Icons.cookie_rounded, title: 'Sugar', line1: '31 g', line2: 'Suggested', line3: 'per day'),
-                      _K2DailyTile(icon: Icons.rice_bowl_rounded, title: 'Carb', line1: '315 g', line2: 'Suggested', line3: 'per day'),
-                      _K2DailyTile(icon: Icons.egg_rounded, title: 'Protein', line1: '120 g', line2: 'Suggested', line3: 'per day'),
-                      _K2DailyTile(icon: Icons.oil_barrel_rounded, title: 'Fat', line1: '78 g', line2: 'Suggested', line3: 'per day'),
-                      _K2DailyTile(icon: Icons.snowing, title: 'Sodium', line1: '2434 mg', line2: 'Suggested', line3: 'per day'),
+                      Expanded(
+                        child: _K2DailyTile(icon: Icons.cookie_rounded, title: 'Sugar', line1: _formatGrams(sugarTarget), line2: 'Suggested', line3: 'per day'),
+                      ),
+                      Expanded(
+                        child: _K2DailyTile(icon: Icons.rice_bowl_rounded, title: 'Carb', line1: _formatGrams(carbTarget), line2: 'Suggested', line3: 'per day'),
+                      ),
+                      Expanded(
+                        child: _K2DailyTile(icon: Icons.egg_rounded, title: 'Protein', line1: _formatGrams(proteinTarget), line2: 'Suggested', line3: 'per day'),
+                      ),
+                      Expanded(
+                        child: _K2DailyTile(icon: Icons.oil_barrel_rounded, title: 'Fat', line1: _formatGrams(fatTarget), line2: 'Suggested', line3: 'per day'),
+                      ),
+                      Expanded(
+                        child: _K2DailyTile(icon: Icons.snowing, title: 'Sodium', line1: _formatMilligrams(sodiumTarget), line2: 'Suggested', line3: 'per day'),
+                      ),
                     ],
                   ),
                 ],
@@ -295,19 +323,32 @@ class _K2DailyTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 54,
-      child: Column(
-        children: [
-          Icon(icon, size: 22),
-          const SizedBox(height: 4),
-          Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
-          const SizedBox(height: 2),
-          Text(line1, style: const TextStyle(fontSize: 11)),
-          Text(line2, style: const TextStyle(fontSize: 10, color: Colors.black54)),
-          Text(line3, style: const TextStyle(fontSize: 10, color: Colors.black54)),
-        ],
-      ),
+    return Column(
+      children: [
+        Icon(icon, size: 22),
+        const SizedBox(height: 4),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          line1,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 11),
+        ),
+        Text(
+          line2,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 10, color: Colors.black54),
+        ),
+        Text(
+          line3,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 10, color: Colors.black54),
+        ),
+      ],
     );
   }
 }
@@ -355,4 +396,19 @@ class _K2ExplainRow extends StatelessWidget {
       ],
     );
   }
+}
+
+double _readDouble(dynamic value) {
+  if (value is num) return value.toDouble();
+  return double.tryParse(value?.toString() ?? '') ?? 0;
+}
+
+String _formatGrams(double value) {
+  if (value <= 0) return '0 g';
+  return '${value.toStringAsFixed(1)} g';
+}
+
+String _formatMilligrams(double value) {
+  if (value <= 0) return '0 mg';
+  return '${value.toStringAsFixed(1)} mg';
 }

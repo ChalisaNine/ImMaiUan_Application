@@ -16,6 +16,7 @@ import 'providers/meal_provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   runApp(const ImMaiUanApp());
 }
@@ -29,19 +30,23 @@ class ImMaiUanApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()..init()),
         ChangeNotifierProxyProvider<AuthProvider, ProfileSetupProvider>(
-          create: (context) =>
-              ProfileSetupProvider(context.read<AuthProvider>().authService),
-          update: (_, auth, prev) =>
-              prev ?? ProfileSetupProvider(auth.authService),
+          create:
+              (context) => ProfileSetupProvider(
+                context.read<AuthProvider>().authService,
+              ),
+          update:
+              (_, auth, prev) => prev ?? ProfileSetupProvider(auth.authService),
         ),
         ChangeNotifierProxyProvider<AuthProvider, UserProvider>(
-          create: (context) =>
-              UserProvider(context.read<AuthProvider>().authService),
+          create:
+              (context) =>
+                  UserProvider(context.read<AuthProvider>().authService),
           update: (_, auth, prev) => prev ?? UserProvider(auth.authService),
         ),
         ChangeNotifierProxyProvider<AuthProvider, MealProvider>(
-          create: (context) =>
-              MealProvider(context.read<AuthProvider>().authService),
+          create:
+              (context) =>
+                  MealProvider(context.read<AuthProvider>().authService),
           update: (_, auth, prev) => prev ?? MealProvider(auth.authService),
         ),
       ],
@@ -219,7 +224,14 @@ class _HomeScreenState extends State<_HomeScreen> {
               (profile?['carb_prefer'] as num?)?.toDouble() ?? 300.0;
           final proteinTarget =
               (profile?['protein_prefer'] as num?)?.toDouble() ?? 50.0;
-          final fatTarget = (profile?['fat_prefer'] as num?)?.toDouble() ?? 70.0;
+          final fatTarget =
+              (profile?['fat_prefer'] as num?)?.toDouble() ?? 70.0;
+          final sugarTarget =
+              (profile?['sugar_target_max'] as num?)?.toDouble() ??
+              (profile?['sugar_target'] as num?)?.toDouble() ??
+              50.0;
+          final sodiumTarget =
+              (profile?['sodium_target'] as num?)?.toDouble() ?? 2000.0;
           final weight = profile?['weight_kg']?.toString() ?? "0";
           final height = profile?['height_cm']?.toString() ?? "0";
           final bmi = profile?['bmi']?.toStringAsFixed(1) ?? "0.0";
@@ -238,11 +250,11 @@ class _HomeScreenState extends State<_HomeScreen> {
             return ((intake / target) * 100).toInt();
           }
 
-          final sugarPercentage = calculatePercentage(sugar, 50);
+          final sugarPercentage = calculatePercentage(sugar, sugarTarget);
           final carbPercentage = calculatePercentage(carb, carbTarget);
           final proteinPercentage = calculatePercentage(protein, proteinTarget);
           final fatPercentage = calculatePercentage(fat, fatTarget);
-          final sodiumPercentage = calculatePercentage(sodium, 2300);
+          final sodiumPercentage = calculatePercentage(sodium, sodiumTarget);
 
           return SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
@@ -370,10 +382,13 @@ class _HomeScreenState extends State<_HomeScreen> {
                 // ---------------- Basic knowledge ----------------
                 InkWell(
                   borderRadius: BorderRadius.circular(16),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const KnowledgeScreen()),
-                  ),
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const KnowledgeScreen(),
+                        ),
+                      ),
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(
@@ -525,11 +540,12 @@ class _CurvedRingPainter extends CustomPainter {
     final radius = (size.width - thickness) / 2;
 
     // 1. Draw Ring Segments
-    final paint = Paint()
-      ..color = ringColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = thickness
-      ..strokeCap = StrokeCap.butt;
+    final paint =
+        Paint()
+          ..color = ringColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = thickness
+          ..strokeCap = StrokeCap.butt;
 
     // We add small gaps by reducing sweep slightly
     const gap = 0.015; // Reduced from 0.04
@@ -668,11 +684,12 @@ class _BlueRingPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = (size.width - thickness) / 1;
 
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = thickness
-      ..strokeCap = StrokeCap.round;
+    final paint =
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = thickness
+          ..strokeCap = StrokeCap.round;
     // No blur
 
     // Draw an arc representing "total calories left" (e.g. 75%)
@@ -702,11 +719,12 @@ class _OuterRingTrackPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = (size.width - thickness) / 2;
 
-    final paint = Paint()
-      ..color = trackColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = thickness
-      ..strokeCap = StrokeCap.round;
+    final paint =
+        Paint()
+          ..color = trackColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = thickness
+          ..strokeCap = StrokeCap.round;
 
     // Draw full circle track
     canvas.drawCircle(center, radius, paint);
@@ -733,11 +751,12 @@ class _OuterRingProgressPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = (size.width - thickness) / 2;
 
-    final paint = Paint()
-      ..color = progressColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = thickness
-      ..strokeCap = StrokeCap.round;
+    final paint =
+        Paint()
+          ..color = progressColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = thickness
+          ..strokeCap = StrokeCap.round;
 
     // Draw arc from top (-90 degrees) clockwise
     final sweepAngle = 2 * 3.14159 * progress;
@@ -832,27 +851,26 @@ class _SummaryCard extends StatelessWidget {
                       const SizedBox(height: 12),
                       // Edit button
                       ElevatedButton(
-                        style:
-                            ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFFFA94D),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 24,
-                                vertical: 8,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: BorderSide(
-                                  color: Colors.grey.withOpacity(0.3),
-                                  width: 1.5,
-                                ),
-                              ),
-                              elevation: 0,
-                              shadowColor: Colors.grey.withOpacity(0.2),
-                            ).copyWith(
-                              overlayColor: WidgetStateProperty.all(
-                                Colors.white.withOpacity(0.1),
-                              ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFFA94D),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 8,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(
+                              color: Colors.grey.withOpacity(0.3),
+                              width: 1.5,
                             ),
+                          ),
+                          elevation: 0,
+                          shadowColor: Colors.grey.withOpacity(0.2),
+                        ).copyWith(
+                          overlayColor: WidgetStateProperty.all(
+                            Colors.white.withOpacity(0.1),
+                          ),
+                        ),
                         onPressed: () {
                           Navigator.push(
                             context,
@@ -979,15 +997,16 @@ class _SummaryCard extends StatelessWidget {
               children: [
                 _SummaryCell(
                   title: "BMI $bmi",
-                  subtitle: bmi != "0.0"
-                      ? (double.parse(bmi) < 18.5
-                            ? "Underweight"
-                            : double.parse(bmi) < 25
-                            ? "Normal"
-                            : double.parse(bmi) < 30
-                            ? "Overweight"
-                            : "Obese")
-                      : "-",
+                  subtitle:
+                      bmi != "0.0"
+                          ? (double.parse(bmi) < 18.5
+                              ? "Underweight"
+                              : double.parse(bmi) < 25
+                              ? "Normal"
+                              : double.parse(bmi) < 30
+                              ? "Overweight"
+                              : "Obese")
+                          : "-",
                 ),
                 _SummaryCell(title: "TDEE $tdee", subtitle: "kcal"),
                 _SummaryCell(title: "BMR $bmr", subtitle: "kcal"),

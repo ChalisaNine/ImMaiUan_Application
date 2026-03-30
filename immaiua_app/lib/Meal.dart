@@ -11,6 +11,7 @@ import 'Calenda.dart';
 import 'ai_image.dart';
 import 'camera_log.dart';
 import 'nav_bar.dart'; // MainScaffold
+import 'utils/food_icon_helper.dart';
 
 class MealScreen extends StatefulWidget {
   const MealScreen({super.key});
@@ -160,27 +161,12 @@ class _MealScreenState extends State<MealScreen> {
   }
 
   // Helper method to get category icon
-  IconData _getCategoryIconData(String? categoryName) {
-    if (categoryName == null) return Icons.fastfood_rounded;
-
-    switch (categoryName.toLowerCase()) {
-      case 'boiled':
-        return Icons.soup_kitchen;
-      case 'curry':
-        return Icons.set_meal;
-      case 'fried':
-        return Icons.ramen_dining;
-      case 'stir-fried':
-        return Icons.local_dining;
-      case 'grilled':
-        return Icons.kebab_dining;
-      case 'dessert':
-        return Icons.cake;
-      case 'beverage':
-        return Icons.local_cafe;
-      default:
-        return Icons.fastfood_rounded;
-    }
+  Widget _buildCategoryIcon(String? categoryName, {double size = 24}) {
+    return buildFoodCategoryIcon(
+      categoryName: categoryName,
+      size: size,
+      color: Colors.black87,
+    );
   }
 
   @override
@@ -252,18 +238,33 @@ class _MealScreenState extends State<MealScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             _MealCategoryCard(
-                              icon: Icons.restaurant_menu_rounded,
+                              icon:
+                                  provider.selectedCategoryId != null
+                                      ? _buildCategoryIcon(categoryTitle, size: 26)
+                                      : const Icon(
+                                        Icons.restaurant_menu_rounded,
+                                        size: 26,
+                                        color: Colors.black87,
+                                      ),
                               title: categoryTitle,
                               onTap: _showCategoryDialog,
                               isSelected: provider.selectedCategoryId != null,
                             ),
                             _MealCategoryCard(
-                              icon: Icons.bookmark_rounded,
+                              icon: const Icon(
+                                Icons.bookmark_rounded,
+                                size: 26,
+                                color: Colors.black87,
+                              ),
                               title: "Favorites",
                               onTap: _showFavoritesSheet,
                             ),
                             _MealCategoryCard(
-                              icon: Icons.list_alt_rounded,
+                              icon: const Icon(
+                                Icons.list_alt_rounded,
+                                size: 26,
+                                color: Colors.black87,
+                              ),
                               title: "My List",
                               onTap: _showMyListSheet,
                             ),
@@ -284,7 +285,11 @@ class _MealScreenState extends State<MealScreen> {
                       builder: (context, provider, child) {
                         // Determine header text and icon based on selected category
                         String headerText = "All Foods";
-                        IconData headerIcon = Icons.fastfood_rounded;
+                        Widget headerIcon = const Icon(
+                          Icons.fastfood_rounded,
+                          size: 22,
+                          color: Color(0xFFFF9900),
+                        );
 
                         if (provider.selectedCategoryId != null &&
                             provider.categories.isNotEmpty) {
@@ -294,16 +299,16 @@ class _MealScreenState extends State<MealScreen> {
                             orElse: () => {'name': 'All Foods'},
                           );
                           headerText = category['name'];
-                          headerIcon = _getCategoryIconData(category['name']);
+                          headerIcon = buildFoodCategoryIcon(
+                            categoryName: category['name'],
+                            size: 22,
+                            color: const Color(0xFFFF9900),
+                          );
                         }
 
                         return Row(
                           children: [
-                            Icon(
-                              headerIcon,
-                              size: 22,
-                              color: const Color(0xFFFF9900),
-                            ),
+                            headerIcon,
                             const SizedBox(width: 8),
                             Text(
                               headerText,
@@ -423,7 +428,7 @@ class _MealCategoryCard extends StatelessWidget {
     this.isSelected = false,
   });
 
-  final IconData icon;
+  final Widget icon;
   final String title;
   final VoidCallback onTap;
   final bool isSelected;
@@ -452,7 +457,7 @@ class _MealCategoryCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Icon(icon, size: 26, color: Colors.black87),
+            icon,
             const SizedBox(height: 4),
             Text(
               title,
@@ -501,7 +506,7 @@ class _MealRecentItem extends StatelessWidget {
         ),
         child: Row(
           children: [
-            _getCategoryIcon(categoryName),
+            _getFoodIcon(name, categoryName),
             const SizedBox(width: 12),
 
             Expanded(
@@ -537,32 +542,12 @@ class _MealRecentItem extends StatelessWidget {
     );
   }
 
-  Icon _getCategoryIcon(String? categoryName) {
-    const color = Color(0xFFFF9900);
-    const size = 28.0;
-
-    if (categoryName == null) {
-      return const Icon(Icons.fastfood, size: size, color: Colors.black87);
-    }
-
-    switch (categoryName.toLowerCase()) {
-      case 'boiled':
-        return const Icon(Icons.soup_kitchen, size: size, color: color);
-      case 'curry':
-        return const Icon(Icons.set_meal, size: size, color: color);
-      case 'fried':
-        return const Icon(Icons.ramen_dining, size: size, color: color);
-      case 'stir-fried':
-        return const Icon(Icons.local_dining, size: size, color: color);
-      case 'grilled':
-        return const Icon(Icons.kebab_dining, size: size, color: color);
-      case 'dessert':
-        return const Icon(Icons.cake, size: size, color: color);
-      case 'beverage':
-        return const Icon(Icons.local_cafe, size: size, color: color);
-      default:
-        return const Icon(Icons.fastfood, size: size, color: Colors.black87);
-    }
+  Widget _getFoodIcon(String? foodName, String? categoryName) {
+    return buildFoodCategoryIcon(
+      categoryName: categoryName,
+      size: 28,
+      color: const Color(0xFFFF9900),
+    );
   }
 }
 /* ===================================================================== */
@@ -668,26 +653,12 @@ class CategorySelectionSheet extends StatelessWidget {
     );
   }
 
-  Icon _getCategoryIcon(String name) {
-    const color = Color(0xFFFF9900);
-    switch (name.toLowerCase()) {
-      case 'boiled':
-        return const Icon(Icons.soup_kitchen, color: color);
-      case 'curry':
-        return const Icon(Icons.set_meal, color: color);
-      case 'fried':
-        return const Icon(Icons.ramen_dining, color: color);
-      case 'stir-fried':
-        return const Icon(Icons.local_dining, color: color);
-      case 'grilled':
-        return const Icon(Icons.kebab_dining, color: color);
-      case 'dessert':
-        return const Icon(Icons.cake, color: color);
-      case 'beverage':
-        return const Icon(Icons.local_cafe, color: color);
-      default:
-        return const Icon(Icons.fastfood, color: color);
-    }
+  Widget _getCategoryIcon(String name) {
+    return buildFoodCategoryIcon(
+      categoryName: name,
+      size: 24,
+      color: const Color(0xFFFF9900),
+    );
   }
 }
 
@@ -823,10 +794,10 @@ class _FavoritesSheetState extends State<_FavoritesSheet> {
                           ),
                           leading: CircleAvatar(
                             backgroundColor: const Color(0xFFFFE1C7),
-                            child: Icon(
-                              _getCategoryIcon(categoryName),
-                              color: const Color(0xFFFF9900),
+                            child: buildFoodCategoryIcon(
+                              categoryName: categoryName,
                               size: 20,
+                              color: const Color(0xFFFF9900),
                             ),
                           ),
                           title: Text(
@@ -846,26 +817,6 @@ class _FavoritesSheetState extends State<_FavoritesSheet> {
     );
   }
 
-  IconData _getCategoryIcon(String? categoryName) {
-    switch (categoryName?.toLowerCase()) {
-      case 'boiled':
-        return Icons.water_drop;
-      case 'curry':
-        return Icons.soup_kitchen;
-      case 'fried':
-        return Icons.restaurant;
-      case 'stir-fried':
-        return Icons.rice_bowl;
-      case 'grilled':
-        return Icons.outdoor_grill;
-      case 'dessert':
-        return Icons.cake;
-      case 'beverage':
-        return Icons.local_cafe;
-      default:
-        return Icons.fastfood;
-    }
-  }
 }
 
 /* ==========================================================
@@ -1037,7 +988,7 @@ class _MyListSheetState extends State<_MyListSheet> {
                             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
                             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFFF9900), width: 1.5)),
                           ),
-                          initialValue: selectedCategory,
+                          value: selectedCategory,
                           items: categories.map((cat) {
                             return DropdownMenuItem<int>(
                               value: cat['category_id'] as int,

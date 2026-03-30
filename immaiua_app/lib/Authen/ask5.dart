@@ -191,7 +191,7 @@ class _Ask5ScreenState extends State<Ask5Screen> {
                           children: [
                             Expanded(
                               child: DropdownButtonFormField<AllergyOption>(
-                                initialValue: _dropdownValue,
+                                value: _dropdownValue,
                                 isExpanded: true,
                                 decoration: const InputDecoration(
                                   hintText: 'Select an allergy',

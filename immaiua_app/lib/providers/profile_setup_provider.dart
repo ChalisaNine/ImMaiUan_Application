@@ -14,6 +14,8 @@ class ProfileSetupProvider extends ChangeNotifier {
   double? _height;
   double? _weight;
   String? _goal;
+  double? _targetWeight;
+  int? _durationMonths;
   List<AllergyOption> _allergies = [];
   String? _name;
   String? _dob; // MM/DD/YYYY
@@ -27,6 +29,8 @@ class ProfileSetupProvider extends ChangeNotifier {
   double? get height => _height;
   double? get weight => _weight;
   String? get goal => _goal;
+  double? get targetWeight => _targetWeight;
+  int? get durationMonths => _durationMonths;
   List<AllergyOption> get allergies => _allergies;
   String? get name => _name;
   String? get dob => _dob;
@@ -52,6 +56,16 @@ class ProfileSetupProvider extends ChangeNotifier {
 
   void setGoal(String value) {
     _goal = value;
+    notifyListeners();
+  }
+
+  void setTargetWeight(double? value) {
+    _targetWeight = value;
+    notifyListeners();
+  }
+
+  void setDurationMonths(int? value) {
+    _durationMonths = value;
     notifyListeners();
   }
 
@@ -83,6 +97,8 @@ class ProfileSetupProvider extends ChangeNotifier {
         "height": _height,
         "weight": _weight,
         "goal": _goal,
+        "target_weight": _targetWeight,
+        "duration_months": _durationMonths,
         "allergy_ids": _allergies.map((allergy) => allergy.id).toList(),
         "allergies": _allergies.map((allergy) => allergy.name).toList(),
         "name": _name,

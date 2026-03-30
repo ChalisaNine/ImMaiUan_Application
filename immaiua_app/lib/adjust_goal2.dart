@@ -356,7 +356,7 @@ class _AdjustGoal2ScreenState extends State<AdjustGoal2Screen> {
         title: const Text('Goal duration'),
         content: StatefulBuilder(
           builder: (context, setModalState) => DropdownButtonFormField<int>(
-            initialValue: selected,
+            value: selected,
             decoration: const InputDecoration(
               labelText: 'Duration',
               border: OutlineInputBorder(),

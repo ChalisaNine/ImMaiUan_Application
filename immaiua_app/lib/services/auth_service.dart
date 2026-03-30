@@ -1,11 +1,11 @@
 import 'dart:io';
+import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
-import 'package:cookie_jar/cookie_jar.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/allergy_option.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AuthService {
   late Dio _dio;
@@ -14,7 +14,6 @@ class AuthService {
 
   PersistCookieJar? get cookieJar => _cookieJar;
 
-  // Optional override: flutter run --dart-define=API_BASE_URL=http://<ip>:5000
   static const String _envBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: '',
@@ -29,7 +28,7 @@ class AuthService {
   static String get _baseUrl {
     if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
     final ipAddress = (dotenv.env['IP_ADDRESS'] ?? '').trim();
-    final apiPort = dotenv.env['API_PORT'] ?? '5000';
+    final apiPort = dotenv.env['API_PORT'] ?? '5001';
     final host = ipAddress.isNotEmpty ? ipAddress : _defaultHost;
     return 'http://$host:$apiPort';
   }
@@ -44,35 +43,31 @@ class AuthService {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        validateStatus: (status) {
-          return status! < 500; // Let 4xx pass through so we can handle them
-        },
+        validateStatus: (status) => status! < 500,
       ),
     );
   }
 
   Future<void> init() async {
-    Directory appDocDir = await getApplicationDocumentsDirectory();
-    String appDocPath = appDocDir.path;
-    print("📂 Cookie Jar Path: $appDocPath/.cookies/"); // DEBUG
+    final appDocDir = await getApplicationDocumentsDirectory();
+    final appDocPath = appDocDir.path;
+    debugPrint('Cookie Jar Path: $appDocPath/.cookies/');
     _cookieJar = PersistCookieJar(
-      storage: FileStorage("$appDocPath/.cookies/"),
+      storage: FileStorage('$appDocPath/.cookies/'),
     );
     _dio.interceptors.add(CookieManager(_cookieJar!));
 
-    // DEBUG: Print loaded cookies
     try {
       final cookies = await _cookieJar!.loadForRequest(Uri.parse(_baseUrl));
-      print("🍪 Initial Cookies loaded: $cookies");
+      debugPrint('Initial cookies loaded: ${cookies.length}');
     } catch (e) {
-      print("🍪 Error loading cookies: $e");
+      debugPrint('Error loading cookies: $e');
     }
   }
 
   Future<Response> setupProfile(Map<String, dynamic> data) async {
     try {
-      final response = await _dio.post('/register/setup-profile', data: data);
-      return response;
+      return await _dio.post('/register/setup-profile', data: data);
     } catch (e) {
       rethrow;
     }
@@ -80,8 +75,7 @@ class AuthService {
 
   Future<Response> getProfile() async {
     try {
-      final response = await _dio.get('/profile/');
-      return response;
+      return await _dio.get('/profile/');
     } catch (e) {
       rethrow;
     }
@@ -102,11 +96,10 @@ class AuthService {
 
   Future<Response> updateAllergies(List<int> allergyIds) async {
     try {
-      final response = await _dio.put(
+      return await _dio.put(
         '/profile/allergies',
         data: {'allergy_ids': allergyIds},
       );
-      return response;
     } catch (e) {
       rethrow;
     }
@@ -114,8 +107,7 @@ class AuthService {
 
   Future<Response> updateProfile(Map<String, dynamic> data) async {
     try {
-      final response = await _dio.put('/profile/', data: data);
-      return response;
+      return await _dio.put('/profile/', data: data);
     } catch (e) {
       rethrow;
     }
@@ -123,8 +115,7 @@ class AuthService {
 
   Future<Response> getGoal() async {
     try {
-      final response = await _dio.get('/profile/goal');
-      return response;
+      return await _dio.get('/profile/goal');
     } catch (e) {
       rethrow;
     }
@@ -136,7 +127,7 @@ class AuthService {
     int? durationMonths,
   }) async {
     try {
-      final response = await _dio.put(
+      return await _dio.put(
         '/profile/goal',
         data: {
           'goal_type': goalType,
@@ -144,7 +135,6 @@ class AuthService {
           if (durationMonths != null) 'duration_months': durationMonths,
         },
       );
-      return response;
     } catch (e) {
       rethrow;
     }
@@ -157,7 +147,7 @@ class AuthService {
     int? calorieTarget,
   }) async {
     try {
-      final response = await _dio.post(
+      return await _dio.post(
         '/profile/calculate-macros',
         data: {
           'carb_percent': carbPercent,
@@ -166,7 +156,6 @@ class AuthService {
           if (calorieTarget != null) 'calorie_target': calorieTarget,
         },
       );
-      return response;
     } catch (e) {
       rethrow;
     }
@@ -174,11 +163,7 @@ class AuthService {
 
   Future<Response> getMeals(String date) async {
     try {
-      final response = await _dio.get(
-        '/meals/',
-        queryParameters: {'date': date},
-      );
-      return response;
+      return await _dio.get('/meals/', queryParameters: {'date': date});
     } catch (e) {
       rethrow;
     }
@@ -186,11 +171,10 @@ class AuthService {
 
   Future<Response> getDailySummary(String date) async {
     try {
-      final response = await _dio.get(
+      return await _dio.get(
         '/meals/daily-summary',
         queryParameters: {'date': date},
       );
-      return response;
     } catch (e) {
       rethrow;
     }
@@ -198,11 +182,10 @@ class AuthService {
 
   Future<Response> getWeeklyAnalytics(String date) async {
     try {
-      final response = await _dio.get(
+      return await _dio.get(
         '/analytics/weekly',
         queryParameters: {'date': date},
       );
-      return response;
     } catch (e) {
       rethrow;
     }
@@ -210,11 +193,10 @@ class AuthService {
 
   Future<Response> getMonthlyAnalytics(String date) async {
     try {
-      final response = await _dio.get(
+      return await _dio.get(
         '/analytics/monthly',
         queryParameters: {'date': date},
       );
-      return response;
     } catch (e) {
       rethrow;
     }
@@ -233,11 +215,10 @@ class AuthService {
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
       if (categoryId != null) queryParams['category_id'] = categoryId;
 
-      final response = await _dio.get(
+      return await _dio.get(
         '/meals/foods',
         queryParameters: queryParams.isNotEmpty ? queryParams : null,
       );
-      return response;
     } catch (e) {
       rethrow;
     }
@@ -245,8 +226,7 @@ class AuthService {
 
   Future<Response> getCategories() async {
     try {
-      final response = await _dio.get('/meals/categories');
-      return response;
+      return await _dio.get('/meals/categories');
     } catch (e) {
       rethrow;
     }
@@ -254,8 +234,7 @@ class AuthService {
 
   Future<Response> getFoodDetails(int foodId) async {
     try {
-      final response = await _dio.get('/meals/food/$foodId');
-      return response;
+      return await _dio.get('/meals/food/$foodId');
     } catch (e) {
       rethrow;
     }
@@ -266,19 +245,17 @@ class AuthService {
       '/auth/login',
       data: {'email': email, 'password': password},
     );
-    // DEBUG
-    print("📥 Login Response: ${response.statusCode} - ${response.data}");
+    debugPrint('Login response: ${response.statusCode}');
 
-    // Safety check for cookieJar
     try {
       if (_cookieJar != null) {
         final cookies = await _cookieJar!.loadForRequest(Uri.parse(_baseUrl));
-        print("🍪 Cookies after login: $cookies");
+        debugPrint('Cookies after login: ${cookies.length}');
       } else {
-        print("⚠️ CookieJar not initialized yet.");
+        debugPrint('CookieJar not initialized yet.');
       }
     } catch (e) {
-      print("⚠️ Failed to load/print cookies: $e");
+      debugPrint('Failed to inspect cookies: $e');
     }
     return response;
   }
@@ -295,14 +272,11 @@ class AuthService {
   }
 
   Future<Response> logout() async {
-    // Call API first while cookies are present
     try {
       final response = await _dio.post('/auth/logout');
-      // Clear cookies locally
       await _cookieJar?.deleteAll();
       return response;
     } catch (e) {
-      // Even if API fails, clear cookies
       await _cookieJar?.deleteAll();
       rethrow;
     }
@@ -310,8 +284,7 @@ class AuthService {
 
   Future<Response> logFood(Map<String, dynamic> data) async {
     try {
-      final response = await _dio.post('/meals/logfood', data: data);
-      return response;
+      return await _dio.post('/meals/logfood', data: data);
     } catch (e) {
       rethrow;
     }
@@ -348,10 +321,10 @@ class AuthService {
         '/auth/me',
         options: Options(receiveTimeout: const Duration(seconds: 5)),
       );
-      print("🕵️ checkAuthStatus Response: ${response.statusCode}"); // DEBUG
+      debugPrint('checkAuthStatus response: ${response.statusCode}');
       return response.statusCode == 200;
     } catch (e) {
-      print("❌ checkAuthStatus Error: $e"); // DEBUG
+      debugPrint('checkAuthStatus error: $e');
       return false;
     }
   }
@@ -376,8 +349,7 @@ class AuthService {
 
   Future<Response> getFavorites() async {
     try {
-      final response = await _dio.get('/meals/favorites');
-      return response;
+      return await _dio.get('/meals/favorites');
     } catch (e) {
       rethrow;
     }
@@ -385,8 +357,7 @@ class AuthService {
 
   Future<Response> getMenus() async {
     try {
-      final response = await _dio.get('/meals/menus');
-      return response;
+      return await _dio.get('/meals/menus');
     } catch (e) {
       rethrow;
     }
@@ -408,7 +379,8 @@ class AuthService {
     try {
       final data = {
         'name': name.trim(),
-        if (description != null && description.isNotEmpty) 'description': description.trim(),
+        if (description != null && description.isNotEmpty)
+          'description': description.trim(),
         if (categoryId != null) 'category_id': categoryId,
         if (kcal != null) 'kcal': kcal,
         if (protein != null) 'protein': protein,
@@ -417,14 +389,11 @@ class AuthService {
         if (sugar != null) 'sugar': sugar,
         if (sodium != null) 'sodium': sodium,
         if (portionQty != null) 'portion_qty': portionQty,
-        if (portionUnit != null && portionUnit.isNotEmpty) 'portion_unit': portionUnit,
+        if (portionUnit != null && portionUnit.isNotEmpty)
+          'portion_unit': portionUnit,
       };
 
-      final response = await _dio.post(
-        '/meals/menus',
-        data: data,
-      );
-      return response;
+      return await _dio.post('/meals/menus', data: data);
     } catch (e) {
       rethrow;
     }
@@ -447,7 +416,8 @@ class AuthService {
     try {
       final data = {
         'name': name.trim(),
-        if (description != null && description.isNotEmpty) 'description': description.trim(),
+        if (description != null && description.isNotEmpty)
+          'description': description.trim(),
         if (categoryId != null) 'category_id': categoryId,
         if (kcal != null) 'kcal': kcal,
         if (protein != null) 'protein': protein,
@@ -456,14 +426,11 @@ class AuthService {
         if (sugar != null) 'sugar': sugar,
         if (sodium != null) 'sodium': sodium,
         if (portionQty != null) 'portion_qty': portionQty,
-        if (portionUnit != null && portionUnit.isNotEmpty) 'portion_unit': portionUnit,
+        if (portionUnit != null && portionUnit.isNotEmpty)
+          'portion_unit': portionUnit,
       };
 
-      final response = await _dio.put(
-        '/meals/menus/$menuId',
-        data: data,
-      );
-      return response;
+      return await _dio.put('/meals/menus/$menuId', data: data);
     } catch (e) {
       rethrow;
     }
@@ -481,11 +448,10 @@ class AuthService {
     final dateStr =
         '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
     try {
-      final response = await _dio.get(
+      return await _dio.get(
         '/meals/day-summary',
         queryParameters: {'date': dateStr},
       );
-      return response;
     } catch (e) {
       rethrow;
     }
@@ -493,8 +459,7 @@ class AuthService {
 
   Future<Response> addCustomFood(Map<String, dynamic> data) async {
     try {
-      final response = await _dio.post('/meals/custom-food', data: data);
-      return response;
+      return await _dio.post('/meals/custom-food', data: data);
     } catch (e) {
       rethrow;
     }
@@ -509,9 +474,7 @@ class AuthService {
         ),
       });
 
-      final response = await _dio.post('/ai/analyze', data: formData);
-
-      return response;
+      return await _dio.post('/ai/analyze', data: formData);
     } catch (e) {
       rethrow;
     }

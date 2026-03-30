@@ -7,6 +7,7 @@ import 'ai_image.dart';
 import 'profile_screen.dart';
 import 'providers/auth_provider.dart';
 import 'providers/user_provider.dart';
+import 'utils/food_icon_helper.dart';
 
 class DayReportScreen extends StatefulWidget {
   final DateTime? date;
@@ -727,32 +728,12 @@ class _MealItemRow extends StatefulWidget {
 class _MealItemRowState extends State<_MealItemRow> {
   bool _deleting = false;
 
-  Icon _getCategoryIcon(String? category) {
-    const color = Color(0xFFFF9900);
-    const size = 20.0;
-
-    if (category == null) {
-      return const Icon(Icons.fastfood, size: size, color: color);
-    }
-
-    switch (category.toLowerCase()) {
-      case 'boiled':
-        return const Icon(Icons.soup_kitchen, size: size, color: color);
-      case 'curry':
-        return const Icon(Icons.set_meal, size: size, color: color);
-      case 'fried':
-        return const Icon(Icons.ramen_dining, size: size, color: color);
-      case 'stir-fried':
-        return const Icon(Icons.local_dining, size: size, color: color);
-      case 'grilled':
-        return const Icon(Icons.kebab_dining, size: size, color: color);
-      case 'dessert':
-        return const Icon(Icons.cake, size: size, color: color);
-      case 'beverage':
-        return const Icon(Icons.local_cafe, size: size, color: color);
-      default:
-        return const Icon(Icons.fastfood, size: size, color: color);
-    }
+  Widget _getFoodIcon(String? foodName, String? category) {
+    return buildFoodCategoryIcon(
+      categoryName: category,
+      size: 20,
+      color: const Color(0xFFFF9900),
+    );
   }
 
   Future<void> _deleteItem() async {
@@ -841,7 +822,7 @@ class _MealItemRowState extends State<_MealItemRow> {
                 color: const Color(0xFFFFE1C7).withOpacity(0.5),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: _getCategoryIcon(widget.categoryName),
+              child: _getFoodIcon(widget.name, widget.categoryName),
             ),
             const SizedBox(width: 12),
             // Food name + quantity
