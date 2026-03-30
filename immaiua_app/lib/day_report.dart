@@ -212,6 +212,25 @@ class _ReportBodyState extends State<_ReportBody> {
     final proteinTarget =
         (profile?['protein_prefer'] as num?)?.toDouble() ?? 50.0;
     final fatTarget = (profile?['fat_prefer'] as num?)?.toDouble() ?? 70.0;
+    final sugarTarget =
+        (profile?['sugar_target_max'] as num?)?.toDouble() ??
+        (profile?['sugar_target'] as num?)?.toDouble() ??
+        50.0;
+    final sodiumTarget =
+        (profile?['sodium_target'] as num?)?.toDouble() ?? 2000.0;
+
+    int calculatePercentage(double intake, double target) {
+      if (target <= 0) {
+        return intake <= 0 ? 0 : 100;
+      }
+      return ((intake / target) * 100).toInt();
+    }
+
+    final sugarPercentage = calculatePercentage(sugar, sugarTarget);
+    final carbPercentage = calculatePercentage(carb, carbTarget);
+    final proteinPercentage = calculatePercentage(protein, proteinTarget);
+    final fatPercentage = calculatePercentage(fat, fatTarget);
+    final sodiumPercentage = calculatePercentage(sodium, sodiumTarget);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,11 +276,14 @@ class _ReportBodyState extends State<_ReportBody> {
 
         /* ---------------- NUTRITION SUMMARY ---------------- */
         Container(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
           decoration: BoxDecoration(
             color: const Color(0xFFFFF0E0),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.grey.withOpacity(0.2), width: 1.5),
+            border: Border.all(
+              color: Colors.grey.withOpacity(0.2),
+              width: 1.5,
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.grey.withOpacity(0.15),
@@ -277,37 +299,37 @@ class _ReportBodyState extends State<_ReportBody> {
               _NutrientChip(
                 icon: Icons.cake_rounded,
                 label: 'Sugar',
+                percentage: sugarPercentage,
                 value: sugar,
                 unit: 'g',
-                rdi: 50,
               ),
               _NutrientChip(
                 icon: Icons.rice_bowl_rounded,
                 label: 'Carb',
+                percentage: carbPercentage,
                 value: carb,
                 unit: 'g',
-                rdi: carbTarget,
               ),
               _NutrientChip(
                 icon: Icons.egg_rounded,
                 label: 'Protein',
+                percentage: proteinPercentage,
                 value: protein,
                 unit: 'g',
-                rdi: proteinTarget,
               ),
               _NutrientChip(
                 icon: Icons.local_pizza_rounded,
                 label: 'Fat',
+                percentage: fatPercentage,
                 value: fat,
                 unit: 'g',
-                rdi: fatTarget,
               ),
               _NutrientChip(
                 icon: Icons.bolt_rounded,
                 label: 'Sodium',
+                percentage: sodiumPercentage,
                 value: sodium,
                 unit: 'mg',
-                rdi: 2300,
               ),
             ],
           ),
@@ -949,24 +971,23 @@ class _MealItemRowState extends State<_MealItemRow> {
 class _NutrientChip extends StatelessWidget {
   final IconData icon;
   final String label;
+  final int percentage;
   final double value;
   final String unit;
-  final double rdi;
 
   const _NutrientChip({
     required this.icon,
     required this.label,
+    required this.percentage,
     required this.value,
     required this.unit,
-    required this.rdi,
   });
 
   @override
   Widget build(BuildContext context) {
-    final percentage = rdi > 0 ? (value / rdi * 100).toInt() : 0;
     final isOver = percentage > 100;
     return SizedBox(
-      width: 60,
+      width: 64,
       child: Column(
         children: [
           Icon(icon, size: 22, color: Colors.black87),
@@ -976,7 +997,7 @@ class _NutrientChip extends StatelessWidget {
             style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
           ),
           Text(
-            '$percentage%',
+            '$percentage %',
             style: TextStyle(
               fontSize: 11,
               color: isOver ? Colors.red.shade700 : Colors.black87,

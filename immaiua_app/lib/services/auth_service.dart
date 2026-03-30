@@ -8,6 +8,9 @@ import 'package:path_provider/path_provider.dart';
 import '../models/allergy_option.dart';
 
 class AuthService {
+  static const Duration _imageAnalyzeSendTimeout = Duration(seconds: 60);
+  static const Duration _imageAnalyzeReceiveTimeout = Duration(minutes: 3);
+
   late Dio _dio;
   Dio get dio => _dio;
   PersistCookieJar? _cookieJar;
@@ -483,7 +486,14 @@ class AuthService {
         ),
       });
 
-      return await _dio.post('/ai/analyze', data: formData);
+      return await _dio.post(
+        '/ai/analyze',
+        data: formData,
+        options: Options(
+          sendTimeout: _imageAnalyzeSendTimeout,
+          receiveTimeout: _imageAnalyzeReceiveTimeout,
+        ),
+      );
     } catch (e) {
       rethrow;
     }
