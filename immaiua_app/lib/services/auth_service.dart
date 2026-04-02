@@ -327,6 +327,17 @@ class AuthService {
     }
   }
 
+  Future<Response> updateMealItemPortion(int mealItemId, double portion) async {
+    try {
+      return await _dio.put(
+        '/meals/items/$mealItemId',
+        data: {'portion': portion},
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<bool> checkAuthStatus() async {
     try {
       final response = await _dio.get(

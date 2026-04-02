@@ -492,15 +492,21 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
     final carbTarget = _readAsDouble(profile?['carb_prefer']);
     final proteinTarget = _readAsDouble(profile?['protein_prefer']);
     final fatTarget = _readAsDouble(profile?['fat_prefer']);
+    final sugarTarget = _readAsDouble(profile?['sugar_target_max']) > 0
+        ? _readAsDouble(profile?['sugar_target_max'])
+        : _readAsDouble(profile?['sugar_target']);
+    final sodiumTarget = _readAsDouble(profile?['sodium_target']);
     final projectedCalories = _consumedCaloriesToday + scaledCal;
     final calorieWarning = _buildCalorieWarning(
       projectedCalories,
       calorieTarget,
     );
 
+    final sugarPercent = _calculatePercent(sugarValue, sugarTarget);
     final carbPercent = _calculatePercent(carbValue, carbTarget);
     final proteinPercent = _calculatePercent(proteinValue, proteinTarget);
     final fatPercent = _calculatePercent(fatValue, fatTarget);
+    final sodiumPercent = _calculatePercent(sodiumValue, sodiumTarget);
 
     final excessRows = <_ExcessData>[
       if (carbPercent >= 100 && carbValue > carbTarget)
@@ -687,7 +693,7 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
                   icon: Icons.cake_rounded,
                   label: "Sugar",
                   value: "$sugar g",
-                  percent: "", // TODO: Calculate %
+                  percent: "$sugarPercent%",
                 ),
                 _NutItem(
                   icon: Icons.rice_bowl_rounded,
@@ -711,7 +717,7 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
                   icon: Icons.bolt_rounded,
                   label: "Sodium",
                   value: "$sodium mg",
-                  percent: "",
+                  percent: "$sodiumPercent%",
                 ),
               ],
             ),

@@ -18,7 +18,7 @@ class _Ask4ScreenState extends State<Ask4Screen> {
   bool _didLoadInitialValues = false;
 
   final List<String> _goals = [
-    "I want to lost my weight",
+    "I want to lose my weight",
     "I want to gain more weight",
     "I just want to be healthy",
     "No specific answer",
@@ -362,7 +362,7 @@ class _Ask4ScreenState extends State<Ask4Screen> {
   Future<void> _onGoalSelected(String goal) async {
     final shouldOpenWeightEditor =
         goal != _selectedGoal &&
-        (goal == "I want to lost my weight" ||
+        (goal == "I want to lose my weight" ||
             goal == "I want to gain more weight");
 
     setState(() {
@@ -469,7 +469,7 @@ class _Ask4ScreenState extends State<Ask4Screen> {
   }
 
   bool get _shouldShowDuration =>
-      _selectedGoal == "I want to lost my weight" ||
+      _selectedGoal == "I want to lose my weight" ||
       _selectedGoal == "I want to gain more weight";
 
   bool get _shouldShowTargetWeight => _shouldShowDuration;
@@ -477,7 +477,7 @@ class _Ask4ScreenState extends State<Ask4Screen> {
   double get _effectiveTargetWeight {
     if (_targetWeight != null) return _targetWeight!;
     final currentWeight = context.read<ProfileSetupProvider>().weight ?? 0;
-    if (_selectedGoal == "I want to lost my weight") {
+    if (_selectedGoal == "I want to lose my weight") {
       return currentWeight > 1 ? currentWeight - 1 : currentWeight;
     }
     if (_selectedGoal == "I want to gain more weight") {
