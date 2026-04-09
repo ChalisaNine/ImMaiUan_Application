@@ -668,7 +668,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               : _allergyError != null
               ? Text(_allergyError!)
               : DropdownButtonFormField<AllergyOption>(
-                  value: _dropdownValue,
+                  initialValue: _dropdownValue,
                   isExpanded: true,
                   decoration: const InputDecoration(
                     hintText: 'Select an allergy',

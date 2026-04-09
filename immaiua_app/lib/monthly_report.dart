@@ -24,6 +24,7 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
   String? _errorMessage;
   Map<String, dynamic>? _analyticsData;
   final AuthService _authService = AuthService();
+  int _touchedBarIndex = -1;
 
   @override
   void initState() {
@@ -427,6 +428,44 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
             ),
             child: _buildWeightChart(),
           ),
+
+          const SizedBox(height: 18),
+
+          const Text(
+            "Calorie Intake",
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 20,
+              color: Color(0xFF2D3142),
+              letterSpacing: 0.5,
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // ================= CALORIE GRAPH =================
+          Container(
+            height: 220,
+            width: double.infinity,
+            padding: const EdgeInsets.only(
+              right: 22,
+              left: 12,
+              top: 24,
+              bottom: 12,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: _buildCalorieChart(),
+          ),
         ],
       ),
     );
@@ -476,7 +515,7 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
         minY: minY < 0 ? 0 : minY,
         maxY: maxY,
         minX: 0,
-        maxX: 29, // max for a trailing 30 day window mapped
+        maxX: dailyBreakdown.length > 1 ? (dailyBreakdown.length - 1).toDouble() : 1.0,
         lineBarsData: [
           LineChartBarData(
             spots: spots,
@@ -509,7 +548,7 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              interval: 6, // Prevents squashing of ~30 labels
+              interval: 1,
               getTitlesWidget: (value, meta) {
                 final index = value.toInt();
                 if (index < 0 || index >= dailyBreakdown.length) {
@@ -527,16 +566,48 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
                   dateObj = DateTime.parse(dateStr);
                 } catch (_) {}
 
-                final label = dateObj != null
-                    ? "${dateObj.day}/${dateObj.month}"
-                    : "D${index + 1}";
+                String label = (index + 1).toString();
+                bool isToday = false;
+                if (dateObj != null) {
+                  final now = DateTime.now();
+                  if (dateObj.year == now.year && dateObj.month == now.month && dateObj.day == now.day) {
+                    label = "Today";
+                    isToday = true;
+                  }
+                }
+
+                if (index % 6 != 0 && index != dailyBreakdown.length - 1 && !isToday) {
+                  return const SizedBox.shrink();
+                }
+
+                Widget childWidget;
+                if (isToday) {
+                  childWidget = Container(
+                    margin: const EdgeInsets.only(top: 4.0),
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFD57F),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFFD57F).withOpacity(0.8),
+                          blurRadius: 6,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                  );
+                } else {
+                  childWidget = Text(
+                    label,
+                    style: const TextStyle(fontSize: 10, color: Colors.grey),
+                  );
+                }
 
                 return Padding(
                   padding: const EdgeInsets.only(top: 8.0),
-                  child: Text(
-                    label,
-                    style: const TextStyle(fontSize: 10, color: Colors.grey),
-                  ),
+                  child: childWidget,
                 );
               },
             ),
@@ -618,6 +689,188 @@ class _MonthlyReportScreenState extends State<MonthlyReportScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCalorieChart() {
+    final dailyBreakdown = _analyticsData?['daily_breakdown'] as List? ?? [];
+    if (dailyBreakdown.isEmpty) {
+      return const Center(
+        child: Text(
+          "No calorie data available for this month.",
+          style: TextStyle(color: Colors.black45),
+        ),
+      );
+    }
+
+    final List<BarChartGroupData> barGroups = [];
+    double maxCal = 0;
+
+    for (int i = 0; i < dailyBreakdown.length; i++) {
+      final dayData = dailyBreakdown[i];
+      final cal = (dayData['intake_kcal'] as num?)?.toDouble() ?? 0.0;
+      if (cal > maxCal) maxCal = cal;
+      
+      final isTouched = i == _touchedBarIndex;
+
+      barGroups.add(
+        BarChartGroupData(
+          x: i,
+          showingTooltipIndicators: isTouched ? [0] : [],
+          barRods: [
+            BarChartRodData(
+              toY: cal,
+              color: const Color(0xFFFFD57F),
+              width: 8, // Set thinner for monthly since there are 30 bars
+              borderSide: isTouched 
+                  ? const BorderSide(color: Color(0xFFD68A1A), width: 1.5) 
+                  : const BorderSide(color: Colors.transparent, width: 0),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(4),
+                topRight: Radius.circular(4),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final maxY = (maxCal + 500).ceilToDouble();
+
+    return BarChart(
+      BarChartData(
+        barGroups: barGroups,
+        alignment: BarChartAlignment.spaceBetween,
+        maxY: maxY,
+        barTouchData: BarTouchData(
+          enabled: true,
+          handleBuiltInTouches: false,
+          touchCallback: (FlTouchEvent event, barTouchResponse) {
+            if (event is FlTapUpEvent) {
+              setState(() {
+                if (barTouchResponse == null ||
+                    barTouchResponse.spot == null) {
+                  _touchedBarIndex = -1;
+                  return;
+                }
+                final touchedIndex = barTouchResponse.spot!.touchedBarGroupIndex;
+                if (_touchedBarIndex == touchedIndex) {
+                  _touchedBarIndex = -1; // Untoggle if clicked again
+                } else {
+                  _touchedBarIndex = touchedIndex; // Toggle on
+                }
+              });
+            }
+          },
+          touchTooltipData: BarTouchTooltipData(
+            getTooltipColor: (group) => Colors.black87,
+            tooltipMargin: 8,
+            getTooltipItem: (group, groupIndex, rod, rodIndex) {
+              return BarTooltipItem(
+                '${rod.toY.round()} kcal',
+                const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              );
+            },
+          ),
+        ),
+        titlesData: FlTitlesData(
+          show: true,
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              interval: 6, // Match interval to weight graph to not crowd labels
+              getTitlesWidget: (value, meta) {
+                final index = value.toInt();
+                if (index < 0 || index >= dailyBreakdown.length) {
+                  return const SizedBox.shrink();
+                }
+
+                final dateStr = dailyBreakdown[index]['date'] as String?;
+                if (dateStr == null) return const SizedBox.shrink();
+                DateTime? dateObj;
+                try {
+                  dateObj = DateTime.parse(dateStr);
+                } catch (_) {}
+                
+                String label = (index + 1).toString();
+                bool isToday = false;
+                if (dateObj != null) {
+                  final now = DateTime.now();
+                  if (dateObj.year == now.year && dateObj.month == now.month && dateObj.day == now.day) {
+                    label = "Today";
+                    isToday = true;
+                  }
+                }
+
+                // Forcefully hide unwanted labels to prevent crowding in BarChart
+                if (index % 6 != 0 && index != dailyBreakdown.length - 1 && !isToday) {
+                  return const SizedBox.shrink();
+                }
+
+                Widget childWidget;
+                if (isToday) {
+                  childWidget = Container(
+                    margin: const EdgeInsets.only(top: 4.0),
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFD57F),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFFD57F).withOpacity(0.8),
+                          blurRadius: 6,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                  );
+                } else {
+                  childWidget = Text(
+                    label,
+                    style: const TextStyle(fontSize: 10, color: Colors.grey),
+                  );
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: childWidget,
+                );
+              },
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              interval: 500,
+              reservedSize: 42,
+              getTitlesWidget: (value, meta) {
+                if (value == 0) return const SizedBox.shrink();
+                return Text(
+                  value.toInt().toString(),
+                  style: const TextStyle(fontSize: 10, color: Colors.black54),
+                );
+              },
+            ),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+        ),
+        gridData: const FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: 500,
+        ),
+        borderData: FlBorderData(show: false),
       ),
     );
   }

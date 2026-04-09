@@ -988,7 +988,7 @@ class _MyListSheetState extends State<_MyListSheet> {
                             enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
                             focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFFF9900), width: 1.5)),
                           ),
-                          value: selectedCategory,
+                          initialValue: selectedCategory,
                           items: categories.map((cat) {
                             return DropdownMenuItem<int>(
                               value: cat['category_id'] as int,
