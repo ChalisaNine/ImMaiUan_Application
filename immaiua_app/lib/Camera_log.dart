@@ -504,6 +504,11 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
     final sodium = sodiumValue.toStringAsFixed(1);
 
     final profile = context.watch<UserProvider>().profile;
+    final userAllergyIds = _extractUserAllergyIds(profile);
+    final matchedFoodAllergies = _getMatchedAllergies(
+      userAllergyIds: userAllergyIds,
+      foodAllergiesRaw: foodDetails?['allergies'],
+    );
     final calorieTarget = _readAsDouble(profile?['calorie_target']);
     final carbTarget = _readAsDouble(profile?['carb_prefer']);
     final proteinTarget = _readAsDouble(profile?['protein_prefer']);
@@ -564,6 +569,14 @@ class _CameraLogBodyState extends State<_CameraLogBody> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (matchedFoodAllergies.isNotEmpty) ...[
+            _AllergyWarningBox(
+              allergies: matchedFoodAllergies,
+              message: "This food matches your saved allergies.",
+            ),
+            const SizedBox(height: 18),
+          ],
+
           /* ---------------- WARNING BOX ---------------- */
           if (excessRows.isNotEmpty) ...[
             Container(
@@ -1003,6 +1016,11 @@ void _showExcessWarningDialog(
           ((foodDetails['calories'] as num?)?.toDouble() ?? 0.0) * quantity;
 
       final profile = Provider.of<UserProvider>(context, listen: false).profile;
+      final userAllergyIds = _extractUserAllergyIds(profile);
+      final matchedFoodAllergies = _getMatchedAllergies(
+        userAllergyIds: userAllergyIds,
+        foodAllergiesRaw: foodDetails['allergies'],
+      );
       final carbTarget = _safeToDouble(profile?['carb_prefer']);
       final proteinTarget = _safeToDouble(profile?['protein_prefer']);
       final fatTarget = _safeToDouble(profile?['fat_prefer']);
@@ -1046,6 +1064,14 @@ void _showExcessWarningDialog(
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (matchedFoodAllergies.isNotEmpty) ...[
+                  _AllergyWarningBox(
+                    allergies: matchedFoodAllergies,
+                    message: "This meal may contain allergens you selected.",
+                    compact: true,
+                  ),
+                  const SizedBox(height: 14),
+                ],
                 if (excessRows.isNotEmpty) ...[
                   Container(
                     width: double.infinity,
@@ -1162,6 +1188,106 @@ void _showExcessWarningDialog(
   );
 }
 
+int? _parseInt(dynamic value) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value);
+  return null;
+}
+
+Set<int> _extractUserAllergyIds(Map<String, dynamic>? profile) {
+  final rawAllergies = profile?['allergies'];
+  if (rawAllergies is! List) return <int>{};
+
+  final ids = <int>{};
+  for (final allergy in rawAllergies) {
+    if (allergy is! Map) continue;
+    final allergyId = _parseInt(allergy['id']);
+    if (allergyId != null) {
+      ids.add(allergyId);
+    }
+  }
+  return ids;
+}
+
+List<Map<String, dynamic>> _normalizeAllergyList(dynamic rawAllergies) {
+  if (rawAllergies is! List) return const <Map<String, dynamic>>[];
+
+  final normalized = <Map<String, dynamic>>[];
+  for (final allergy in rawAllergies) {
+    if (allergy is! Map) continue;
+
+    final allergyId = _parseInt(allergy['id']);
+    final allergyName = allergy['name']?.toString().trim() ?? '';
+    if (allergyId == null || allergyName.isEmpty) continue;
+
+    final allergyTypeRaw = allergy['type']?.toString().trim();
+    final allergyType =
+        (allergyTypeRaw != null && allergyTypeRaw.isNotEmpty)
+            ? allergyTypeRaw
+            : null;
+
+    normalized.add({
+      'id': allergyId,
+      'name': allergyName,
+      'type': allergyType,
+    });
+  }
+
+  return normalized;
+}
+
+List<Map<String, dynamic>> _getMatchedAllergies({
+  required Set<int> userAllergyIds,
+  required dynamic foodAllergiesRaw,
+}) {
+  if (userAllergyIds.isEmpty) return const <Map<String, dynamic>>[];
+
+  final matched = <Map<String, dynamic>>[];
+  final seen = <int>{};
+  for (final allergy in _normalizeAllergyList(foodAllergiesRaw)) {
+    final allergyId = allergy['id'] as int;
+    if (!userAllergyIds.contains(allergyId)) continue;
+    if (!seen.add(allergyId)) continue;
+    matched.add(allergy);
+  }
+  return matched;
+}
+
+List<Map<String, dynamic>> _collectMatchedAllergiesFromDetections(
+  List<dynamic> detections,
+  Set<int> userAllergyIds,
+) {
+  final byId = <int, Map<String, dynamic>>{};
+
+  for (final detection in detections) {
+    if (detection is! Map) continue;
+    final matched = _getMatchedAllergies(
+      userAllergyIds: userAllergyIds,
+      foodAllergiesRaw: detection['allergies'],
+    );
+    for (final allergy in matched) {
+      byId[allergy['id'] as int] = allergy;
+    }
+  }
+
+  final sorted = byId.values.toList()
+    ..sort((a, b) {
+      final nameA = a['name']?.toString().toLowerCase() ?? '';
+      final nameB = b['name']?.toString().toLowerCase() ?? '';
+      return nameA.compareTo(nameB);
+    });
+
+  return sorted;
+}
+
+String _allergyDisplayName(Map<String, dynamic> allergy) {
+  final name = allergy['name']?.toString().trim() ?? 'Unknown';
+  final type = allergy['type']?.toString().trim() ?? '';
+  if (type.isEmpty) return name;
+  return '$name ($type)';
+}
+
 double _safeToDouble(dynamic value) {
   if (value is num) return value.toDouble();
   if (value is String) return double.tryParse(value) ?? 0.0;
@@ -1222,6 +1348,65 @@ class _ExcessRow extends StatelessWidget {
           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
         ),
       ],
+    );
+  }
+}
+
+class _AllergyWarningBox extends StatelessWidget {
+  final List<Map<String, dynamic>> allergies;
+  final String message;
+  final bool compact;
+
+  const _AllergyWarningBox({
+    required this.allergies,
+    required this.message,
+    this.compact = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(compact ? 12 : 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFE6E0),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFF2A191)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Color(0xFFB3261E)),
+              SizedBox(width: 8),
+              Text(
+                "ALLERGY ALERT",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            message,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 8),
+          ...allergies.map(
+            (allergy) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                "- ${_allergyDisplayName(allergy)}",
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  color: Color(0xFF8A1C14),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1389,6 +1574,22 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
     }
 
     final profile = context.watch<UserProvider>().profile;
+    final userAllergyIds = _extractUserAllergyIds(profile);
+    final matchedAllergiesByIndex = List<List<Map<String, dynamic>>>.generate(
+      widget.detections.length,
+      (i) {
+        final detection = widget.detections[i];
+        final rawAllergies = detection is Map ? detection['allergies'] : null;
+        return _getMatchedAllergies(
+          userAllergyIds: userAllergyIds,
+          foodAllergiesRaw: rawAllergies,
+        );
+      },
+    );
+    final matchedAllergiesSummary = _collectMatchedAllergiesFromDetections(
+      widget.detections,
+      userAllergyIds,
+    );
     final calorieTarget = _safeToDouble(profile?['calorie_target']);
     final carbTarget = _safeToDouble(profile?['carb_prefer']);
     final proteinTarget = _safeToDouble(profile?['protein_prefer']);
@@ -1428,6 +1629,13 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (matchedAllergiesSummary.isNotEmpty) ...[
+            _AllergyWarningBox(
+              allergies: matchedAllergiesSummary,
+              message: "Some detected items match your saved allergies.",
+            ),
+            const SizedBox(height: 18),
+          ],
           if (excessRows.isNotEmpty) ...[
             Container(
               width: double.infinity,
@@ -1567,6 +1775,7 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
             final d = widget.detections[i];
             final name = d['db_name'] ?? d['class'] ?? "Unknown";
             final nuts = d['per_100g_nutrients'] ?? {};
+            final matchedDetectionAllergies = matchedAllergiesByIndex[i];
 
             // Only calc kcal if we have food_id, otherwise 0
             final kcal =
@@ -1610,6 +1819,17 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
                             "Not in DB (won't be logged)",
                             style: TextStyle(color: Colors.red, fontSize: 11),
                           ),
+                        if (matchedDetectionAllergies.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Text(
+                            "Allergy alert: ${matchedDetectionAllergies.map(_allergyDisplayName).join(', ')}",
+                            style: const TextStyle(
+                              color: Color(0xFFB3261E),
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
