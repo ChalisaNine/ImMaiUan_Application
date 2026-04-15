@@ -36,15 +36,31 @@ class _CameraLogScreenState extends State<CameraLogScreen> {
   bool _isFavorite = false;
   bool _isFavoriteLoading = false;
 
-  String _selectedMealType = "Breakfast"; // Default
+  late String _selectedMealType;
 
   @override
   void initState() {
     super.initState();
+    _selectedMealType = _defaultMealTypeForTime(DateTime.now());
     if (widget.foodId != null) {
       _fetchFoodDetails();
       _checkFavorite();
     }
+  }
+
+  String _defaultMealTypeForTime(DateTime time) {
+    final hour = time.hour;
+
+    if (hour >= 5 && hour < 11) {
+      return "Breakfast";
+    }
+    if (hour >= 11 && hour < 15) {
+      return "Lunch";
+    }
+    if (hour >= 17 && hour < 22) {
+      return "Dinner";
+    }
+    return "Snack";
   }
 
   Future<void> _checkFavorite() async {

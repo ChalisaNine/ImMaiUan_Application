@@ -72,6 +72,30 @@ class MealProvider extends ChangeNotifier {
   bool get hasMore => _hasMore;
   String get searchQuery => _searchQuery;
 
+  void _sortFoodsNewestFirst() {
+    _foodList.sort((a, b) {
+      final leftLoggedAt = DateTime.tryParse(
+        (a is Map ? a['last_logged_at'] : null)?.toString() ?? '',
+      );
+      final rightLoggedAt = DateTime.tryParse(
+        (b is Map ? b['last_logged_at'] : null)?.toString() ?? '',
+      );
+
+      if (leftLoggedAt != null && rightLoggedAt != null) {
+        final compareLoggedAt = rightLoggedAt.compareTo(leftLoggedAt);
+        if (compareLoggedAt != 0) return compareLoggedAt;
+      } else if (rightLoggedAt != null) {
+        return 1;
+      } else if (leftLoggedAt != null) {
+        return -1;
+      }
+
+      final leftFoodId = (a is Map ? a['food_id'] : null) as int? ?? 0;
+      final rightFoodId = (b is Map ? b['food_id'] : null) as int? ?? 0;
+      return rightFoodId.compareTo(leftFoodId);
+    });
+  }
+
   Future<void> fetchFoods({
     bool reset = false,
     String? search,
@@ -129,6 +153,8 @@ class MealProvider extends ChangeNotifier {
             _foodList.addAll(foods);
           }
 
+          _sortFoodsNewestFirst();
+
           _hasMore = data['has_more'] ?? false;
           _offset += foods.length;
         } else {
@@ -138,6 +164,7 @@ class MealProvider extends ChangeNotifier {
           } else {
             _foodList.addAll(data);
           }
+          _sortFoodsNewestFirst();
           _hasMore = false; // No more data if using old format
         }
 

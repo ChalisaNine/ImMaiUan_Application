@@ -428,7 +428,7 @@ class _Ask4ScreenState extends State<Ask4Screen> {
             content: StatefulBuilder(
               builder:
                   (context, setModalState) => DropdownButtonFormField<int>(
-                    initialValue: selected,
+                    value: selected,
                     decoration: const InputDecoration(
                       labelText: 'Duration',
                       border: OutlineInputBorder(),
