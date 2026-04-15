@@ -73,6 +73,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return MainScaffold(
       currentIndex: _index,
       onTap: _onTap,
+      showBackButton: false,
+      canPopScreen: false,
       body: Consumer<UserProvider>(
         builder: (context, userProvider, child) {
           final profile = userProvider.profile;

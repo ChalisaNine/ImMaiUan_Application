@@ -67,32 +67,43 @@ class MealProvider extends ChangeNotifier {
   int _offset = 0;
   final int _limit = 20;
   String _searchQuery = '';
+  bool _recentOnly = false;
 
   bool get isLoadingMore => _isLoadingMore;
   bool get hasMore => _hasMore;
   String get searchQuery => _searchQuery;
+  bool get recentOnly => _recentOnly;
 
   void _sortFoodsNewestFirst() {
     _foodList.sort((a, b) {
-      final leftLoggedAt = DateTime.tryParse(
-        (a is Map ? a['last_logged_at'] : null)?.toString() ?? '',
-      );
-      final rightLoggedAt = DateTime.tryParse(
-        (b is Map ? b['last_logged_at'] : null)?.toString() ?? '',
-      );
+      if (_recentOnly) {
+        final leftLoggedAt = DateTime.tryParse(
+          (a is Map ? a['last_logged_at'] : null)?.toString() ?? '',
+        );
+        final rightLoggedAt = DateTime.tryParse(
+          (b is Map ? b['last_logged_at'] : null)?.toString() ?? '',
+        );
 
-      if (leftLoggedAt != null && rightLoggedAt != null) {
-        final compareLoggedAt = rightLoggedAt.compareTo(leftLoggedAt);
-        if (compareLoggedAt != 0) return compareLoggedAt;
-      } else if (rightLoggedAt != null) {
-        return 1;
-      } else if (leftLoggedAt != null) {
-        return -1;
+        if (leftLoggedAt != null && rightLoggedAt != null) {
+          final compareLoggedAt = rightLoggedAt.compareTo(leftLoggedAt);
+          if (compareLoggedAt != 0) return compareLoggedAt;
+        } else if (rightLoggedAt != null) {
+          return 1;
+        } else if (leftLoggedAt != null) {
+          return -1;
+        }
+      } else {
+        final leftName = (a is Map ? a['name'] : null)?.toString().toLowerCase() ?? '';
+        final rightName = (b is Map ? b['name'] : null)?.toString().toLowerCase() ?? '';
+        final compareName = leftName.compareTo(rightName);
+        if (compareName != 0) return compareName;
       }
 
       final leftFoodId = (a is Map ? a['food_id'] : null) as int? ?? 0;
       final rightFoodId = (b is Map ? b['food_id'] : null) as int? ?? 0;
-      return rightFoodId.compareTo(leftFoodId);
+      return _recentOnly
+          ? rightFoodId.compareTo(leftFoodId)
+          : leftFoodId.compareTo(rightFoodId);
     });
   }
 
@@ -100,6 +111,7 @@ class MealProvider extends ChangeNotifier {
     bool reset = false,
     String? search,
     int? categoryId,
+    bool? recentOnly,
   }) async {
     // Handle search query changes
     if (search != null && search != _searchQuery) {
@@ -111,6 +123,10 @@ class MealProvider extends ChangeNotifier {
     if (categoryId != null && categoryId != _selectedCategoryId) {
       _selectedCategoryId = categoryId;
       reset = true; // Reset pagination when category changes
+    }
+    if (recentOnly != null && recentOnly != _recentOnly) {
+      _recentOnly = recentOnly;
+      reset = true;
     }
 
     // Reset pagination if requested
@@ -138,6 +154,7 @@ class MealProvider extends ChangeNotifier {
         offset: _offset,
         search: _searchQuery.isNotEmpty ? _searchQuery : null,
         categoryId: _selectedCategoryId,
+        recentOnly: _recentOnly,
       );
 
       if (response.statusCode == 200) {

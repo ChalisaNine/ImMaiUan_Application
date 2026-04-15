@@ -141,6 +141,8 @@ class _MainHomeScreenState extends State<MainHomeScreen> {
     return MainScaffold(
       currentIndex: _index,
       onTap: _onTap,
+      showBackButton: false,
+      canPopScreen: false,
       body: const _HomeScreen(), // ⭐ BODY ของหน้า Home
     );
   }

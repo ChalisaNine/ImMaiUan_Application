@@ -86,6 +86,8 @@ class _CalendaScreenState extends State<CalendaScreen> {
     return MainScaffold(
       currentIndex: _index,
       onTap: _onTap,
+      showBackButton: false,
+      canPopScreen: false,
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(

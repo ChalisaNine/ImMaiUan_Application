@@ -69,6 +69,7 @@ class _AiImageScreenState extends State<AiImageScreen> {
     return MainScaffold(
       currentIndex: _index,
       onTap: _onTap,
+      showBackButton: false,
       onCameraTap: () {
         _cameraKey.currentState?._handleCameraAction();
       },

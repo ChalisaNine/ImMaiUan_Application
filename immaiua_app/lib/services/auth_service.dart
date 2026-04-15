@@ -210,6 +210,7 @@ class AuthService {
     int? offset,
     String? search,
     int? categoryId,
+    bool? recentOnly,
   }) async {
     try {
       final queryParams = <String, dynamic>{};
@@ -217,6 +218,7 @@ class AuthService {
       if (offset != null) queryParams['offset'] = offset;
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
       if (categoryId != null) queryParams['category_id'] = categoryId;
+      if (recentOnly != null) queryParams['recent_only'] = recentOnly;
 
       return await _dio.get(
         '/meals/foods',

@@ -5,6 +5,8 @@ class MainScaffold extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
   final VoidCallback? onCameraTap;
+  final bool showBackButton;
+  final bool canPopScreen;
 
   const MainScaffold({
     super.key,
@@ -12,86 +14,95 @@ class MainScaffold extends StatelessWidget {
     required this.currentIndex,
     required this.onTap,
     this.onCameraTap,
+    this.showBackButton = true,
+    this.canPopScreen = true,
   });
 
   @override
   Widget build(BuildContext context) {
     const peach = Color(0xFFFFE1C7);
 
-    return Scaffold(
-      // ---------------- TOP BAR ----------------
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        toolbarHeight: 68,
-        iconTheme: const IconThemeData(color: Colors.black87),
-        leading: Navigator.canPop(context) 
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                onPressed: () => Navigator.pop(context),
-              )
-            : null,
-        centerTitle: true,
-        title: Image.asset("assets/immaiuan_logo.jpg", height: 38),
-        actions: [
-          IconButton(
-            onPressed: () => onTap(4),
-            icon: const Icon(Icons.tune_rounded, size: 26, color: Colors.black87),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
+    return PopScope(
+      canPop: canPopScreen,
+      child: Scaffold(
+        // ---------------- TOP BAR ----------------
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: Colors.white,
+          toolbarHeight: 68,
+          iconTheme: const IconThemeData(color: Colors.black87),
+          leading:
+              showBackButton && Navigator.canPop(context)
+                  ? IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                    onPressed: () => Navigator.pop(context),
+                  )
+                  : null,
+          centerTitle: true,
+          title: Image.asset("assets/immaiuan_logo.jpg", height: 38),
+          actions: [
+            IconButton(
+              onPressed: () => onTap(4),
+              icon: const Icon(
+                Icons.tune_rounded,
+                size: 26,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ),
 
-      // ---------------- BODY with Modern Gradient Background ----------------
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color.fromARGB(255, 255, 255, 255),
-              //Color.fromARGB(255, 253, 237, 225),
-              Color.fromARGB(255, 250, 234, 222), // Soft peachy-orange
+        // ---------------- BODY with Modern Gradient Background ----------------
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color.fromARGB(255, 255, 255, 255),
+                Color.fromARGB(255, 250, 234, 222),
+              ],
+            ),
+          ),
+          child: body,
+        ),
+
+        // ---------------- FLOAT CAMERA BUTTON ----------------
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        floatingActionButton: SizedBox(
+          width: 74,
+          height: 74,
+          child: FloatingActionButton(
+            heroTag: null,
+            backgroundColor: const Color(0xFF825C2A),
+            elevation: 6,
+            shape: const CircleBorder(),
+            onPressed: onCameraTap ?? () => onTap(2),
+            child: const Icon(
+              Icons.camera_alt_rounded,
+              color: Colors.white,
+              size: 32,
+            ),
+          ),
+        ),
+
+        // ---------------- BOTTOM NAV BAR ----------------
+        bottomNavigationBar: BottomAppBar(
+          color: peach,
+          height: 63,
+          shape: const CircularNotchedRectangle(),
+          notchMargin: 0,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _item(0, "Home", Icons.home_rounded),
+              _item(1, "Meal", Icons.restaurant_menu_rounded),
+              const SizedBox(width: 36),
+              _item(3, "Diary", Icons.calendar_month_rounded),
+              _item(4, "Profile", Icons.person_rounded),
             ],
           ),
-        ),
-        child: body,
-      ),
-
-      // ---------------- FLOAT CAMERA BUTTON ----------------
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: SizedBox(
-        width: 74,
-        height: 74,
-        child: FloatingActionButton(
-          heroTag: null,
-          backgroundColor: const Color(0xFF825C2A),
-          elevation: 6,
-          shape: const CircleBorder(),
-          onPressed: onCameraTap ?? () => onTap(2),
-          child: const Icon(
-            Icons.camera_alt_rounded,
-            color: Colors.white,
-            size: 32,
-          ),
-        ),
-      ),
-
-      // ---------------- BOTTOM NAV BAR ----------------
-      bottomNavigationBar: BottomAppBar(
-        color: peach,
-        height: 63,
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 0,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _item(0, "Home", Icons.home_rounded),
-            _item(1, "Meal", Icons.restaurant_menu_rounded),
-            const SizedBox(width: 36),
-            _item(3, "Diary", Icons.calendar_month_rounded),
-            _item(4, "Profile", Icons.person_rounded),
-          ],
         ),
       ),
     );

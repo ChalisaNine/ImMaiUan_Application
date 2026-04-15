@@ -69,6 +69,10 @@ class _MealScreenState extends State<MealScreen> {
     context.read<MealProvider>().clearSearch();
   }
 
+  void _changeFoodMode(bool recentOnly) {
+    context.read<MealProvider>().fetchFoods(reset: true, recentOnly: recentOnly);
+  }
+
   @override
   void dispose() {
     _debounce?.cancel();
@@ -174,6 +178,8 @@ class _MealScreenState extends State<MealScreen> {
     return MainScaffold(
       currentIndex: _index,
       onTap: _onTap,
+      showBackButton: false,
+      canPopScreen: false,
 
       body: SafeArea(
         top: false,
@@ -277,6 +283,22 @@ class _MealScreenState extends State<MealScreen> {
 
                 const SliverToBoxAdapter(child: SizedBox(height: 22)),
 
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Consumer<MealProvider>(
+                      builder: (context, provider, child) {
+                        return _FoodModeToggle(
+                          recentOnly: provider.recentOnly,
+                          onChanged: _changeFoodMode,
+                        );
+                      },
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 18)),
+
                 /* ================= SECTION TITLE ================= */
                 SliverToBoxAdapter(
                   child: Padding(
@@ -284,14 +306,23 @@ class _MealScreenState extends State<MealScreen> {
                     child: Consumer<MealProvider>(
                       builder: (context, provider, child) {
                         // Determine header text and icon based on selected category
-                        String headerText = "All Foods";
-                        Widget headerIcon = const Icon(
-                          Icons.fastfood_rounded,
-                          size: 22,
-                          color: Color(0xFFFF9900),
-                        );
+                        final isRecent = provider.recentOnly;
+                        String headerText = isRecent ? "Recent Foods" : "All Foods";
+                        Widget headerIcon =
+                            isRecent
+                                ? const Icon(
+                                  Icons.history_rounded,
+                                  size: 22,
+                                  color: Color(0xFFFF9900),
+                                )
+                                : const Icon(
+                                  Icons.fastfood_rounded,
+                                  size: 22,
+                                  color: Color(0xFFFF9900),
+                                );
 
-                        if (provider.selectedCategoryId != null &&
+                        if (!isRecent &&
+                            provider.selectedCategoryId != null &&
                             provider.categories.isNotEmpty) {
                           final category = provider.categories.firstWhere(
                             (c) =>
@@ -336,11 +367,15 @@ class _MealScreenState extends State<MealScreen> {
                     child: Center(child: Text("Error: ${mealProvider.error}")),
                   )
                 else if (items.isEmpty)
-                  const SliverFillRemaining(
+                  SliverFillRemaining(
                     child: Center(
                       child: Padding(
-                        padding: EdgeInsets.all(20.0),
-                        child: Text("No foods found."),
+                        padding: const EdgeInsets.all(20.0),
+                        child: Text(
+                          mealProvider.recentOnly
+                              ? "No recent foods yet."
+                              : "No foods found.",
+                        ),
                       ),
                     ),
                   )
@@ -468,6 +503,110 @@ class _MealCategoryCard extends StatelessWidget {
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FoodModeToggle extends StatelessWidget {
+  const _FoodModeToggle({
+    required this.recentOnly,
+    required this.onChanged,
+  });
+
+  final bool recentOnly;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF0E0),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _FoodModeButton(
+              label: 'All Foods',
+              icon: Icons.fastfood_rounded,
+              selected: !recentOnly,
+              onTap: () => onChanged(false),
+            ),
+          ),
+          Expanded(
+            child: _FoodModeButton(
+              label: 'Recent Foods',
+              icon: Icons.history_rounded,
+              selected: recentOnly,
+              onTap: () => onChanged(true),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FoodModeButton extends StatelessWidget {
+  const _FoodModeButton({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: selected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow:
+              selected
+                  ? [
+                    BoxShadow(
+                      color: Colors.orange.withOpacity(0.14),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                  : null,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 18,
+              color: selected ? const Color(0xFFFF9900) : Colors.black54,
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                  color: selected ? Colors.black87 : Colors.black54,
+                ),
+              ),
             ),
           ],
         ),
