@@ -511,4 +511,26 @@ class AuthService {
       rethrow;
     }
   }
+
+  Future<Response> classifyImage(File imageFile) async {
+    try {
+      final formData = FormData.fromMap({
+        'image': await MultipartFile.fromFile(
+          imageFile.path,
+          filename: imageFile.path.split('/').last,
+        ),
+      });
+
+      return await _dio.post(
+        '/ai/classify',
+        data: formData,
+        options: Options(
+          sendTimeout: _imageAnalyzeSendTimeout,
+          receiveTimeout: _imageAnalyzeReceiveTimeout,
+        ),
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

@@ -96,6 +96,7 @@ class _CameraBodyState extends State<_CameraBody> with WidgetsBindingObserver {
   CameraController? _cameraController;
   List<CameraDescription>? _cameras;
   bool _isCameraInitialized = false;
+  bool _isClassificationMode = false;
 
   @override
   void initState() {
@@ -195,6 +196,54 @@ class _CameraBodyState extends State<_CameraBody> with WidgetsBindingObserver {
     });
   }
 
+  Widget _buildSwitchItem({
+    required String title,
+    required IconData icon,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        curve: Curves.easeInOut,
+        decoration: BoxDecoration(
+          color: isActive ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(25),
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  )
+                ]
+              : [],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: isActive ? const Color(0xFFFFB300) : const Color(0xFF757575),
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(
+                color: isActive ? const Color(0xFFFFB300) : const Color(0xFF757575),
+                fontWeight: isActive ? FontWeight.bold : FontWeight.w600,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _mockScanToLog() {
     if (_imageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -205,7 +254,10 @@ class _CameraBodyState extends State<_CameraBody> with WidgetsBindingObserver {
     // Navigate to the AI analysis result screen first
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => AiResultScreen(imageFile: _imageFile!)),
+      MaterialPageRoute(builder: (_) => AiResultScreen(
+        imageFile: _imageFile!,
+        isClassificationMode: _isClassificationMode,
+      )),
     );
   }
 
@@ -236,6 +288,42 @@ class _CameraBodyState extends State<_CameraBody> with WidgetsBindingObserver {
               width: MediaQuery.of(context).size.width * 0.70,
               height: MediaQuery.of(context).size.width * 0.70,
               child: CustomPaint(painter: _FocusRingPainter()),
+            ),
+          ),
+        ),
+
+        // ---------- Mode Switcher ----------
+        Positioned(
+          top: MediaQuery.of(context).padding.top > 0 
+                  ? MediaQuery.of(context).padding.top + 16 
+                  : 54,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F5F5),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: const Color(0xFFE0E0E0), width: 1.5),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildSwitchItem(
+                    title: "Portion",
+                    icon: Icons.star_rounded,
+                    isActive: !_isClassificationMode,
+                    onTap: () => setState(() => _isClassificationMode = false),
+                  ),
+                  _buildSwitchItem(
+                    title: "Classify",
+                    icon: Icons.crop_free_rounded,
+                    isActive: _isClassificationMode,
+                    onTap: () => setState(() => _isClassificationMode = true),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

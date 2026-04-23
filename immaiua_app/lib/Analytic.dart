@@ -141,7 +141,7 @@ class CalendarScreen extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: const [
                         Text(
-                          '2181 cal.',
+                          '2181 kcal.',
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.w700,

@@ -8,8 +8,13 @@ import 'providers/auth_provider.dart';
 
 class AiResultScreen extends StatefulWidget {
   final File imageFile;
+  final bool isClassificationMode;
 
-  const AiResultScreen({super.key, required this.imageFile});
+  const AiResultScreen({
+    super.key, 
+    required this.imageFile,
+    this.isClassificationMode = false,
+  });
 
   @override
   State<AiResultScreen> createState() => _AiResultScreenState();
@@ -22,6 +27,11 @@ class _AiResultScreenState extends State<AiResultScreen> {
   String? _annotatedImageBase64;
   double? _originalGlobalDepth;
   double? _currentGlobalDepth;
+  
+  int? _predictionClassId;
+  String? _predictionClassName;
+  int? _predictionFoodId;
+  double? _confidence;
   
   double get _depthRatio {
     if (_originalGlobalDepth == null || _originalGlobalDepth == 0) return 1.0;
@@ -40,16 +50,35 @@ class _AiResultScreenState extends State<AiResultScreen> {
         context,
         listen: false,
       ).authService;
-      final response = await authService.analyzeImage(widget.imageFile);
+      final response = widget.isClassificationMode 
+          ? await authService.classifyImage(widget.imageFile)
+          : await authService.analyzeImage(widget.imageFile);
 
       if (response.statusCode == 200) {
         if (mounted) {
           setState(() {
-            _detections = response.data['detections'] ?? [];
-            _originalGlobalDepth = (response.data['global_center_depth_m'] ?? 0.5).toDouble();
-            _currentGlobalDepth = _originalGlobalDepth;
-            _annotatedImageBase64 = response.data['annotated_image_base64'];
-            _isAnalyzing = false;
+            if (widget.isClassificationMode) {
+              _predictionClassId = response.data['prediction_class_id'];
+              _predictionClassName = response.data['prediction_class_name'];
+              final rawFoodId = response.data['prediction_food_id'];
+              if (rawFoodId is int) {
+                _predictionFoodId = rawFoodId;
+              } else if (rawFoodId is num) {
+                _predictionFoodId = rawFoodId.toInt();
+              } else if (rawFoodId is String) {
+                _predictionFoodId = int.tryParse(rawFoodId);
+              } else {
+                _predictionFoodId = null;
+              }
+              _confidence = (response.data['confidence'] as num?)?.toDouble();
+              _isAnalyzing = false;
+            } else {
+              _detections = response.data['detections'] ?? [];
+              _originalGlobalDepth = (response.data['global_center_depth_m'] ?? 0.5).toDouble();
+              _currentGlobalDepth = _originalGlobalDepth;
+              _annotatedImageBase64 = response.data['annotated_image_base64'];
+              _isAnalyzing = false;
+            }
           });
         }
       } else {
@@ -72,6 +101,27 @@ class _AiResultScreenState extends State<AiResultScreen> {
   }
 
   void _proceedToLog() {
+    if (widget.isClassificationMode) {
+      if (_predictionFoodId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cannot open meal log because predicted food_id is missing.'),
+          ),
+        );
+        return;
+      }
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => CameraLogScreen(
+            foodId: _predictionFoodId,
+            foodName: _predictionClassName,
+          ),
+        ),
+      );
+      return;
+    }
     final adjustedDetections = _detections.map((item) {
       final updated = Map<String, dynamic>.from(item);
       double origDepth = double.tryParse(updated['center_depth_m']?.toString() ?? '0') ?? 0;
@@ -213,67 +263,71 @@ class _AiResultScreenState extends State<AiResultScreen> {
           const SizedBox(height: 24),
 
           // Header
-          const Text(
-            "Detected Features",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            widget.isClassificationMode ? "Classification Result" : "Detected Features",
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
 
-          // Slider for Depth
-          if (_currentGlobalDepth != null && _detections.isNotEmpty)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      "Camera Distance (Depth)",
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      "${_currentGlobalDepth!.toStringAsFixed(2)} m",
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: peachDeep),
-                    ),
-                  ],
-                ),
-                Slider(
-                  value: _currentGlobalDepth!,
-                  min: 0.1,
-                  max: 2.0,
-                  divisions: 190,
-                  activeColor: peachDeep,
-                  onChanged: (val) {
-                    setState(() {
-                      _currentGlobalDepth = val;
-                    });
-                  },
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text(
-                    "Adjust this slider if the estimated food weight seems off. Modifying the depth mathematically recalibrates the estimated mass.",
-                    style: TextStyle(fontSize: 12, color: Colors.black54),
+          if (widget.isClassificationMode)
+            _buildClassificationResult()
+          else ...[
+            // Slider for Depth
+            if (_currentGlobalDepth != null && _detections.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Camera Distance (Depth)",
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        "${_currentGlobalDepth!.toStringAsFixed(2)} m",
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: peachDeep),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 24),
-              ],
-            ),
-
-          if (_detections.isEmpty)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 16.0),
-              child: Text(
-                "No segmentation masks detected in this image.",
-                style: TextStyle(fontSize: 14, color: Colors.black54),
+                  Slider(
+                    value: _currentGlobalDepth!,
+                    min: 0.1,
+                    max: 2.0,
+                    divisions: 190,
+                    activeColor: peachDeep,
+                    onChanged: (val) {
+                      setState(() {
+                        _currentGlobalDepth = val;
+                      });
+                    },
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text(
+                      "Adjust this slider if the estimated food weight seems off. Modifying the depth mathematically recalibrates the estimated mass.",
+                      style: TextStyle(fontSize: 12, color: Colors.black54),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
               ),
-            ),
 
-          // Render dynamic detection cards
-          for (var item in _detections) _buildItemDetection(item),
+            if (_detections.isEmpty)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 16.0),
+                child: Text(
+                  "No segmentation masks detected in this image.",
+                  style: TextStyle(fontSize: 14, color: Colors.black54),
+                ),
+              ),
+
+            // Render dynamic detection cards
+            for (var item in _detections) _buildItemDetection(item),
+          ],
 
           const SizedBox(height: 32),
 
@@ -289,9 +343,9 @@ class _AiResultScreenState extends State<AiResultScreen> {
               ),
               elevation: 4,
             ),
-            child: const Text(
-              "Proceed to Meal Log",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            child: Text(
+              widget.isClassificationMode ? "Confirm" : "Proceed to Meal Log",
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(height: 12),
@@ -311,6 +365,83 @@ class _AiResultScreenState extends State<AiResultScreen> {
               "Retake Photo",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildClassificationResult() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const Icon(
+            Icons.memory_rounded,
+            color: Color(0xFFFFA94D),
+            size: 48,
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            "Overall Image Class",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Colors.black54,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _predictionClassName ?? 'Unknown',
+            style: const TextStyle(
+               fontWeight: FontWeight.bold,
+               fontSize: 24,
+               color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "Class ID: ${_predictionClassId ?? 'Unknown'}",
+            style: const TextStyle(
+               fontSize: 14,
+               color: Colors.black54,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "Food ID: ${_predictionFoodId ?? 'Unknown'}",
+            style: const TextStyle(
+               fontSize: 14,
+               color: Colors.black54,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.check_circle_rounded, color: Colors.green, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                "Confidence: ${((_confidence ?? 0) * 100).toStringAsFixed(1)}%",
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.green,
+                ),
+              ),
+            ],
           ),
         ],
       ),
