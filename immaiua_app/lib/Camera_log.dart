@@ -11,6 +11,7 @@ import 'nav_bar.dart';
 import 'profile_screen.dart';
 import 'Calenda.dart';
 import 'utils/food_icon_helper.dart';
+import 'package:fuzzy/fuzzy.dart';
 
 class CameraLogScreen extends StatefulWidget {
   final int? foodId;
@@ -1469,14 +1470,16 @@ class _CameraLogMultiBody extends StatefulWidget {
 class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
   // Store adjusted grams per detection index
   late List<double> _grams;
+  late List<dynamic> _detections;
   bool _isLogging = false;
   double _consumedCaloriesToday = 0;
 
   @override
   void initState() {
     super.initState();
+    _detections = List.from(widget.detections);
     _grams =
-        widget.detections
+        _detections
             .map((d) => _safeToDouble(d['estimated_portion_g']))
             .toList();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1516,8 +1519,8 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
           Provider.of<AuthProvider>(context, listen: false).authService;
       List<Map<String, dynamic>> items = [];
 
-      for (int i = 0; i < widget.detections.length; i++) {
-        final d = widget.detections[i];
+      for (int i = 0; i < _detections.length; i++) {
+        final d = _detections[i];
         if (d['food_id'] == null) continue;
 
         items.add({
@@ -1561,8 +1564,8 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
     double totalProtein = 0;
     double totalFat = 0;
 
-    for (int i = 0; i < widget.detections.length; i++) {
-      final d = widget.detections[i];
+    for (int i = 0; i < _detections.length; i++) {
+      final d = _detections[i];
       if (d['food_id'] != null) {
         final nuts = d['per_100g_nutrients'] ?? {};
         final factor = _grams[i] / 100.0;
@@ -1576,9 +1579,9 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
     final profile = context.watch<UserProvider>().profile;
     final userAllergyIds = _extractUserAllergyIds(profile);
     final matchedAllergiesByIndex = List<List<Map<String, dynamic>>>.generate(
-      widget.detections.length,
+      _detections.length,
       (i) {
-        final detection = widget.detections[i];
+        final detection = _detections[i];
         final rawAllergies = detection is Map ? detection['allergies'] : null;
         return _getMatchedAllergies(
           userAllergyIds: userAllergyIds,
@@ -1587,7 +1590,7 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
       },
     );
     final matchedAllergiesSummary = _collectMatchedAllergiesFromDetections(
-      widget.detections,
+      _detections,
       userAllergyIds,
     );
     final calorieTarget = _safeToDouble(profile?['calorie_target']);
@@ -1771,8 +1774,8 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
           ),
           const SizedBox(height: 8),
 
-          ...List.generate(widget.detections.length, (i) {
-            final d = widget.detections[i];
+          ...List.generate(_detections.length, (i) {
+            final d = _detections[i];
             final name = d['db_name'] ?? d['class'] ?? "Unknown";
             final nuts = d['per_100g_nutrients'] ?? {};
             final matchedDetectionAllergies = matchedAllergiesByIndex[i];
@@ -1798,12 +1801,24 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 15,
-                          ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.edit, size: 20, color: Color(0xFF825C2A)),
+                              onPressed: () => _showFoodSearchSheet(context, i),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 4),
                         if (d['food_id'] != null)
@@ -1911,6 +1926,217 @@ class _CameraLogMultiBodyState extends State<_CameraLogMultiBody> {
                 ],
               ),
           const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+
+  void _showFoodSearchSheet(BuildContext context, int detectionIndex) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _FoodSearchSheet(
+        onFoodSelected: (foodId) async {
+          Navigator.pop(ctx);
+          await _replaceDetectionItem(detectionIndex, foodId);
+        },
+      ),
+    );
+  }
+
+  Future<void> _replaceDetectionItem(int index, int foodId) async {
+    setState(() => _isLogging = true); // use logging state as a generic loading state
+    try {
+      final authService = Provider.of<AuthProvider>(context, listen: false).authService;
+      final response = await authService.getFoodDetails(foodId);
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data!;
+        
+        final portionQty = _safeToDouble(data['quantity']);
+        final unit = data['unit']?.toString().toLowerCase() ?? 'g';
+        final isGrams = ['g', 'ml', 'oz'].contains(unit);
+
+        double extractPer100g(dynamic val) {
+          final v = _safeToDouble(val);
+          if (portionQty <= 0) return 0;
+          if (isGrams) {
+            return (v * 100) / portionQty;
+          } else {
+            return v / portionQty;
+          }
+        }
+
+        final nuts = data['nutrients'] ?? {};
+        final per100g = {
+          'calories': extractPer100g(data['calories']),
+          'carb': extractPer100g(nuts['Carb']),
+          'protein': extractPer100g(nuts['Protein']),
+          'fat': extractPer100g(nuts['Fat']),
+          'sugar': extractPer100g(nuts['Sugar']),
+          'sodium': extractPer100g(nuts['Sodium']),
+        };
+
+        setState(() {
+          _detections[index] = {
+            'class': data['name'],
+            'db_name': data['name'],
+            'food_id': data['food_id'],
+            'per_100g_nutrients': per100g,
+            'allergies': data['allergies'] ?? [],
+            'estimated_portion_g': _grams[index], // keep current grams
+          };
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load food details: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLogging = false);
+    }
+  }
+}
+
+class _FoodSearchSheet extends StatefulWidget {
+  final ValueChanged<int> onFoodSelected;
+
+  const _FoodSearchSheet({required this.onFoodSelected});
+
+  @override
+  State<_FoodSearchSheet> createState() => _FoodSearchSheetState();
+}
+
+class _FoodSearchSheetState extends State<_FoodSearchSheet> {
+  final TextEditingController _searchController = TextEditingController();
+  List<dynamic> _allFoods = [];
+  List<dynamic> _filteredFoods = [];
+  bool _isLoading = false;
+  Fuzzy? _fuse;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAllFoods();
+  }
+
+  Future<void> _fetchAllFoods() async {
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+    try {
+      final authService = Provider.of<AuthProvider>(context, listen: false).authService;
+      final response = await authService.getFoodList(limit: 1000);
+      if (response.statusCode == 200 && mounted) {
+        setState(() {
+          _allFoods = response.data['foods'] ?? [];
+          _filteredFoods = _allFoods;
+          _fuse = Fuzzy(
+            _allFoods,
+            options: FuzzyOptions(
+              keys: [
+                WeightedKey(
+                  name: 'name',
+                  getter: (dynamic obj) => obj['name']?.toString() ?? '',
+                  weight: 1,
+                )
+              ],
+              threshold: 0.4,
+            ),
+          );
+        });
+      }
+    } catch (e) {
+      // ignore errors
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _applyFuzzySearch(String query) {
+    if (query.trim().isEmpty || _fuse == null) {
+      setState(() {
+        _filteredFoods = _allFoods;
+      });
+      return;
+    }
+
+    final results = _fuse!.search(query);
+    setState(() {
+      _filteredFoods = results.map((r) => r.item).toList();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.75,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: const EdgeInsets.only(top: 16),
+      child: Column(
+        children: [
+          Container(
+            width: 40,
+            height: 5,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            "Change Food",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: "Search foods...",
+                prefixIcon: const Icon(Icons.search),
+                filled: true,
+                fillColor: Colors.grey.shade100,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 0),
+              ),
+              onChanged: _applyFuzzySearch,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    itemCount: _filteredFoods.length,
+                    itemBuilder: (context, index) {
+                      final food = _filteredFoods[index];
+                      return ListTile(
+                        leading: buildFoodCategoryIcon(
+                          categoryName: food['category_name'] ?? 'Unknown',
+                          size: 32,
+                        ),
+                        title: Text(food['name'] ?? 'Unknown'),
+                        subtitle: Text('${food['calories']} kcal / ${food['quantity']} ${food['unit'] ?? ''}'),
+                        onTap: () => widget.onFoodSelected(food['food_id']),
+                      );
+                    },
+                  ),
+          ),
         ],
       ),
     );
